@@ -62,7 +62,9 @@
                                   nrf_gpio_pin_clear(MOTOR_EN_PIN);	\
                                   main_status.MotorPowerOffReq = 0;     
 
+#define PARAM_TAB_ID            0x4C656F6E
 #define MOTOR_TIMEOUT_DEF {3000,1500,3000,1500}
+#define BATTERY_ALARM_LEVEL_DEF     0x0100
 
 #define RTC_TICK_TIME       125
 

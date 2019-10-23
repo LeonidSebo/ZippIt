@@ -14,7 +14,7 @@
 
 /* TWI instance ID. */
 #define TWI_INSTANCE_ID     0
-extern const ParamTable_t  ParamTable;
+extern const ParamTable_t*  pParamTable;
 
 
 /* Indicates if operation on TWI has ended. */
@@ -89,19 +89,19 @@ void lsensor_rx(uint8_t reg_addr, uint8_t* pdata, size_t size)
 
 void lsensor_init(void)
 {
-  uint8_t contr_reg = ParamTable.lsensor.contr_reg & 0xFE; // Stand-by mode
+  uint8_t contr_reg = pParamTable->lsensor.contr_reg & 0xFE; // Stand-by mode
 
   lsensor_tx(LSEN_ALS_CONTR_REG,&contr_reg,1);
-  lsensor_tx(LSEN_ALS_THRES_UP_0_REG,&(ParamTable.lsensor.upper_thresh_low),4);
-  lsensor_tx(LSEN_INTERRUPT_PERSIST_REG,&(ParamTable.lsensor.int_persist_reg),1);
-  lsensor_tx(LSEN_ALS_MEAS_RATE_REG,&(ParamTable.lsensor.meas_rate),1);
-  lsensor_tx(LSEN_INTERRUPT_REG,&(ParamTable.lsensor.interrupt),1);
+  lsensor_tx(LSEN_ALS_THRES_UP_0_REG,&(pParamTable->lsensor.upper_thresh_low),4);
+  lsensor_tx(LSEN_INTERRUPT_PERSIST_REG,&(pParamTable->lsensor.int_persist_reg),1);
+  lsensor_tx(LSEN_ALS_MEAS_RATE_REG,&(pParamTable->lsensor.meas_rate),1);
+  lsensor_tx(LSEN_INTERRUPT_REG,&(pParamTable->lsensor.interrupt),1);
 
 }
 
 void lsensor_sleep(void)
 {
-  uint8_t contr_reg = ParamTable.lsensor.contr_reg & 0xFE; // Stand-by mode
+  uint8_t contr_reg = pParamTable->lsensor.contr_reg & 0xFE; // Stand-by mode
   nrfx_gpiote_in_event_disable(SENSOR_INT_PIN);            // desable interrupt
   lsensor_tx(LSEN_ALS_CONTR_REG,&contr_reg,1);             // send reg value
   
@@ -111,7 +111,7 @@ void lsensor_sleep(void)
 
 void lsensor_weak_up(void)
 {
-  uint8_t contr_reg = ParamTable.lsensor.contr_reg | 0x01; // Active mode
+  uint8_t contr_reg = pParamTable->lsensor.contr_reg | 0x01; // Active mode
   nrfx_gpiote_in_event_disable(SENSOR_INT_PIN);            // desable interrupt
   lsensor_tx(LSEN_ALS_CONTR_REG,&contr_reg,1);             // send reg value
   nrfx_gpiote_in_event_enable(SENSOR_INT_PIN, true);

@@ -1,6 +1,6 @@
 #include "bleCmdHandler.h"
 
-extern ParamTable_t  ParamTable; 
+extern const ParamTable_t*  pParamTable; 
 extern ParamTable_t  ParamTab;
 
 extern main_status_t main_status;
@@ -20,8 +20,8 @@ RESULT bleGetDeviceInfo(DEVICE_INFO* pDeviceInfo)
 {
   pDeviceInfo->SW_VERSION_MINOR = sw_rewision&0xFF;
   pDeviceInfo->SW_VERSION_MAJOR = sw_rewision>>8;
-  pDeviceInfo->HW_VERSION_MINOR = ParamTable.HW_revision&0xFF;
-  pDeviceInfo->HW_VERSION_MAJOR = ParamTable.HW_revision>>8;
+  pDeviceInfo->HW_VERSION_MINOR = pParamTable->HW_revision&0xFF;
+  pDeviceInfo->HW_VERSION_MAJOR = pParamTable->HW_revision>>8;
   return ERR_NO;
 }
 
@@ -104,15 +104,15 @@ RESULT bleSetLedState(LED_CONTROL LedControl)
 RESULT  bleSetMotorTimes(motor_active_time_t MotorTimes)
 {
   uint32_t addr;
-  if((ParamTable.MotorActiveTime.MOTOR_CCW_FULL_TIME_MS != MotorTimes.MOTOR_CCW_FULL_TIME_MS)||
-     (ParamTable.MotorActiveTime.MOTOR_CCW_HALF_TIME_MS  != MotorTimes.MOTOR_CCW_HALF_TIME_MS)||
-     (ParamTable.MotorActiveTime.MOTOR_CW_FULL_TIME_MS  != MotorTimes.MOTOR_CW_FULL_TIME_MS)||
-     (ParamTable.MotorActiveTime.MOTOR_CW_HALF_TIME_MS  != MotorTimes.MOTOR_CW_HALF_TIME_MS))
+  if((pParamTable->MotorActiveTime.MOTOR_CCW_FULL_TIME_MS != MotorTimes.MOTOR_CCW_FULL_TIME_MS)||
+     (pParamTable->MotorActiveTime.MOTOR_CCW_HALF_TIME_MS  != MotorTimes.MOTOR_CCW_HALF_TIME_MS)||
+     (pParamTable->MotorActiveTime.MOTOR_CW_FULL_TIME_MS  != MotorTimes.MOTOR_CW_FULL_TIME_MS)||
+     (pParamTable->MotorActiveTime.MOTOR_CW_HALF_TIME_MS  != MotorTimes.MOTOR_CW_HALF_TIME_MS))
   {
     if(main_status.ParamTab_change_req != REQ_NONE){
       return ERR_BLE_MODULE_BUZY;
     }
-    memcpy(&NewParamTable,&ParamTable,sizeof(ParamTable_t));
+    memcpy(&NewParamTable,pParamTable,sizeof(ParamTable_t));
     NewParamTable.MotorActiveTime.MOTOR_CCW_FULL_TIME_MS = MotorTimes.MOTOR_CCW_FULL_TIME_MS;
     NewParamTable.MotorActiveTime.MOTOR_CCW_HALF_TIME_MS  = MotorTimes.MOTOR_CCW_HALF_TIME_MS;
     NewParamTable.MotorActiveTime.MOTOR_CW_FULL_TIME_MS = MotorTimes.MOTOR_CW_FULL_TIME_MS;
@@ -132,11 +132,11 @@ RESULT bleSetRtcTime(uint32_t DateTime)
 RESULT bleSetBatteryAlarmLevel(uint32_t BatLevel)
 {
   uint32_t addr;
-  if(ParamTable.BatteryAlarmLevel != BatLevel){
+  if(pParamTable->BatteryAlarmLevel != BatLevel){
     if(main_status.ParamTab_change_req != REQ_NONE){
       return ERR_BLE_MODULE_BUZY;
     }
-    memcpy(&NewParamTable,&ParamTable,sizeof(ParamTable_t));
+    memcpy(&NewParamTable,pParamTable,sizeof(ParamTable_t));
     NewParamTable.BatteryAlarmLevel = BatLevel;
     main_status.ParamTab_change_req = REQ;
   }
@@ -146,12 +146,12 @@ RESULT bleSetBatteryAlarmLevel(uint32_t BatLevel)
 RESULT bleSetLIghtAlarmLevel(uint32_t LightAlarm)
 {
   uint32_t addr;
-  if((ParamTable.lsensor.upper_thresh_low != LightAlarm & 0xFF)||
-     (ParamTable.lsensor.upper_thresh_hight != ((LightAlarm >> 8)&0xFF))){
+  if((pParamTable->lsensor.upper_thresh_low != LightAlarm & 0xFF)||
+     (pParamTable->lsensor.upper_thresh_hight != ((LightAlarm >> 8)&0xFF))){
     if(main_status.ParamTab_change_req != REQ_NONE){
       return ERR_BLE_MODULE_BUZY;
     }
-    memcpy(&NewParamTable,&ParamTable,sizeof(ParamTable_t));
+    memcpy(&NewParamTable,pParamTable,sizeof(ParamTable_t));
     NewParamTable.lsensor.upper_thresh_hight = (LightAlarm >> 8)&0xFF;
     NewParamTable.lsensor.upper_thresh_low = LightAlarm & 0xFF;
     main_status.ParamTab_change_req = REQ;

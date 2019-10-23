@@ -2,7 +2,7 @@
 #include "bleCmdHandler.h"
 
 
-extern const report_t  reports;
+//extern const report_t  reports;
 extern ble_status_t ble_status;
 extern ParamTable_t  NewParamTable;
 
@@ -31,11 +31,11 @@ rtc_tick_enable_t rtcTickRequest = {0,0,0};
 
 
 __attribute__ ((section(".ParamTab")))
-const ParamTable_t  ParamTable = {LSENSOR_DEF, MOTOR_TIMEOUT_DEF,0x0100};
-__attribute__ ((section(".ReportTab")))
-const report_t  reports;
+const ParamTable_t  ParamTable_def =  {PARAM_TAB_ID,LSENSOR_DEF, MOTOR_TIMEOUT_DEF,BATTERY_ALARM_LEVEL_DEF};
+//__attribute__ ((section(".ReportTab")))
+//const report_t  reports;
 
-
+const ParamTable_t* pParamTable = (ParamTable_t*) ((uint8_t*)&ParamTable_def + 0x1000);
 ParamTable_t  ParamTab;
 
 
@@ -374,7 +374,7 @@ NRF_FSTORAGE_DEF(nrf_fstorage_t fstorage) =
      * You must set these manually, even at runtime, before nrf_fstorage_init() is called.
      * The function nrf5_flash_end_addr_get() can be used to retrieve the last address on the
      * last page of flash available to write data. */
-    .start_addr = (uint32_t)&ParamTable, //0x36000,
+    .start_addr = ((uint32_t)&ParamTable_def)+0x1000, 
     .end_addr   = 0x3ffff,
 };
 
@@ -401,7 +401,8 @@ uint32_t int_flash_erase(uint32_t addr, size_t pages_cnt)
 
   main_status.FlashEraseBuzy = 1;
   rc = nrf_fstorage_erase(&fstorage, addr, pages_cnt, NULL);
-
+  APP_ERROR_CHECK(rc);
+  
 //  while (nrf_fstorage_is_busy(&fstorage)){
 //        sd_app_evt_wait();
 //        app_sched_execute();
@@ -459,8 +460,10 @@ uint32_t find_free_addr(uint32_t startAddr)
 void WriteParamTab(void)
 {
     uint32_t addr;
+    NewParamTable.id = PARAM_TAB_ID;
 { //debug
-#if 1
+
+#if 0
     NewParamTable.lsensor.upper_thresh_low = 0x0;
     NewParamTable.lsensor.upper_thresh_hight = 0x1;
     NewParamTable.lsensor.lower_thresh_low = 0x2;
@@ -469,6 +472,7 @@ void WriteParamTab(void)
     NewParamTable.lsensor.interrupt = 0x5;
     NewParamTable.lsensor.contr_reg = 0x6;
     NewParamTable.lsensor.int_persist_reg = 0x7;
+    addr = REPORTS_START_ADDR;
 #endif
 }
     if(nrf_fstorage_is_busy(&fstorage))
@@ -477,13 +481,14 @@ void WriteParamTab(void)
       case REQ:
         main_status.ParamTab_change_req = REQ_ERASE_IN_PROGRESS;
         main_status.FlashEraseBuzy = 1;
-        int_flash_erase((uint32_t)&ParamTable, 1);
+        int_flash_erase((uint32_t)pParamTable, 1);
         break;
       case REQ_ERASE_IN_PROGRESS:
         if(main_status.FlashEraseBuzy == 0){
           main_status.FlashWriteBuzy = 1;
           main_status.ParamTab_change_req = REQ_WRITE_IN_PROGRESS;
-          int_flash_write((uint32_t)&ParamTable,(uint32_t*)&NewParamTable, sizeof(ParamTable_t)>>2);
+//          int_flash_write(addr,(uint32_t*)&NewParamTable, sizeof(ParamTable_t)>>2);
+          int_flash_write((uint32_t)pParamTable,(uint32_t*)&NewParamTable, sizeof(ParamTable_t)>>2);
         }
         break;
       case REQ_WRITE_IN_PROGRESS:
@@ -491,6 +496,15 @@ void WriteParamTab(void)
           main_status.ParamTab_change_req = REQ_NONE;
         }
     }
+}
+
+static void initParamTab(void){
+  if(ParamTab.id != PARAM_TAB_ID){
+    ParamTable_t newParamTab = {PARAM_TAB_ID,LSENSOR_DEF, MOTOR_TIMEOUT_DEF,BATTERY_ALARM_LEVEL_DEF};
+    WriteParamTab();
+
+  }
+
 }
 
 /************************ RTC ****************/
@@ -503,19 +517,28 @@ static void rtc_handler(nrf_drv_rtc_int_type_t int_type)
     static uint32_t RTC_cntr_sec = 0;
     static uint32_t RTC_cntr_tick = 0;
     uint32_t err_code;
-// debug
-//    uint32_t deb_buf;
+//// debug
+//    static uint32_t deb_buf = 0;
 //    uint32_t deb_arr[2];
+//    if(RTC_cntr_sec == 5){
+//        deb_buf = int_flash_erase(REPORTS_START_ADDR,1);
+//    }    
 //    if(RTC_cntr_sec == 10){
-//        deb_buf = int_flash_erase((uint32_t)&ParamTable,1);
-//
-//    }    
-//    if(RTC_cntr_sec == 15){
 //        deb_arr[0] = 0x1234;
-//       int_flash_write((uint32_t)&reports+0x30, deb_arr, 4);
+//       int_flash_write((REPORTS_START_ADDR+8), deb_arr, 4);
+//
+//    }
+//   if(RTC_cntr_sec == 15){
+//        deb_buf = int_flash_erase(REPORTS_START_ADDR,1);
 //
 //    }    
-// end debug 
+//   if(RTC_cntr_sec == 20){
+//        deb_arr[0] = 0x5678;
+//       int_flash_write((REPORTS_START_ADDR+8), deb_arr, 4);
+//
+//    }
+//        
+//// end debug 
     if (int_type == NRF_DRV_RTC_INT_COMPARE0){ // one second event
       //   RTC_cntr =  nrfx_rtc_counter_get(&rtc);
       //    nrf_gpio_pin_toggle(RED_LED);  // for debugging only 
@@ -718,8 +741,9 @@ void init_periferal(void)
   rc = nrf_fstorage_init(&fstorage, p_fs_api, NULL);
   APP_ERROR_CHECK(rc);
 
+//  pParamTable = &ParamTable_def;
 
-  int_flash_read((uint32_t)&ParamTable, (uint32_t*)&ParamTab, sizeof(ParamTable_t));
+  int_flash_read((uint32_t)pParamTable, (uint32_t*)&ParamTab, sizeof(ParamTable_t));
 
   ReportAddr = find_free_addr(REPORTS_START_ADDR);
 

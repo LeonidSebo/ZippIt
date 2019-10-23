@@ -88,23 +88,23 @@
   <Watches active="0" update="Never"/>
  </Watch4>
  <Files>
-  <SessionOpenFile windowGroup="DockEditLeft" x="1" y="472" useTextEdit="1" useBinaryEdit="0" left="0" path="source/periferal.c" selected="1" top="461" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="35" y="74" useTextEdit="1" useBinaryEdit="0" left="0" path="source/periferal.h" selected="0" top="60" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="472" useTextEdit="1" useBinaryEdit="0" left="0" path="source/periferal.c" selected="1" top="461" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="74" useTextEdit="1" useBinaryEdit="0" left="0" path="source/periferal.h" selected="0" top="60" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="37" useTextEdit="1" useBinaryEdit="0" left="0" path="ble/BLE_Def.h" selected="0" top="30" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="73" useTextEdit="1" useBinaryEdit="0" left="0" path="BLE/CmdHandler.c" selected="0" top="30" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="111" useTextEdit="1" useBinaryEdit="0" left="0" path="source/bleCmdHandler.c" selected="0" top="91" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="22" y="119" useTextEdit="1" useBinaryEdit="0" left="0" path="source/lsensor.c" selected="0" top="98" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="18" y="87" useTextEdit="1" useBinaryEdit="0" left="0" path="source/types.h" selected="0" top="58" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="119" useTextEdit="1" useBinaryEdit="0" left="0" path="source/lsensor.c" selected="0" top="98" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="87" useTextEdit="1" useBinaryEdit="0" left="0" path="source/types.h" selected="0" top="58" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="20" useTextEdit="1" useBinaryEdit="0" left="0" path="BLE/CmdHandler.h" selected="0" top="19" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="26" y="19" useTextEdit="1" useBinaryEdit="0" left="0" path="source/bleCmdHandler.h" selected="0" top="0" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="19" useTextEdit="1" useBinaryEdit="0" left="0" path="source/bleCmdHandler.h" selected="0" top="0" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="107" useTextEdit="1" useBinaryEdit="0" left="0" path="BLE/Debug.c" selected="0" top="96" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="18" y="97" useTextEdit="1" useBinaryEdit="0" left="0" path="main.c" selected="0" top="78" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="97" useTextEdit="1" useBinaryEdit="0" left="0" path="main.c" selected="0" top="78" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="33" useTextEdit="1" useBinaryEdit="0" left="0" path="flash_placement.xml" selected="0" top="14" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="36" useTextEdit="1" useBinaryEdit="0" left="0" path="BLE/BLE_Init.c" selected="0" top="17" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="40" y="195" useTextEdit="1" useBinaryEdit="0" left="0" path="C:/Nordic_Semi/nRF5_SDK_15_3_0/components/libraries/fstorage/nrf_fstorage.c" selected="0" top="180" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="195" useTextEdit="1" useBinaryEdit="0" left="0" path="C:/Nordic_Semi/nRF5_SDK_15_3_0/components/libraries/fstorage/nrf_fstorage.c" selected="0" top="180" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="53" useTextEdit="1" useBinaryEdit="0" left="0" path="source/lsensor.h" selected="0" top="39" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="99" useTextEdit="1" useBinaryEdit="0" left="0" path="C:/Nordic_Semi/nRF5_SDK_15_3_0/components/libraries/util/app_error_weak.c" selected="0" top="86" codecName=""/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="99" useTextEdit="1" useBinaryEdit="0" left="0" path="C:/Nordic_Semi/nRF5_SDK_15_3_0/components/libraries/util/app_error_weak.c" selected="0" top="86" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="339" useTextEdit="1" useBinaryEdit="0" left="0" path="C:/Nordic_Semi/nRF5_SDK_15_3_0/components/libraries/pwr_mgmt/nrf_pwr_mgmt.c" selected="0" top="339" codecName="Default"/>
  </Files>
- <ARMCrossStudioWindow activeProject="ZipplT" fileDialogDefaultFilter="" autoConnectTarget="J-Link" buildConfiguration="Debug" sessionSettings="" debugSearchFileMap="" fileDialogInitialDirectory="D:/Project/ZippIt/MC/source" debugSearchPath="" autoConnectCapabilities="3711"/>
+ <ARMCrossStudioWindow activeProject="ZipplT" fileDialogDefaultFilter="*.c" autoConnectTarget="J-Link" buildConfiguration="Debug" sessionSettings="" debugSearchFileMap="" fileDialogInitialDirectory="D:/Project/ZippIt/MC/source" debugSearchPath="" autoConnectCapabilities="3199"/>
 </session>
