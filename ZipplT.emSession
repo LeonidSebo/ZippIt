@@ -1,0 +1,110 @@
+<!DOCTYPE CrossStudio_Session_File>
+<session>
+ <Bookmarks>
+  <BookmarkItem objectName="" line="98" column="0" path="D:/Project/ZippIt/MC/source/periferal.c" number="1" extra="static void switch_int_handler(uint8_t pin, uint8_t action)" color="5"/>
+  <BookmarkItem objectName="" line="458" column="0" path="D:/Project/ZippIt/MC/source/periferal.c" number="1" extra="void WriteParamTab(void)" color="5"/>
+ </Bookmarks>
+ <Breakpoints groups="Breakpoints" active_group="Breakpoints">
+  <BreakpointListItem trigger="" line="728" counter="0" hardwareBreakpoint="" isFunctionBreakpoint="false" action="" expression="" group="Breakpoints" type="Breakpoint" state="2" filename="source/periferal.c" useHWbreakpoint="false"/>
+  <BreakpointListItem trigger="" line="745" counter="0" hardwareBreakpoint="" isFunctionBreakpoint="false" action="" expression="" group="Breakpoints" type="Breakpoint" state="2" filename="source/periferal.c" useHWbreakpoint="false"/>
+  <Exceptions set="MemManage;UsageFault_Coprocessor;UsageFault_CheckingError;UsageFault_StateError;BusFault;ExceptionEntryReturnFault;HardFault"/>
+ </Breakpoints>
+ <ExecutionProfileWindow/>
+ <FrameBufferWindow>
+  <FrameBufferWindow bufferHeight="-1" addressSpace="" addressText="" bufferWidth="-1"/>
+ </FrameBufferWindow>
+ <Memory1>
+  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" addressOrder="0" columnsText="" refreshPeriod="0" name="ble_app_blinky_pca10040_s132" radix="16" sizeText="" addressText=""/>
+  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" addressOrder="0" columnsText="" refreshPeriod="0" name="ZipplT" radix="16" sizeText="" addressText="0x38000"/>
+ </Memory1>
+ <Memory2>
+  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" addressOrder="0" columnsText="" refreshPeriod="0" name="ble_app_blinky_pca10040_s132" radix="16" sizeText="" addressText=""/>
+  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" addressOrder="0" columnsText="" refreshPeriod="0" name="ZipplT" radix="16" sizeText="" addressText=""/>
+ </Memory2>
+ <Memory3>
+  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" addressOrder="0" columnsText="" refreshPeriod="0" name="ble_app_blinky_pca10040_s132" radix="16" sizeText="" addressText=""/>
+  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" addressOrder="0" columnsText="" refreshPeriod="0" name="ZipplT" radix="16" sizeText="" addressText=""/>
+ </Memory3>
+ <Memory4>
+  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" addressOrder="0" columnsText="" refreshPeriod="0" name="ble_app_blinky_pca10040_s132" radix="16" sizeText="" addressText=""/>
+  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" addressOrder="0" columnsText="" refreshPeriod="0" name="ZipplT" radix="16" sizeText="" addressText=""/>
+ </Memory4>
+ <Project>
+  <ProjectSessionItem path="ZipplT"/>
+  <ProjectSessionItem path="ZipplT;ZipplT"/>
+  <ProjectSessionItem path="ZipplT;ZipplT;Application"/>
+  <ProjectSessionItem path="ZipplT;ZipplT;Board Definition"/>
+  <ProjectSessionItem path="ZipplT;ZipplT;nRF_Libraries"/>
+  <ProjectSessionItem path="ZipplT;ZipplT;nRF_Log"/>
+  <ProjectSessionItem path="ZipplT;ZipplT;nRF_Segger_RTT"/>
+  <ProjectSessionItem path="ZipplT;ZipplT;nRF_SoftDevice"/>
+  <ProjectSessionItem path="ZipplT;ZipplT;Segger Startup Files"/>
+  <ProjectSessionItem path="ZipplT;ZipplT;UTF8/UTF16 converter"/>
+ </Project>
+ <Register1>
+  <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/msp;CPU/psp;CPU/cfbp;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="ble_app_blinky_pca10040_s132" decimalNodes="" octalNodes="" unsignedNodes=""/>
+  <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/msp;CPU/psp;CPU/cfbp;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="ZipplT" decimalNodes="" octalNodes="" unsignedNodes=""/>
+ </Register1>
+ <Register2>
+  <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/msp;CPU/psp;CPU/cfbp;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="ble_app_blinky_pca10040_s132" decimalNodes="" octalNodes="" unsignedNodes=""/>
+  <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;GPIOTE/TASKS_OUT[0];GPIOTE/TASKS_OUT[1];GPIOTE/TASKS_OUT[2];GPIOTE/TASKS_OUT[3];GPIOTE/TASKS_OUT[4];GPIOTE/TASKS_OUT[5];GPIOTE/TASKS_OUT[6];GPIOTE/TASKS_OUT[7];GPIOTE/TASKS_SET[0];GPIOTE/TASKS_SET[1];GPIOTE/TASKS_SET[2];GPIOTE/TASKS_SET[3];GPIOTE/TASKS_SET[4];GPIOTE/TASKS_SET[5];GPIOTE/TASKS_SET[6];GPIOTE/TASKS_SET[7];GPIOTE/TASKS_CLR[0];GPIOTE/TASKS_CLR[1];GPIOTE/TASKS_CLR[2];GPIOTE/TASKS_CLR[3];GPIOTE/TASKS_CLR[4];GPIOTE/TASKS_CLR[5];GPIOTE/TASKS_CLR[6];GPIOTE/TASKS_CLR[7];GPIOTE/EVENTS_IN[0];GPIOTE/EVENTS_IN[1];GPIOTE/EVENTS_IN[2];GPIOTE/EVENTS_IN[3];GPIOTE/EVENTS_IN[4];GPIOTE/EVENTS_IN[5];GPIOTE/EVENTS_IN[6];GPIOTE/EVENTS_IN[7];GPIOTE/EVENTS_PORT;GPIOTE/INTENSET;GPIOTE/INTENCLR;GPIOTE/CONFIG[0];GPIOTE/CONFIG[1];GPIOTE/CONFIG[2];GPIOTE/CONFIG[3];GPIOTE/CONFIG[4];GPIOTE/CONFIG[5];GPIOTE/CONFIG[6];GPIOTE/CONFIG[7]" binaryNodes="" asciiNodes="" openNodes="GPIOTE;GPIOTE/CONFIG[6]" name="ZipplT" decimalNodes="" octalNodes="" unsignedNodes=""/>
+ </Register2>
+ <Register3>
+  <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/msp;CPU/psp;CPU/cfbp;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="ble_app_blinky_pca10040_s132" decimalNodes="" octalNodes="" unsignedNodes=""/>
+  <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/msp;CPU/psp;CPU/cfbp;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="ZipplT" decimalNodes="" octalNodes="" unsignedNodes=""/>
+ </Register3>
+ <Register4>
+  <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/msp;CPU/psp;CPU/cfbp;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="ble_app_blinky_pca10040_s132" decimalNodes="" octalNodes="" unsignedNodes=""/>
+  <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/msp;CPU/psp;CPU/cfbp;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="ZipplT" decimalNodes="" octalNodes="" unsignedNodes=""/>
+ </Register4>
+ <Threads>
+  <ThreadsWindow showLists=""/>
+ </Threads>
+ <TraceWindow>
+  <Trace enabled="Yes"/>
+ </TraceWindow>
+ <Watch1>
+  <Watches active="1" update="Never">
+   <Watchpoint expression="*p_offset" name="*p_offset" radix="16" linenumber="0" filename="../ZipplT"/>
+   <Watchpoint expression="ParamTable" name="ParamTable" radix="16" linenumber="661" filename="source/periferal.c"/>
+   <Watchpoint expression="fstorage" name="fstorage" radix="-1" linenumber="347" filename="source/periferal.c"/>
+   <Watchpoint expression="p_evt" name="p_evt" radix="-1" linenumber="292" filename="source/periferal.c"/>
+   <Watchpoint expression="addr" name="addr" radix="16" linenumber="366" filename="source/periferal.c"/>
+   <Watchpoint expression="pCommandEncr" name="pCommandEncr" radix="16" linenumber="31" filename="BLE/CmdHandler.c"/>
+   <Watchpoint expression="pCommand" name="pCommand" radix="16" linenumber="55" filename="BLE/CmdHandler.c"/>
+   <Watchpoint expression="debug_buff" name="debug_buff" radix="-1" linenumber="707" filename="source/periferal.c"/>
+   <Watchpoint expression="p_btn" name="p_btn" radix="-1" linenumber="174" filename="C:/Nordic_Semi/nRF5_SDK_15_3_0/components/libraries/button/app_button.c"/>
+   <Watchpoint expression="motorTimeout" name="motorTimeout" radix="-1" linenumber="60" filename="source/bleCmdHandler.c"/>
+   <Watchpoint expression="main_status" name="main_status" radix="-1" linenumber="535" filename="source/periferal.c"/>
+  </Watches>
+ </Watch1>
+ <Watch2>
+  <Watches active="0" update="Never"/>
+ </Watch2>
+ <Watch3>
+  <Watches active="0" update="Never"/>
+ </Watch3>
+ <Watch4>
+  <Watches active="0" update="Never"/>
+ </Watch4>
+ <Files>
+  <SessionOpenFile windowGroup="DockEditLeft" x="1" y="472" useTextEdit="1" useBinaryEdit="0" left="0" path="source/periferal.c" selected="1" top="461" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="35" y="74" useTextEdit="1" useBinaryEdit="0" left="0" path="source/periferal.h" selected="0" top="60" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="37" useTextEdit="1" useBinaryEdit="0" left="0" path="ble/BLE_Def.h" selected="0" top="30" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="73" useTextEdit="1" useBinaryEdit="0" left="0" path="BLE/CmdHandler.c" selected="0" top="30" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="111" useTextEdit="1" useBinaryEdit="0" left="0" path="source/bleCmdHandler.c" selected="0" top="91" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="22" y="119" useTextEdit="1" useBinaryEdit="0" left="0" path="source/lsensor.c" selected="0" top="98" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="18" y="87" useTextEdit="1" useBinaryEdit="0" left="0" path="source/types.h" selected="0" top="58" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="20" useTextEdit="1" useBinaryEdit="0" left="0" path="BLE/CmdHandler.h" selected="0" top="19" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="26" y="19" useTextEdit="1" useBinaryEdit="0" left="0" path="source/bleCmdHandler.h" selected="0" top="0" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="107" useTextEdit="1" useBinaryEdit="0" left="0" path="BLE/Debug.c" selected="0" top="96" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="18" y="97" useTextEdit="1" useBinaryEdit="0" left="0" path="main.c" selected="0" top="78" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="33" useTextEdit="1" useBinaryEdit="0" left="0" path="flash_placement.xml" selected="0" top="14" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="36" useTextEdit="1" useBinaryEdit="0" left="0" path="BLE/BLE_Init.c" selected="0" top="17" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="40" y="195" useTextEdit="1" useBinaryEdit="0" left="0" path="C:/Nordic_Semi/nRF5_SDK_15_3_0/components/libraries/fstorage/nrf_fstorage.c" selected="0" top="180" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="53" useTextEdit="1" useBinaryEdit="0" left="0" path="source/lsensor.h" selected="0" top="39" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="99" useTextEdit="1" useBinaryEdit="0" left="0" path="C:/Nordic_Semi/nRF5_SDK_15_3_0/components/libraries/util/app_error_weak.c" selected="0" top="86" codecName=""/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="339" useTextEdit="1" useBinaryEdit="0" left="0" path="C:/Nordic_Semi/nRF5_SDK_15_3_0/components/libraries/pwr_mgmt/nrf_pwr_mgmt.c" selected="0" top="339" codecName="Default"/>
+ </Files>
+ <ARMCrossStudioWindow activeProject="ZipplT" fileDialogDefaultFilter="" autoConnectTarget="J-Link" buildConfiguration="Debug" sessionSettings="" debugSearchFileMap="" fileDialogInitialDirectory="D:/Project/ZippIt/MC/source" debugSearchPath="" autoConnectCapabilities="3711"/>
+</session>
