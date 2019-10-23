@@ -743,6 +743,7 @@ void init_periferal(void)
 //
 //    lsensor_weak_up();    //debug
       main_status.ParamTab_change_req = 1;
+
       WriteParamTab();
 //    lsensor_rx(LSEN_ALS_CONTR_REG, debug_buff, 1);
 //    lsensor_rx(LSEN_ALS_MEAS_RATE_REG, debug_buff+1, 8);
