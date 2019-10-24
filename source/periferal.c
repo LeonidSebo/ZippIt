@@ -736,7 +736,7 @@ void init_periferal(void)
   rtc_config();
   gpio_init();
   twi_init();                     //initialization i2c
-  lsensor_init();
+  //lsensor_init();
   p_fs_api = &nrf_fstorage_sd;
   rc = nrf_fstorage_init(&fstorage, p_fs_api, NULL);
   APP_ERROR_CHECK(rc);

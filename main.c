@@ -140,7 +140,7 @@ int main(void)
 //#endif
     power_management_init();
     BLE_Init();
-    NRF_LOG_INFO("Zipplt started.");
+    NRF_LOG_INFO("ZippIT started.");
     //Debug_EncriptDecript();
     // Enter main loop.
     for (;;)
