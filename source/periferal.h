@@ -17,6 +17,8 @@
 #include "nrf_fstorage.h"
 #include "nrf_fstorage_sd.h"
 #include "app_button.h"
+#include "crc32.h"
+#include "nrfx_saadc.h"
 
 
 #define BUTTON_DETECTION_DELAY          APP_TIMER_TICKS(50)                     /**< Delay from a GPIOTE event until a button is reported as pushed (in number of timer ticks). */
@@ -70,7 +72,7 @@
 
 #define INT_FLESH_START_ADDR    0x10000
 #define INT_FLESH_LAST_ADDR     0x7FFFF
-#define REPORTS_START_ADDR      0x39000
+#define REPORTS_START_ADDR      0x3A000
 
 #define PARAM_TAB_ADDR      0x10000
 #define PAGE_SIZE           0x01000
@@ -83,7 +85,7 @@
 uint32_t find_free_addr(uint32_t start_addr);
 //void fstorage_init(void);
 void int_flash_read(uint32_t addr, uint32_t* pdata, size_t size);
-uint32_t int_flash_erase(uint32_t addr, size_t pages_cnt);
+void int_flash_erase(uint32_t addr, size_t pages_cnt);
 void int_flash_write(uint32_t addr, uint32_t* pdata, size_t size);
 void WriteParamTab(void);
 
