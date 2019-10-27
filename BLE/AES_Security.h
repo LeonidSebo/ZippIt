@@ -13,7 +13,7 @@ typedef BLE_BLOCK AES_BLOCK_DATA;
 #define AES_BLOCK_SIZE_BYTE 16
 #define AES_KEY_SIZE_BYTE AES_BLOCK_SIZE_BYTE
 #define AES_IV_SIZE_BYTE AES_BLOCK_SIZE_BYTE
-#define AES_BLOCK_COUNTER_SIZE_BYTE 3
+#define AES_BLOCK_RANDOM_NO_SIZE_BYTE 3
 
 //#define AES_BLOCK_ID_SIZE_BYTE                      1
 //#define AES_BLOCK_DATALEN_SIZE_BYTE                 1
@@ -68,7 +68,7 @@ void AES_XorArray3(uint8_t *pIn0, uint8_t *pIn1, uint8_t *pOut, uint32_t Len);
 RESULT AES_RandFillArray(uint8_t *pArray, uint32_t Len);
 void AES_SetNewCharCounter(CHARACTERISTIC_ID CharacteristicID);
 void AES_Connect(uint8_t *pNewCounters);
-uint32_t AES_GetDefaultKey(CHARACTERISTIC_ID CharacteristicID);
+/* uint32_t AES_GetDefaultKey(CHARACTERISTIC_ID CharacteristicID); */
 RESULT AES_GetNewCounters(uint8_t *pNewCounters);
 void AES_SetNewRandomNumbers(uint8_t *pNewCounters);
 void AES_SetCountersDefault();

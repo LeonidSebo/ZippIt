@@ -30,6 +30,7 @@
 typedef enum _RESULT {
   ERR_NO,
   ERR_BLE_DEVICE_NOT_CONNECTED,
+  ERR_BLE_CHARACTERISTIC_ID,
   ERR_BLE_CMD_ID,
   ERR_BLE_CMD_LEN,
   ERR_BLE_CMD_DATA,
@@ -40,6 +41,7 @@ typedef enum _RESULT {
 
   ERR_AES_ECB_BLOCK_ENCRYPT,
   ERR_GET_RAND_BYTES
+
 } RESULT;
 
 typedef RESULT OPERATION_STATUS;
@@ -55,6 +57,12 @@ typedef enum _BLE_COMMANDS_ID {
   CMD_ID_SET_LIGHT_ALARM_LEVEL = 0x07,
   CMD_ID_SET_NUMBER_RETRIES = 0x08,
   CMD_ID_GET_RANDOM_NUMBERS = 0x09,
+  CMD_ID_GET_BATTERY_CHARGING_LEVEL = 0x0A,
+  //----------------------------
+  CMD_ID_FLASH_SETUP_WRITE = 0x0B,
+  CMD_ID_FLASH_SETUP_READ = 0x0C,
+  CMD_ID_FLASH_LOG_ERRASE = 0x0D,
+  CMD_ID_FLASH_LOG_READ = 0x0E,
   //  CMD_ID_FLASH_READ               = 0x0A,
   //  CMD_ID_FLASH_ERRASE             = 0x0B,
   //  CMD_ID_FLASH_WRITE              = 0x0C,
@@ -74,6 +82,7 @@ typedef enum _BLE_MESSAGE_ID {
   MSG_DEVICE_ERROR = 0x02,
   MSG_ATTENTION = 0x03,
   MSG_BLE_CMD_ID_UNKNOWN = 0x04,
+  MSG_LOG_FILE_IS_FULL = 0x05,
   //MSG_RANDOM_NUMBERS              = 0x05,
 } BLE_MESSAGE_ID;
 
@@ -159,12 +168,8 @@ typedef enum _CASE_STATE {
   CASE_UNLOCK,
   CASE_MANUAL,
   CASE_LOCK,
-  // Old definition
-  //CASE_LOCK,
-  //CASE_UNLOCK
 } CASE_STATE;
 
-//typedef uint8_t   CASE_STATE;
 typedef uint16_t BATTERY_ALARM_LEVEL;
 typedef uint16_t LIGHT_ALARM_LEVEL;
 typedef uint8_t NUMBER_RETRIES;
@@ -178,14 +183,19 @@ typedef struct _RTC_VALUE {
   uint32_t YEAR : 5;
 } RTC_VALUE;
 
-typedef struct _DEVICE_STATUS_OLD {
-  uint32_t DEVSTAT_SW1 : 1;
-  uint32_t DEVSTAT_SW2 : 1;
-  uint32_t DEVSTAT_SW3 : 1;
-  uint32_t DEVSTAT_WIRE_ALARM : 1;
-  uint32_t DEVSTAT_POWET_LOW : 1;
-  uint32_t DEVSTAT_Reserved_0 : 17;
-} DEVICE_STATUS_OLD;
+typedef struct _DEVICE_STATE {
+  uint32_t STATE_OF_SW_1 : 1;
+  uint32_t STATE_OF_SW_2 : 1;
+  uint32_t STATE_OF_SW_3 : 1;
+  uint32_t WIRE_PIN : 1;
+  uint32_t LIGHT_PENETRATION : 1;
+  uint32_t POWER_LOW : 1;
+  uint32_t Reserved_0 : 10;
+  /*-------------------------------*/
+  uint32_t LIGHT_SENSOR_NOT_PRESENT : 1;
+  uint32_t FLASH_LOG_FULL : 1;
+  uint32_t Reserved_1 : 20;
+} DEVICE_STATE;
 
 typedef struct _DEVICE_STATUS {
   uint32_t DEVSTAT_STATE_OF_SW_1 : 1;
@@ -203,22 +213,6 @@ typedef struct _DEVICE_STATUS {
   uint32_t DEVSTAT_Reserved_0 : 20;
 } DEVICE_STATUS;
 
-/*
-typedef struct _device_status_t
-{
-  uint32_t DEVSTAT_SW1          : 1;
-  uint32_t DEVSTAT_SW2          : 1;
-  uint32_t DEVSTAT_SW3          : 1;
-  uint32_t DEVSTAT_WIRE_PIN     : 1;
-  uint32_t DEVSTAT_POWER        : 1;
-  uint32_t LIGHT_SENSOR         : 1;
-  uint32_t unused0              : 2;
-  uint32_t ALARM_POWER          : 2;
-  uint32_t ALARM_LIGHT          : 2;
-
-  uint32_t DEVSTAT_Reserved_0   : 23;  
-}device_status_t;
-*/
 typedef struct _MOTOR_ACTIVE_TIME {
   uint16_t MOTOR_CW_FULL_TIME_MS;
   uint16_t MOTOR_CW_HALF_TIME_MS;
@@ -240,7 +234,7 @@ typedef enum _CHARACTERISTIC_ID {
   CHAR_MESSAGE
 } CHARACTERISTIC_ID;
 
-#define DEVICE_NAME "ZipplT_l" /**< Name of device. Will be included in the advertising data. */
+#define DEVICE_NAME "ZipplT" /**< Name of device. Will be included in the advertising data. */
 
 #define UUID_BASE                                             \
   { 0x66, 0x9A, 0x0C, 0x20, 0x00, 0x08, /**/ 0x23, 0x15, /**/ \
@@ -253,6 +247,7 @@ typedef enum _CHARACTERISTIC_ID {
 #define UUID_CHAR_COMMAND 0x1524
 #define UUID_CHAR_ANSWER 0x1525
 #define UUID_CHAR_MESSAGE 0x1526
+#define UUID_CHAR_FLASH_DATA 0x1527
 
 /*=============================================================*/
 /* Debuging */

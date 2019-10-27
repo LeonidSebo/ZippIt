@@ -46,11 +46,21 @@ RESULT AES_Init() {
   AES_SetCountersDefault();
 }
 
-void AES_SetCountersDefault() {
+void AES_SetCountersDefault() 
+{
+  uint32_t RandomDefault;
+  
+  RandomDefault = gKey[0] + (gKey[1] << 8) + (gKey[2] << 16);
   memset(gCharInfo, 0, sizeof(AES_CHARACTERISTIC_INFO) * CHARACTERISTICS_NO);
+  
+  gCharInfo[CHAR_COMMAND].PRandomNo = RandomDefault;
+  gCharInfo[CHAR_ANSWER].PRandomNo = RandomDefault;
+  gCharInfo[CHAR_MESSAGE].PRandomNo = RandomDefault;
+  /*
   gCharInfo[CHAR_COMMAND].PRandomNo = DEFAULT_VAL_PRANDOM_CHAR_COMMAND;
   gCharInfo[CHAR_ANSWER].PRandomNo = DEFAULT_VAL_PRANDOM_CHAR_ANSWER;
   gCharInfo[CHAR_MESSAGE].PRandomNo = DEFAULT_VAL_PRANDOM_CHAR_MESSAGE;
+  */
 }
 
 void AES_SetNewCharCounter(CHARACTERISTIC_ID CharacteristicID) {
@@ -68,7 +78,7 @@ RESULT AES_GetNewCounters(uint8_t *pNewCounters) {
   int32_t i;
 
   /* Generate new Counters values*/
-  res = AES_RandFillArray(pNewCounters, AES_BLOCK_COUNTER_SIZE_BYTE * CHARACTERISTICS_NO);
+  res = AES_RandFillArray(pNewCounters, AES_BLOCK_RANDOM_NO_SIZE_BYTE * CHARACTERISTICS_NO);
   RESULT_CHECK(res);
   //  for(i = 0; i < CHARACTERISTICS_NO; i++)
   //  {
@@ -83,7 +93,7 @@ void AES_SetNewRandomNumbers(uint8_t *pNewRandNumber) {
   for (i = 0; i < CHARACTERISTICS_NO; i++) {
     gCharInfo[i].PRandomNo = 0;
     memcpy(&(gCharInfo[i].PRandomNo),
-        pNewRandNumber + AES_BLOCK_COUNTER_SIZE_BYTE * i, AES_BLOCK_COUNTER_SIZE_BYTE);
+        pNewRandNumber + AES_BLOCK_RANDOM_NO_SIZE_BYTE * i, AES_BLOCK_RANDOM_NO_SIZE_BYTE);
     NRF_LOG_INFO("Key %d %02x", i, gCharInfo[i].PRandomNo);
   }
   AES_SetNewCharCounter(CHAR_COMMAND);
@@ -105,7 +115,7 @@ RESULT AES_BlockEncript(CHARACTERISTIC_ID CharacteristicID, uint8_t *pClearBlock
   /* Copy Security Key */
   memcpy(NewKey, gKey, AES_KEY_SIZE_BYTE);
   /* Copy Counter */
-  memcpy(NewKey, &(gCharInfo[CharacteristicID].PRandomNo), AES_BLOCK_COUNTER_SIZE_BYTE);
+  memcpy(NewKey, &(gCharInfo[CharacteristicID].PRandomNo), AES_BLOCK_RANDOM_NO_SIZE_BYTE);
 
   /* Fill the buffer with random numbers  */
   //res = AES_RandFillArray(pCipherBlock16, AES_BLOCK_SIZE_BYTE);
@@ -131,7 +141,7 @@ RESULT AES_BlockDecript(CHARACTERISTIC_ID CharacteristicID,
   /* Copy Security Key */
   memcpy(NewKey, gKey, AES_KEY_SIZE_BYTE);
   /* Copy PRandom number */
-  memcpy(NewKey, &(gCharInfo[CharacteristicID].PRandomNo), AES_BLOCK_COUNTER_SIZE_BYTE);
+  memcpy(NewKey, &(gCharInfo[CharacteristicID].PRandomNo), AES_BLOCK_RANDOM_NO_SIZE_BYTE);
 
   /* Encription IV */
   res = AES_EncodeBlock(NewKey, gIV, DecrBuffer);
@@ -151,7 +161,7 @@ RESULT AES_BlockEncript1(CHARACTERISTIC_ID CharacteristicID, uint8_t ID,
   /* Copy Security Key */
   memcpy(NewKey, gKey, AES_KEY_SIZE_BYTE);
   /* Copy PRandom number */
-  memcpy(NewKey, &(gCharInfo[CharacteristicID].PRandomNo), AES_BLOCK_COUNTER_SIZE_BYTE);
+  memcpy(NewKey, &(gCharInfo[CharacteristicID].PRandomNo), AES_BLOCK_RANDOM_NO_SIZE_BYTE);
 
   res = AES_RandFillArray(pCipherBlock16, AES_BLOCK_SIZE_BYTE);
   RESULT_CHECK(res);
@@ -174,7 +184,7 @@ RESULT AES_BlockDecript1(CHARACTERISTIC_ID CharacteristicID, uint8_t *pBlock16,
   RESULT res;
 
   memcpy(NewKey, gKey, AES_KEY_SIZE_BYTE);
-  memcpy(NewKey, &(gCharInfo[CharacteristicID].PRandomNo), AES_BLOCK_COUNTER_SIZE_BYTE);
+  memcpy(NewKey, &(gCharInfo[CharacteristicID].PRandomNo), AES_BLOCK_RANDOM_NO_SIZE_BYTE);
 
   AES_EncodeBlock(NewKey, gIV, DecrBuffer);
   AES_XorArray2(DecrBuffer, pBlock16, AES_BLOCK_SIZE_BYTE);
@@ -186,6 +196,7 @@ RESULT AES_BlockDecript1(CHARACTERISTIC_ID CharacteristicID, uint8_t *pBlock16,
   return ERR_NO;
 }
 
+/*
 uint32_t AES_GetDefaultKey(CHARACTERISTIC_ID CharacteristicID) {
   switch (CharacteristicID) {
   case CHAR_COMMAND:
@@ -197,6 +208,7 @@ uint32_t AES_GetDefaultKey(CHARACTERISTIC_ID CharacteristicID) {
   }
   return 0;
 }
+*/
 
 RESULT AES_EncodeBlock(uint8_t *pKey, uint8_t *pCleartext, uint8_t *pCiphertext) {
   nrf_ecb_hal_data_t aes;

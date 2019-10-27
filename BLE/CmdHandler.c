@@ -148,7 +148,7 @@ RESULT Cmd_SetMotorTimes(BLE_COMMAND *pCommand) {
     return Answer_OperationStatus(pCommand->CommandID, ERR_BLE_CMD_LEN);
   }
   //NRF_LOG_INFO("SetMotorTimes: CW = %d, CCW = %d", MotorTimes.MOTOR_CW_TIME_MS, MotorTimes.MOTOR_CCW_TIME_MS);
-  res = bleSetMotorTimes(MotorTimes);
+  res = bleSetMotorTimes(MotorTimes); 
   res = Answer_OperationStatus(pCommand->CommandID, res);
   return res;
 }
@@ -318,19 +318,19 @@ RESULT CmdH_DeviceDisconnected() {
 RESULT SetNewRandomNubers(bool AnswerChar) {
   RESULT res;
 
-  uint8_t pNewRandNumber[AES_BLOCK_COUNTER_SIZE_BYTE * CHARACTERISTICS_NO];
+  uint8_t pNewRandNumber[AES_BLOCK_RANDOM_NO_SIZE_BYTE * CHARACTERISTICS_NO];
 
-  res = AES_RandFillArray(pNewRandNumber, AES_BLOCK_COUNTER_SIZE_BYTE * CHARACTERISTICS_NO);
+  res = AES_RandFillArray(pNewRandNumber, AES_BLOCK_RANDOM_NO_SIZE_BYTE * CHARACTERISTICS_NO);
   RESULT_CHECK(res);
 
   //Debug_PrintHexArray("pNewRandNumber = ", pNewRandNumber, 9);
 
   AES_SetCountersDefault();
   if (AnswerChar) {
-    res = Answer_SendToHost(CMD_ID_GET_RANDOM_NUMBERS, ERR_NO, pNewRandNumber, AES_BLOCK_COUNTER_SIZE_BYTE * CHARACTERISTICS_NO);
+    res = Answer_SendToHost(CMD_ID_GET_RANDOM_NUMBERS, ERR_NO, pNewRandNumber, AES_BLOCK_RANDOM_NO_SIZE_BYTE * CHARACTERISTICS_NO);
   } else {
     //NRF_LOG_INFO("CmdH_Message_SendToHost.");
-    res = CmdH_Message_SendToHost(MSG_NEW_COUNTERS_VALUES, pNewRandNumber, AES_BLOCK_COUNTER_SIZE_BYTE * CHARACTERISTICS_NO);
+    res = CmdH_Message_SendToHost(MSG_NEW_COUNTERS_VALUES, pNewRandNumber, AES_BLOCK_RANDOM_NO_SIZE_BYTE * CHARACTERISTICS_NO);
   }
   if (res == ERR_NO) {
     AES_SetNewRandomNumbers(pNewRandNumber);
