@@ -57,7 +57,7 @@ typedef  enum _Month_t
 // and can be changed during operations.
 typedef struct _ParamTable_t
 {
-  uint32_t    id;
+//  uint32_t    id;
   lsensor_t   lsensor;
   motor_active_time_t    MotorActiveTime;
   uint32_t    HW_revision;
@@ -146,6 +146,10 @@ typedef enum _pow_st_t
   LOW,
   HIGHT
 }pow_st_t;
+
+#define YES   1
+#define NO    0
+
 
 typedef enum _alarm_t
 {

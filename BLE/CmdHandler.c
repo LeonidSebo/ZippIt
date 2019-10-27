@@ -148,7 +148,7 @@ RESULT Cmd_SetMotorTimes(BLE_COMMAND *pCommand) {
     return Answer_OperationStatus(pCommand->CommandID, ERR_BLE_CMD_LEN);
   }
   //NRF_LOG_INFO("SetMotorTimes: CW = %d, CCW = %d", MotorTimes.MOTOR_CW_TIME_MS, MotorTimes.MOTOR_CCW_TIME_MS);
-  /* res = bleSetMotorTimes(motor_active_time_t MotorTimes); */
+  res = bleSetMotorTimes(MotorTimes);
   res = Answer_OperationStatus(pCommand->CommandID, res);
   return res;
 }

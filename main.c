@@ -127,7 +127,6 @@ static void idle_state_handle(void)
 int main(void)
 {
     log_init();
-
 //    leds_init();
     timers_init();
 //    gpio_init();

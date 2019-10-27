@@ -11,7 +11,7 @@
 RESULT bleGetDeviceInfo(DEVICE_INFO* pDeviceInfo);
 RESULT bleSetCaseState(CASE_STATE CaseState);
 RESULT bleSetLedState(LED_CONTROL LedControl);
-RESULT bleSetMotorTimes(motor_active_time_t MotorTimes);
+RESULT bleSetMotorTimes(MOTOR_ACTIVE_TIME MotorTimes);
 RESULT bleSetRtcTime(uint32_t DateTime);
 RESULT bleSetBatteryAlarmLevel(uint32_t BatLevel);
 

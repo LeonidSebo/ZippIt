@@ -3,7 +3,6 @@
 
 
 //extern const report_t  reports;
-extern ble_status_t ble_status;
 extern ParamTable_t  NewParamTable;
 
 
@@ -31,11 +30,12 @@ rtc_tick_enable_t rtcTickRequest = {0,0,0};
 
 
 __attribute__ ((section(".ParamTab")))
-const ParamTable_t  ParamTable_def =  {PARAM_TAB_ID,LSENSOR_DEF, MOTOR_TIMEOUT_DEF,BATTERY_ALARM_LEVEL_DEF};
+const uint32_t endOfPrg = 0;
+//const ParamTable_t  ParamTable_def =  {PARAM_TAB_ID,LSENSOR_DEF, MOTOR_TIMEOUT_DEF,BATTERY_ALARM_LEVEL_DEF};
 //__attribute__ ((section(".ReportTab")))
 //const report_t  reports;
 
-const ParamTable_t* pParamTable = (ParamTable_t*) ((uint8_t*)&ParamTable_def + 0x1000);
+const ParamTable_t* pParamTable = (ParamTable_t*) ((uint8_t*)&endOfPrg + 0x1000);
 ParamTable_t  ParamTab;
 
 
@@ -168,7 +168,6 @@ static void switch_init(void)
 
 //    nrfx_gpiote_in_event_disable(nSW1_PIN);
 //    nrfx_gpiote_in_event_enable(nSW1_PIN, true);
-
 }
 
 
@@ -215,7 +214,6 @@ void gpio_init(void)
     nrf_drv_gpiote_in_config_t in_config = NRFX_GPIOTE_CONFIG_IN_SENSE_LOTOHI(false);
 
     in_config.pull = NRF_GPIO_PIN_PULLUP;
-
 }
 void StoreDevStatus(void)
 {
@@ -277,63 +275,84 @@ static uint32_t              m_adc_evt_counter;
 
 void saadc_callback(nrf_drv_saadc_evt_t const * p_event)
 {
-//  if (p_event->type == NRF_DRV_SAADC_EVT_DONE)
-//  {
-//    ret_code_t err_code;
-//                      
-//    err_code = nrf_drv_saadc_buffer_convert(p_event->data.done.p_buffer, SAMPLES_IN_BUFFER);
-//    APP_ERROR_CHECK(err_code);
-//    BatVoltage = p_event->data.done.p_buffer[0];
-//
-//    if(BatVoltage < ParamTable.BatteryAlarmLevel){
-//      if(device_status.AsStruct.DEVSTAT_POWER == HIGHT){
-//        device_status.AsStruct.DEVSTAT_POWER = LOW;
-//        device_status.AsStruct.ALARM_POWER = ALARM;
-//      }
-//    }
-//    if(device_status.AsStruct.ALARM_POWER == ALARM){
-//      if(ble_status.connected){
-//        get_current_status();
-//        DeviceStatus_Notification( *(DEVICE_STATUS*)&device_status.AsInt);
-//      }
-//      device_status.AsStruct.ALARM_POWER = ALARM_SENT;
-//    }
-//    if((BatVoltage > ParamTable.BatteryAlarmLevel)&&
-//       (device_status.AsStruct.ALARM_POWER != ALARM)){
-//        device_status.AsStruct.DEVSTAT_POWER = HIGHT;
-//        device_status.AsStruct.ALARM_POWER = ALARM_NONE;
-//    }
-//// cancel the measuring  
-//    nrf_drv_saadc_uninit();
-//    NRF_SAADC->INTENCLR = (SAADC_INTENCLR_END_Clear << SAADC_INTENCLR_END_Pos);
-//    NVIC_ClearPendingIRQ(SAADC_IRQn);
-//  }
+  if (p_event->type == NRF_DRV_SAADC_EVT_DONE)
+  {
+    ret_code_t err_code;
+                      
+    err_code = nrf_drv_saadc_buffer_convert(p_event->data.done.p_buffer, SAMPLES_IN_BUFFER);
+    APP_ERROR_CHECK(err_code);
+    BatVoltage = p_event->data.done.p_buffer[0];
+    NRF_LOG_INFO("BatVoltage = 0X%08x",BatVoltage);
+
+    if(BatVoltage < pParamTable->BatteryAlarmLevel){
+      if(device_status.DEVSTAT_POWER_LOW == NO){
+        device_status.DEVSTAT_POWER_LOW = YES;
+        device_status.DEVSTAT_POWER_LOW_CHANGED = YES;
+      }
+    }
+    if(device_status.DEVSTAT_POWER_LOW_CHANGED == YES){
+      get_current_status();
+      Message_DeviceStatus( device_status);
+      device_status.DEVSTAT_POWER_LOW_CHANGED = NO;
+    }
+    if((BatVoltage > pParamTable->BatteryAlarmLevel)&&
+       (device_status.DEVSTAT_POWER_LOW_CHANGED != YES)){
+        device_status.DEVSTAT_POWER_LOW = NO;
+        device_status.DEVSTAT_POWER_LOW_CHANGED = NO;
+    }
+// cancel the measuring  
+    nrf_drv_saadc_uninit();
+    NRF_SAADC->INTENCLR = (SAADC_INTENCLR_END_Clear << SAADC_INTENCLR_END_Pos);
+    NVIC_ClearPendingIRQ(SAADC_IRQn);
+  }
 }
 
 void saadc_init(void)
 {
-//    // reference voltage is 0.6 V.
-//    // resolution is 10 bit
-//    // input voltage devider is 6;
-//    // U (V) = 6 * 0.6 * mea_val/1024 
-//    ret_code_t err_code;
-//    nrf_saadc_channel_config_t channel_config =
-//        NRF_DRV_SAADC_DEFAULT_CHANNEL_CONFIG_SE(NRF_SAADC_INPUT_VDD);
-//
-//    err_code = nrf_drv_saadc_init(NULL, saadc_callback);
-//    APP_ERROR_CHECK(err_code);
-//
-//    err_code = nrf_drv_saadc_channel_init(0, &channel_config);
-//    APP_ERROR_CHECK(err_code);
-//
-//    err_code = nrf_drv_saadc_buffer_convert(m_buffer_pool[0], SAMPLES_IN_BUFFER);
-//    APP_ERROR_CHECK(err_code);
-//
-//    err_code = nrf_drv_saadc_buffer_convert(m_buffer_pool[1], SAMPLES_IN_BUFFER);
-//    APP_ERROR_CHECK(err_code);
+    // reference voltage is 0.6 V.
+    // resolution is 10 bit
+    // input voltage devider is 6;
+    // U (V) = 6 * 0.6 * mea_val/1024 
+    ret_code_t err_code;
+    nrf_saadc_channel_config_t channel_config =
+        NRF_DRV_SAADC_DEFAULT_CHANNEL_CONFIG_SE(NRF_SAADC_INPUT_VDD);
+
+    err_code = nrf_drv_saadc_init(NULL, saadc_callback);
+    APP_ERROR_CHECK(err_code);
+
+    err_code = nrf_drv_saadc_channel_init(0, &channel_config);
+    APP_ERROR_CHECK(err_code);
+
+    err_code = nrf_drv_saadc_buffer_convert(m_buffer_pool[0], SAMPLES_IN_BUFFER);
+    APP_ERROR_CHECK(err_code);
+
+    err_code = nrf_drv_saadc_buffer_convert(m_buffer_pool[1], SAMPLES_IN_BUFFER);
+    APP_ERROR_CHECK(err_code);
 }
 
 /************** imbedded flash *********************/
+
+/**@brief   Sleep until an event is received. */
+static void power_manage(void)
+{
+#ifdef SOFTDEVICE_PRESENT
+    (void) sd_app_evt_wait();
+#else
+    __WFE();
+#endif
+}
+void wait_for_flash_ready(nrf_fstorage_t const * p_fstorage)
+{
+    /* While fstorage is busy, sleep and wait for an event. */
+    while (nrf_fstorage_is_busy(p_fstorage))
+    {
+      if (NRF_LOG_PROCESS() == false)
+      {
+          nrf_pwr_mgmt_run();
+      }
+    }  
+}
+
 
 static void fstorage_evt_handler(nrf_fstorage_evt_t * p_evt)
 {
@@ -374,7 +393,7 @@ NRF_FSTORAGE_DEF(nrf_fstorage_t fstorage) =
      * You must set these manually, even at runtime, before nrf_fstorage_init() is called.
      * The function nrf5_flash_end_addr_get() can be used to retrieve the last address on the
      * last page of flash available to write data. */
-    .start_addr = ((uint32_t)&ParamTable_def)+0x1000, 
+    .start_addr = ((uint32_t)&endOfPrg)+0x1000, 
     .end_addr   = 0x3ffff,
 };
 
@@ -393,11 +412,11 @@ void int_flash_read(uint32_t addr, uint32_t* pdata, size_t size)
     }
 }
 
-uint32_t int_flash_erase(uint32_t addr, size_t pages_cnt)
+void int_flash_erase(uint32_t addr, size_t pages_cnt)
 {
   ret_code_t rc;
-  if(main_status.FlashEraseBuzy && main_status.FlashWriteBuzy)
-    return ERR_BLE_MODULE_BUZY;
+//  if(main_status.FlashEraseBuzy && main_status.FlashWriteBuzy)
+//    return ERR_BLE_MODULE_BUZY;
 
   main_status.FlashEraseBuzy = 1;
   rc = nrf_fstorage_erase(&fstorage, addr, pages_cnt, NULL);
@@ -407,7 +426,7 @@ uint32_t int_flash_erase(uint32_t addr, size_t pages_cnt)
 //        sd_app_evt_wait();
 //        app_sched_execute();
 //    }
-  return rc;
+  return ;
 }
 
 // write data to internal flash
@@ -426,16 +445,16 @@ void int_flash_write(uint32_t addr, uint32_t* pdata, size_t size)
     if(main_status.FlashEraseBuzy && main_status.FlashWriteBuzy)
       return;
     main_status.FlashWriteBuzy = 1;
-    rc = nrf_fstorage_write(&fstorage,addr,pdata,4,NULL);
-    APP_ERROR_CHECK(rc);
-    return;//debug
+//    rc = nrf_fstorage_write(&fstorage,addr,pdata,4,NULL);
+//    APP_ERROR_CHECK(rc);
+//    return;//debug
 
     if((addr + size) > INT_FLESH_LAST_ADDR){
       APP_ERROR_CHECK(NRF_ERROR_INVALID_PARAM);
     } 
     do{
-      nrf_fstorage_write(&fstorage,addr,pdata,4,NULL);
-//      nrf_fstorage_write(&fstorage,addr,pdata,WrSize,NULL);
+//      nrf_fstorage_write(&fstorage,addr,pdata,4,NULL);
+      nrf_fstorage_write(&fstorage,addr,pdata,WrSize,NULL);
 //      nrf_nvmc_write_words(addr, pdata, WrSize);
       size -= WrSize;
       pdata += WrSize;
@@ -460,23 +479,29 @@ uint32_t find_free_addr(uint32_t startAddr)
 void WriteParamTab(void)
 {
     uint32_t addr;
-    NewParamTable.id = PARAM_TAB_ID;
-{ //debug
+    uint32_t ParamTabCrc;
+    uint8_t currentParamTable[sizeof(ParamTable_t)+sizeof(uint32_t)];
 
-#if 0
-    NewParamTable.lsensor.upper_thresh_low = 0x0;
-    NewParamTable.lsensor.upper_thresh_hight = 0x1;
-    NewParamTable.lsensor.lower_thresh_low = 0x2;
-    NewParamTable.lsensor.lower_thresh_hight = 0x3;
-    NewParamTable.lsensor.meas_rate = 0x4;
-    NewParamTable.lsensor.interrupt = 0x5;
-    NewParamTable.lsensor.contr_reg = 0x6;
-    NewParamTable.lsensor.int_persist_reg = 0x7;
-    addr = REPORTS_START_ADDR;
+#if 1     
+//debug
+    int_flash_read((uint32_t)pParamTable+4, (uint32_t*)&currentParamTable, 1);
+    NRF_LOG_INFO("currentParamTable[0] = 0x%02x",currentParamTable[0]);
+
 #endif
-}
     if(nrf_fstorage_is_busy(&fstorage))
       return;
+#if 1
+    if(main_status.ParamTab_change_req != REQ_NONE){
+      main_status.ParamTab_change_req = REQ_NONE;
+      int_flash_erase((uint32_t)pParamTable, 1);
+//      wait_for_flash_ready(&fstorage);
+//      ParamTabCrc = crc32_compute((uint8_t*)&NewParamTable,sizeof(ParamTable_t),NULL);
+//      memcpy(currentParamTable,&NewParamTable,sizeof(ParamTable_t));
+//      memcpy(currentParamTable+sizeof(ParamTable_t),&ParamTabCrc,sizeof(uint32_t));
+//      int_flash_write((uint32_t)pParamTable,(uint32_t*)currentParamTable,sizeof(currentParamTable));
+//      wait_for_flash_ready(&fstorage);
+    }
+#else
     switch(main_status.ParamTab_change_req){
       case REQ:
         main_status.ParamTab_change_req = REQ_ERASE_IN_PROGRESS;
@@ -496,15 +521,33 @@ void WriteParamTab(void)
           main_status.ParamTab_change_req = REQ_NONE;
         }
     }
+#endif
 }
 
 static void initParamTab(void){
-  if(ParamTab.id != PARAM_TAB_ID){
-    ParamTable_t newParamTab = {PARAM_TAB_ID,LSENSOR_DEF, MOTOR_TIMEOUT_DEF,BATTERY_ALARM_LEVEL_DEF};
-    WriteParamTab();
-
-  }
-
+    uint8_t currentParamTable[sizeof(ParamTable_t)+sizeof(uint32_t)];
+    uint32_t  ParamTabCrc;
+    uint32_t  currCrc;
+//    NRF_LOG_INFO("initParamTab() begin");
+    int_flash_read((uint32_t)pParamTable, (uint32_t*)&currentParamTable, sizeof(currentParamTable));
+//    NRF_LOG_INFO("ParamTable: %02x %02x %02x %02x %02x",currentParamTable[0],currentParamTable[1],currentParamTable[2],currentParamTable[3],currentParamTable[4]);
+    ParamTabCrc = crc32_compute(currentParamTable,sizeof(ParamTable_t),NULL);
+//    NRF_LOG_INFO("ParamTabCrc: %08x",ParamTabCrc);
+    currCrc = *(uint32_t*)(currentParamTable + sizeof(ParamTable_t));
+//    NRF_LOG_INFO("currCrc: %08x",currCrc);
+    if(ParamTabCrc != currCrc){
+        NRF_LOG_INFO("update ParamTable");
+        ParamTable_t newTab = {LSENSOR_DEF, MOTOR_TIMEOUT_DEF,BATTERY_ALARM_LEVEL_DEF};
+        ParamTabCrc = crc32_compute((uint8_t*)&newTab,sizeof(ParamTable_t),NULL);
+        memcpy(currentParamTable,&newTab,sizeof(ParamTable_t));
+        memcpy(currentParamTable+sizeof(ParamTable_t),&ParamTabCrc,sizeof(uint32_t));
+        int_flash_erase((uint32_t)pParamTable, 1);
+        wait_for_flash_ready(&fstorage);
+        int_flash_write((uint32_t)pParamTable,(uint32_t*)currentParamTable,sizeof(currentParamTable));
+        wait_for_flash_ready(&fstorage);
+    }else
+    NRF_LOG_INFO("initParamTab - ParamTable is good");
+    NRF_LOG_INFO("initParamTab() end");
 }
 
 /************************ RTC ****************/
@@ -517,28 +560,6 @@ static void rtc_handler(nrf_drv_rtc_int_type_t int_type)
     static uint32_t RTC_cntr_sec = 0;
     static uint32_t RTC_cntr_tick = 0;
     uint32_t err_code;
-//// debug
-//    static uint32_t deb_buf = 0;
-//    uint32_t deb_arr[2];
-//    if(RTC_cntr_sec == 5){
-//        deb_buf = int_flash_erase(REPORTS_START_ADDR,1);
-//    }    
-//    if(RTC_cntr_sec == 10){
-//        deb_arr[0] = 0x1234;
-//       int_flash_write((REPORTS_START_ADDR+8), deb_arr, 4);
-//
-//    }
-//   if(RTC_cntr_sec == 15){
-//        deb_buf = int_flash_erase(REPORTS_START_ADDR,1);
-//
-//    }    
-//   if(RTC_cntr_sec == 20){
-//        deb_arr[0] = 0x5678;
-//       int_flash_write((REPORTS_START_ADDR+8), deb_arr, 4);
-//
-//    }
-//        
-//// end debug 
     if (int_type == NRF_DRV_RTC_INT_COMPARE0){ // one second event
       //   RTC_cntr =  nrfx_rtc_counter_get(&rtc);
       //    nrf_gpio_pin_toggle(RED_LED);  // for debugging only 
@@ -552,11 +573,11 @@ static void rtc_handler(nrf_drv_rtc_int_type_t int_type)
 //        LockSwitchEvent_handler();
         WireEvent_handler();
         StoreDevStatus();           
-//        if((RTC_cntr_sec & 0x0F)==0){ // measure Battery Voltage every 16 second
-//          saadc_init();
-//          err_code = nrfx_saadc_sample();
-//          APP_ERROR_CHECK(err_code);
-//        }
+        if((RTC_cntr_sec & 0x0F)==0){ // measure Battery Voltage every 16 second
+          saadc_init();
+          err_code = nrfx_saadc_sample();
+          APP_ERROR_CHECK(err_code);
+        }
         if(CaseStateLedOnTime > 1){
           CaseStateLedOnTime--;
         }else if(CaseStateLedOnTime == 1){
@@ -736,57 +757,15 @@ void init_periferal(void)
   rtc_config();
   gpio_init();
   twi_init();                     //initialization i2c
-  //lsensor_init();
   p_fs_api = &nrf_fstorage_sd;
   rc = nrf_fstorage_init(&fstorage, p_fs_api, NULL);
   APP_ERROR_CHECK(rc);
-
-//  pParamTable = &ParamTable_def;
-
   int_flash_read((uint32_t)pParamTable, (uint32_t*)&ParamTab, sizeof(ParamTable_t));
-
+  initParamTab();
   ReportAddr = find_free_addr(REPORTS_START_ADDR);
+  lsensor_init();
 
   {// debug start
-    uint8_t debug_buff[15];
-
-//        uint32_t deb_buf;
-//        led_control.LED_GREEN = LED_BLINK; //debug
-//        rtcTickRequest.led_bilnk = 1;
-//        nrf_drv_rtc_tick_enable(&rtc,true);
-
-//        while(1){
-//          debug_buff[0] = nrf_gpio_pin_read(nSW1_PIN);
-//          debug_buff[1] = nrf_gpio_pin_read(nSW2_PIN);
-//          debug_buff[2] = nrf_gpio_pin_read(nSW3_PIN);
-//        }
-//        bleSetCaseState(CASE_UNLOCK);
-//        deb_buf = int_flash_erase((uint32_t)&ParamTable,1);
-//        led_control.LED_BLUE = LED_BLINK; //debug
-
-//
-//    lsensor_weak_up();    //debug
-      main_status.ParamTab_change_req = 1;
-
-      WriteParamTab();
-//    lsensor_rx(LSEN_ALS_CONTR_REG, debug_buff, 1);
-//    lsensor_rx(LSEN_ALS_MEAS_RATE_REG, debug_buff+1, 8);
-//    lsensor_rx(LSEN_INTERRUPT_REG, debug_buff+9, 1);
-//    lsensor_rx(LSEN_ALS_THRES_UP_0_REG, debug_buff+10, 4);
-//    lsensor_rx(LSEN_INTERRUPT_PERSIST_REG, debug_buff+14, 1);
-
-//    while(true){
-//      lsensor_rx(LSEN_ALS_DATA_CH1_0_REG, debug_buff, 4);
-//  }
-
-//        nrf_gpio_pin_set(LED_B_PIN);
-//        nrf_gpio_pin_clear(LED_B_PIN);
-
-//        nrf_gpio_pin_set(MOTOR_EN_PIN);
-//        nrf_gpio_pin_set(MOTOR_IN1_PIN);
-//        nrf_gpio_pin_clear(MOTOR_IN1_PIN);
-//        nrf_gpio_pin_set(MOTOR_IN2_PIN);
-//        nrf_gpio_pin_clear(MOTOR_IN2_PIN);
 
   }// debug end
 

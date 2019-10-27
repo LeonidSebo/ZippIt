@@ -56,13 +56,12 @@ RESULT bleSetCaseState(CASE_STATE CaseState)
     case CASE_MANUAL:
       if(device_status.DEVSTAT_STATE_OF_SW_2){ // case isn't manual
         if(device_status.DEVSTAT_STATE_OF_SW_3){  // case is looked
-          MOTOR_OPEN_CASE();
-          motorTimeout = ParamTab.MotorActiveTime.MOTOR_CW_HALF_TIME_MS;
+          MOTOR_CLOSE_CASE();
           main_status.change_case_state_req = CASE_STATE_REQ_MANUAL;
           rtcTickRequest.motor_buzy = 1;
           nrf_drv_rtc_tick_enable(&rtc,true);
         }else{
-          MOTOR_CLOSE_CASE();
+          MOTOR_OPEN_CASE();
           motorTimeout = ParamTab.MotorActiveTime.MOTOR_CCW_HALF_TIME_MS;
           main_status.change_case_state_req = CASE_STATE_REQ_MANUAL;
           rtcTickRequest.motor_buzy = 1;
@@ -101,9 +100,14 @@ RESULT bleSetLedState(LED_CONTROL LedControl)
   return ERR_NO;
 }
 
-RESULT  bleSetMotorTimes(motor_active_time_t MotorTimes)
+RESULT  bleSetMotorTimes(MOTOR_ACTIVE_TIME MotorTimes)
 {
   uint32_t addr;
+  NRF_LOG_INFO("seent MotorTimes = %d  %d   %d  %d",MotorTimes.MOTOR_CCW_FULL_TIME_MS,
+                                              MotorTimes.MOTOR_CCW_HALF_TIME_MS,
+                                              MotorTimes.MOTOR_CW_FULL_TIME_MS,
+                                              MotorTimes.MOTOR_CW_HALF_TIME_MS);
+
   if((pParamTable->MotorActiveTime.MOTOR_CCW_FULL_TIME_MS != MotorTimes.MOTOR_CCW_FULL_TIME_MS)||
      (pParamTable->MotorActiveTime.MOTOR_CCW_HALF_TIME_MS  != MotorTimes.MOTOR_CCW_HALF_TIME_MS)||
      (pParamTable->MotorActiveTime.MOTOR_CW_FULL_TIME_MS  != MotorTimes.MOTOR_CW_FULL_TIME_MS)||
@@ -112,13 +116,20 @@ RESULT  bleSetMotorTimes(motor_active_time_t MotorTimes)
     if(main_status.ParamTab_change_req != REQ_NONE){
       return ERR_BLE_MODULE_BUZY;
     }
-    memcpy(&NewParamTable,pParamTable,sizeof(ParamTable_t));
+    int_flash_read((uint32_t)pParamTable, (uint32_t*)&NewParamTable, sizeof(ParamTable_t));
     NewParamTable.MotorActiveTime.MOTOR_CCW_FULL_TIME_MS = MotorTimes.MOTOR_CCW_FULL_TIME_MS;
     NewParamTable.MotorActiveTime.MOTOR_CCW_HALF_TIME_MS  = MotorTimes.MOTOR_CCW_HALF_TIME_MS;
     NewParamTable.MotorActiveTime.MOTOR_CW_FULL_TIME_MS = MotorTimes.MOTOR_CW_FULL_TIME_MS;
     NewParamTable.MotorActiveTime.MOTOR_CW_HALF_TIME_MS  = MotorTimes.MOTOR_CW_HALF_TIME_MS;
     main_status.ParamTab_change_req = REQ;
   }
+  
+  NRF_LOG_INFO("MotorActiveTime = %d  %d   %d  %d",NewParamTable.MotorActiveTime.MOTOR_CCW_FULL_TIME_MS,
+                                                    NewParamTable.MotorActiveTime.MOTOR_CCW_HALF_TIME_MS,
+                                                    NewParamTable.MotorActiveTime.MOTOR_CW_FULL_TIME_MS,
+                                                    NewParamTable.MotorActiveTime.MOTOR_CW_HALF_TIME_MS);
+
+
   return ERR_NO;
 }
 
@@ -136,7 +147,7 @@ RESULT bleSetBatteryAlarmLevel(uint32_t BatLevel)
     if(main_status.ParamTab_change_req != REQ_NONE){
       return ERR_BLE_MODULE_BUZY;
     }
-    memcpy(&NewParamTable,pParamTable,sizeof(ParamTable_t));
+    int_flash_read((uint32_t)pParamTable, (uint32_t*)&NewParamTable, sizeof(ParamTable_t));
     NewParamTable.BatteryAlarmLevel = BatLevel;
     main_status.ParamTab_change_req = REQ;
   }
@@ -151,7 +162,7 @@ RESULT bleSetLIghtAlarmLevel(uint32_t LightAlarm)
     if(main_status.ParamTab_change_req != REQ_NONE){
       return ERR_BLE_MODULE_BUZY;
     }
-    memcpy(&NewParamTable,pParamTable,sizeof(ParamTable_t));
+    int_flash_read((uint32_t)pParamTable, (uint32_t*)&NewParamTable, sizeof(ParamTable_t));
     NewParamTable.lsensor.upper_thresh_hight = (LightAlarm >> 8)&0xFF;
     NewParamTable.lsensor.upper_thresh_low = LightAlarm & 0xFF;
     main_status.ParamTab_change_req = REQ;

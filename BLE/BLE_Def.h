@@ -240,7 +240,7 @@ typedef enum _CHARACTERISTIC_ID {
   CHAR_MESSAGE
 } CHARACTERISTIC_ID;
 
-#define DEVICE_NAME "ZipplT" /**< Name of device. Will be included in the advertising data. */
+#define DEVICE_NAME "ZipplT_l" /**< Name of device. Will be included in the advertising data. */
 
 #define UUID_BASE                                             \
   { 0x66, 0x9A, 0x0C, 0x20, 0x00, 0x08, /**/ 0x23, 0x15, /**/ \
