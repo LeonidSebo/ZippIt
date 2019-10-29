@@ -12,7 +12,8 @@ extern uint32_t motorTimeout;
 extern rtc_tick_enable_t rtcTickRequest;
 
 uint16_t sw_rewision  = 0x0100;
-ParamTable_t  NewParamTable;
+uint8_t  NewParamTable[sizeof(ParamTable_t) + sizeof(uint32_t)] = {DEF_PARAM_TAB};
+
 
 
 
@@ -31,9 +32,11 @@ RESULT bleSetCaseState(CASE_STATE CaseState)
     return ERR_BLE_MODULE_BUZY;
   }
   get_current_status();
-//  uint32_t sw_state = device_status.AsInt & 0x07;
   switch(CaseState){
     case CASE_LOCK:
+      if(device_status.DEVSTAT_POWER_LOW == YES){
+        return ERR_LOW_BATTERY;
+      }
       if(device_status.DEVSTAT_STATE_OF_SW_3){ // case isn't looked
         MOTOR_CLOSE_CASE();
         motorTimeout = (device_status.DEVSTAT_STATE_OF_SW_2 == 0)? ParamTab.MotorActiveTime.MOTOR_CCW_HALF_TIME_MS:
@@ -56,6 +59,9 @@ RESULT bleSetCaseState(CASE_STATE CaseState)
     case CASE_MANUAL:
       if(device_status.DEVSTAT_STATE_OF_SW_2){ // case isn't manual
         if(device_status.DEVSTAT_STATE_OF_SW_3){  // case is looked
+          if(device_status.DEVSTAT_POWER_LOW == YES){
+            return ERR_LOW_BATTERY;
+          }
           MOTOR_CLOSE_CASE();
           main_status.change_case_state_req = CASE_STATE_REQ_MANUAL;
           rtcTickRequest.motor_buzy = 1;
@@ -103,7 +109,9 @@ RESULT bleSetLedState(LED_CONTROL LedControl)
 RESULT  bleSetMotorTimes(MOTOR_ACTIVE_TIME MotorTimes)
 {
   uint32_t addr;
-  NRF_LOG_INFO("seent MotorTimes = %d  %d   %d  %d",MotorTimes.MOTOR_CCW_FULL_TIME_MS,
+  motor_active_time_t    MotorActiveTime;
+
+  NRF_LOG_INFO("sent MotorTimes = %d  %d   %d  %d",MotorTimes.MOTOR_CCW_FULL_TIME_MS,
                                               MotorTimes.MOTOR_CCW_HALF_TIME_MS,
                                               MotorTimes.MOTOR_CW_FULL_TIME_MS,
                                               MotorTimes.MOTOR_CW_HALF_TIME_MS);
@@ -113,21 +121,23 @@ RESULT  bleSetMotorTimes(MOTOR_ACTIVE_TIME MotorTimes)
      (pParamTable->MotorActiveTime.MOTOR_CW_FULL_TIME_MS  != MotorTimes.MOTOR_CW_FULL_TIME_MS)||
      (pParamTable->MotorActiveTime.MOTOR_CW_HALF_TIME_MS  != MotorTimes.MOTOR_CW_HALF_TIME_MS))
   {
+
     if(main_status.ParamTab_change_req != REQ_NONE){
       return ERR_BLE_MODULE_BUZY;
     }
     int_flash_read((uint32_t)pParamTable, (uint32_t*)&NewParamTable, sizeof(ParamTable_t));
-    NewParamTable.MotorActiveTime.MOTOR_CCW_FULL_TIME_MS = MotorTimes.MOTOR_CCW_FULL_TIME_MS;
-    NewParamTable.MotorActiveTime.MOTOR_CCW_HALF_TIME_MS  = MotorTimes.MOTOR_CCW_HALF_TIME_MS;
-    NewParamTable.MotorActiveTime.MOTOR_CW_FULL_TIME_MS = MotorTimes.MOTOR_CW_FULL_TIME_MS;
-    NewParamTable.MotorActiveTime.MOTOR_CW_HALF_TIME_MS  = MotorTimes.MOTOR_CW_HALF_TIME_MS;
-    main_status.ParamTab_change_req = REQ;
+    MotorActiveTime.MOTOR_CCW_FULL_TIME_MS = MotorTimes.MOTOR_CCW_FULL_TIME_MS;
+    MotorActiveTime.MOTOR_CCW_HALF_TIME_MS  = MotorTimes.MOTOR_CCW_HALF_TIME_MS;
+    MotorActiveTime.MOTOR_CW_FULL_TIME_MS = MotorTimes.MOTOR_CW_FULL_TIME_MS;
+    MotorActiveTime.MOTOR_CW_HALF_TIME_MS  = MotorTimes.MOTOR_CW_HALF_TIME_MS;
+    memcpy(NewParamTable + MOTOR_ACTIVE_TIME_OFFSET,&MotorActiveTime,sizeof(motor_active_time_t));
+    main_status.ParamTab_change_req = REQ_CHNGE;
   }
   
-  NRF_LOG_INFO("MotorActiveTime = %d  %d   %d  %d",NewParamTable.MotorActiveTime.MOTOR_CCW_FULL_TIME_MS,
-                                                    NewParamTable.MotorActiveTime.MOTOR_CCW_HALF_TIME_MS,
-                                                    NewParamTable.MotorActiveTime.MOTOR_CW_FULL_TIME_MS,
-                                                    NewParamTable.MotorActiveTime.MOTOR_CW_HALF_TIME_MS);
+  NRF_LOG_INFO("MotorActiveTime = %d  %d   %d  %d",MotorActiveTime.MOTOR_CCW_FULL_TIME_MS,
+                                                    MotorActiveTime.MOTOR_CCW_HALF_TIME_MS,
+                                                    MotorActiveTime.MOTOR_CW_FULL_TIME_MS,
+                                                    MotorActiveTime.MOTOR_CW_HALF_TIME_MS);
 
 
   return ERR_NO;
@@ -148,8 +158,8 @@ RESULT bleSetBatteryAlarmLevel(uint32_t BatLevel)
       return ERR_BLE_MODULE_BUZY;
     }
     int_flash_read((uint32_t)pParamTable, (uint32_t*)&NewParamTable, sizeof(ParamTable_t));
-    NewParamTable.BatteryAlarmLevel = BatLevel;
-    main_status.ParamTab_change_req = REQ;
+    memcpy(NewParamTable+BAT_ALARM_LEVEL_OFFSET,&BatLevel,sizeof(BatLevel));
+    main_status.ParamTab_change_req = REQ_CHNGE;
   }
   return ERR_NO;
 }
@@ -163,9 +173,9 @@ RESULT bleSetLIghtAlarmLevel(uint32_t LightAlarm)
       return ERR_BLE_MODULE_BUZY;
     }
     int_flash_read((uint32_t)pParamTable, (uint32_t*)&NewParamTable, sizeof(ParamTable_t));
-    NewParamTable.lsensor.upper_thresh_hight = (LightAlarm >> 8)&0xFF;
-    NewParamTable.lsensor.upper_thresh_low = LightAlarm & 0xFF;
-    main_status.ParamTab_change_req = REQ;
+    NewParamTable[1] = (LightAlarm >> 8)&0xFF;
+    NewParamTable[0] = LightAlarm & 0xFF;
+    main_status.ParamTab_change_req = REQ_CHNGE;
   }
   return ERR_NO;
 }

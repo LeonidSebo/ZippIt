@@ -54,14 +54,14 @@ typedef struct _lsensor_t
   uint8_t   int_persist_reg;
 }lsensor_t;
 
-#define LSENSOR_DEF     { LSEN_UPPER_THRESH_LOW_DEF, \
+#define LSENSOR_DEF      LSEN_UPPER_THRESH_LOW_DEF, \
                           LSEN_UPPER_THRESH_HIGHT_DEF,\
                           LSEN_LOWER_THRESH_LOW_DEF,\
                           LSEN_LOWER_THRESH_HIGHT_DEF,\
                           LSEN_ALS_MEAS_RATE_DEF,\
                           LSEN_INTERRUPT_DEF,\
                           LSEN_CONTR_REG_DEF,\
-                          LSEN_INT_PERSIST_DEF }
+                          LSEN_INT_PERSIST_DEF 
 
 #define I2C_REPETITION_MAX          5
 

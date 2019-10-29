@@ -3,7 +3,7 @@
 
 
 //extern const report_t  reports;
-extern ParamTable_t  NewParamTable;
+extern uint8_t  NewParamTable[sizeof(ParamTable_t) + sizeof(uint32_t)];
 
 
 DateTime_int_t CurrentDateTime = {0};
@@ -31,13 +31,70 @@ rtc_tick_enable_t rtcTickRequest = {0,0,0};
 
 __attribute__ ((section(".ParamTab")))
 const uint32_t endOfPrg = 0;
-//const ParamTable_t  ParamTable_def =  {PARAM_TAB_ID,LSENSOR_DEF, MOTOR_TIMEOUT_DEF,BATTERY_ALARM_LEVEL_DEF};
-//__attribute__ ((section(".ReportTab")))
-//const report_t  reports;
 
 const ParamTable_t* pParamTable = (ParamTable_t*) ((uint8_t*)&endOfPrg + 0x1000);
 ParamTable_t  ParamTab;
 
+uint8_t debug_buffer[128];
+
+static void fstorage_evt_handler(nrf_fstorage_evt_t * p_evt)
+{
+    if (p_evt->result != NRF_SUCCESS)
+    {
+        NRF_LOG_INFO("--> Event received: ERROR while executing an fstorage operation.");
+        return;
+    }
+
+    switch (p_evt->id)
+    {
+        case NRF_FSTORAGE_EVT_WRITE_RESULT:
+        {
+            NRF_LOG_INFO("--> Event received: wrote %d bytes at address 0x%x.",
+                         p_evt->len, p_evt->addr);
+            NRF_LOG_INFO("--> wrote %02x %02x %02x %02x %02x %02x ",((uint8_t*)&NewParamTable)[0],
+                        ((uint8_t*)&NewParamTable)[1],((uint8_t*)&NewParamTable)[2],((uint8_t*)&NewParamTable)[3],
+                        ((uint8_t*)&NewParamTable)[4],((uint8_t*)&NewParamTable)[5]);
+            int_flash_read((uint32_t)pParamTable, (uint32_t*) debug_buffer, sizeof(debug_buffer));
+            NRF_LOG_INFO("--> readed %02x %02x %02x %02x %02x %02x ",((uint8_t*)&debug_buffer)[0],
+                        ((uint8_t*)&debug_buffer)[1],((uint8_t*)&debug_buffer)[2],((uint8_t*)&debug_buffer)[3],
+                        ((uint8_t*)&debug_buffer)[4],((uint8_t*)&debug_buffer)[5]);
+
+
+            if(main_status.ParamTab_change_req == REQ_WRITE){
+              main_status.ParamTab_change_req = REQ_NONE;
+            }
+        } break;
+
+        case NRF_FSTORAGE_EVT_ERASE_RESULT:
+        {
+            NRF_LOG_INFO("--> Event received: erased %d page from address 0x%x.",
+                         p_evt->len, p_evt->addr);
+      
+            if(main_status.ParamTab_change_req == REQ_CHNGE){
+              main_status.ParamTab_change_req = REQ_WRITE;
+            }
+
+        } break;
+
+        default:
+            break;
+    }
+}
+
+
+
+NRF_FSTORAGE_DEF(nrf_fstorage_t fstorage) =
+{
+    /* Set a handler for fstorage events. */
+    .evt_handler = fstorage_evt_handler,
+
+    /* These below are the boundaries of the flash space assigned to this instance of fstorage.
+     * You must set these manually, even at runtime, before nrf_fstorage_init() is called.
+     * The function nrf5_flash_end_addr_get() can be used to retrieve the last address on the
+     * last page of flash available to write data. */
+    .start_addr = (uint32_t)&endOfPrg, 
+    .end_addr   = 0x3ffff,
+};
 
 void get_current_status(void)
 {
@@ -103,7 +160,8 @@ static void switch_int_handler(uint8_t pin, uint8_t action)
     case nSW1_PIN:  // case is open
       device_status.DEVSTAT_STATE_OF_SW_1_CHANGED = 1; 
       if(main_status.change_case_state_req == CASE_STATE_REQ_UNLOOK){
-        nrf_gpio_pin_set(LED_G_PIN);
+        SetLedControl(LED_OFF,LED_ON,LED_OFF);
+//        nrf_gpio_pin_set(LED_G_PIN);
         CaseStateLedOnTime = CASE_STATE_LED_ON_TIME;
         stop_motor();
       }
@@ -111,7 +169,8 @@ static void switch_int_handler(uint8_t pin, uint8_t action)
     case nSW2_PIN: // case is in manual mode
       device_status.DEVSTAT_STATE_OF_SW_2_CHANGED = 1; 
       if(main_status.change_case_state_req == CASE_STATE_REQ_MANUAL){
-        nrf_gpio_pin_set(LED_B_PIN);
+        SetLedControl(LED_OFF,LED_OFF,LED_ON);
+//        nrf_gpio_pin_set(LED_B_PIN);
         CaseStateLedOnTime = CASE_STATE_LED_ON_TIME;
         stop_motor();
       }
@@ -120,7 +179,8 @@ static void switch_int_handler(uint8_t pin, uint8_t action)
       main_status.LockSwitchEventTime = SW_EVENT_TIMEOUT;
       device_status.DEVSTAT_STATE_OF_SW_3_CHANGED = 1; 
       if(main_status.change_case_state_req == CASE_STATE_REQ_LOOK){
-        nrf_gpio_pin_set(LED_R_PIN);
+        SetLedControl(LED_ON,LED_OFF,LED_OFF);
+//        nrf_gpio_pin_set(LED_R_PIN);
         CaseStateLedOnTime = CASE_STATE_LED_ON_TIME;
         stop_motor();
       }
@@ -135,7 +195,8 @@ static void switch_int_handler(uint8_t pin, uint8_t action)
       main_status.StoreDevStatusReq = 1;
 
       CaseStateLedOnTime = ALARM_BLINK_TIME;
-      led_control.LED_RED = LED_BLINK;
+      SetLedControl(LED_BLINK,LED_OFF,LED_OFF);
+//      led_control.LED_RED = LED_BLINK;
       rtcTickRequest.led_bilnk = 1;
       break;
   }
@@ -209,20 +270,50 @@ void gpio_init(void)
 /***********   initialization leds ***************************/
     bsp_board_init(BSP_INIT_LEDS);   
 
-
 /********** init SENSOR_INT_PIN *******************************/
     nrf_drv_gpiote_in_config_t in_config = NRFX_GPIOTE_CONFIG_IN_SENSE_LOTOHI(false);
 
     in_config.pull = NRF_GPIO_PIN_PULLUP;
 }
+
+void SetLedControl(LED_STATE R,LED_STATE G,LED_STATE B)
+{
+  uint32_t state;
+  led_control.LED_RED = R;
+  led_control.LED_GREEN = G;
+  led_control.LED_BLUE = B;
+
+   NRF_LOG_INFO("Led State - 0x%02x", *(uint8_t*)&led_control);
+
+  if((R == LED_BLINK)||(G == LED_BLINK)||(B == LED_BLINK)){
+    NRF_LOG_INFO("RGB - 0x%02x  0x%02x  0x%02x", *(uint8_t*)&R, *(uint8_t*)&G, *(uint8_t*)&B);
+     rtcTickRequest.led_bilnk = 1;
+  }
+  if(R == LED_ON)
+    nrf_gpio_pin_set(LED_R_PIN);
+  else 
+    nrf_gpio_pin_clear(LED_R_PIN);
+  if(G == LED_ON)
+    nrf_gpio_pin_set(LED_G_PIN);
+  else 
+    nrf_gpio_pin_clear(LED_G_PIN);
+  if(B == LED_ON)
+    nrf_gpio_pin_set(LED_B_PIN);
+  else 
+    nrf_gpio_pin_clear(LED_B_PIN);
+
+}
+
 void StoreDevStatus(void)
 {
+  if(nrf_fstorage_is_busy(&fstorage))
+    return;
   if(main_status.StoreDevStatusReq){
     report_t report_t;
     get_current_status();
     report_t.DateTime.AsInt = CurrentDateTime.AsInt;
     *(uint32_t*)&report_t.current_status =*(uint32_t*)&device_status;
-    int_flash_write(ReportAddr, &report_t.DateTime.AsInt, sizeof(report_t)/sizeof(uint32_t));
+    int_flash_write(ReportAddr, &report_t.DateTime.AsInt, sizeof(report_t));
     ReportAddr += sizeof(report_t);
     main_status.StoreDevStatusReq = 0;
   }
@@ -282,9 +373,10 @@ void saadc_callback(nrf_drv_saadc_evt_t const * p_event)
     err_code = nrf_drv_saadc_buffer_convert(p_event->data.done.p_buffer, SAMPLES_IN_BUFFER);
     APP_ERROR_CHECK(err_code);
     BatVoltage = p_event->data.done.p_buffer[0];
-    NRF_LOG_INFO("BatVoltage = 0X%08x",BatVoltage);
+    NRF_LOG_INFO("BatVoltage = %d",BatVoltage);
 
     if(BatVoltage < pParamTable->BatteryAlarmLevel){
+      NRF_LOG_INFO("Low Battery");
       if(device_status.DEVSTAT_POWER_LOW == NO){
         device_status.DEVSTAT_POWER_LOW = YES;
         device_status.DEVSTAT_POWER_LOW_CHANGED = YES;
@@ -295,11 +387,11 @@ void saadc_callback(nrf_drv_saadc_evt_t const * p_event)
       Message_DeviceStatus( device_status);
       device_status.DEVSTAT_POWER_LOW_CHANGED = NO;
     }
-    if((BatVoltage > pParamTable->BatteryAlarmLevel)&&
-       (device_status.DEVSTAT_POWER_LOW_CHANGED != YES)){
-        device_status.DEVSTAT_POWER_LOW = NO;
-        device_status.DEVSTAT_POWER_LOW_CHANGED = NO;
-    }
+//    if((BatVoltage > pParamTable->BatteryAlarmLevel)&&
+//       (device_status.DEVSTAT_POWER_LOW_CHANGED != YES)){
+//        device_status.DEVSTAT_POWER_LOW = NO;
+//        device_status.DEVSTAT_POWER_LOW_CHANGED = NO;
+//    }
 // cancel the measuring  
     nrf_drv_saadc_uninit();
     NRF_SAADC->INTENCLR = (SAADC_INTENCLR_END_Clear << SAADC_INTENCLR_END_Pos);
@@ -354,50 +446,6 @@ void wait_for_flash_ready(nrf_fstorage_t const * p_fstorage)
 }
 
 
-static void fstorage_evt_handler(nrf_fstorage_evt_t * p_evt)
-{
-    if (p_evt->result != NRF_SUCCESS)
-    {
-        NRF_LOG_INFO("--> Event received: ERROR while executing an fstorage operation.");
-        return;
-    }
-
-    switch (p_evt->id)
-    {
-        case NRF_FSTORAGE_EVT_WRITE_RESULT:
-        {
-           main_status.FlashWriteBuzy = 0;
-
-            NRF_LOG_INFO("--> Event received: wrote %d bytes at address 0x%x.",
-                         p_evt->len, p_evt->addr);
-        } break;
-
-        case NRF_FSTORAGE_EVT_ERASE_RESULT:
-        {
-            main_status.FlashEraseBuzy = 0;
-            NRF_LOG_INFO("--> Event received: erased %d page from address 0x%x.",
-                         p_evt->len, p_evt->addr);
-        } break;
-
-        default:
-            break;
-    }
-}
-
-NRF_FSTORAGE_DEF(nrf_fstorage_t fstorage) =
-{
-    /* Set a handler for fstorage events. */
-    .evt_handler = fstorage_evt_handler,
-
-    /* These below are the boundaries of the flash space assigned to this instance of fstorage.
-     * You must set these manually, even at runtime, before nrf_fstorage_init() is called.
-     * The function nrf5_flash_end_addr_get() can be used to retrieve the last address on the
-     * last page of flash available to write data. */
-    .start_addr = ((uint32_t)&endOfPrg)+0x1000, 
-    .end_addr   = 0x3ffff,
-};
-
-
 // read data from internal flash
 // addr - start write address
 // pdata - pointer to data buffer
@@ -415,17 +463,9 @@ void int_flash_read(uint32_t addr, uint32_t* pdata, size_t size)
 void int_flash_erase(uint32_t addr, size_t pages_cnt)
 {
   ret_code_t rc;
-//  if(main_status.FlashEraseBuzy && main_status.FlashWriteBuzy)
-//    return ERR_BLE_MODULE_BUZY;
 
-  main_status.FlashEraseBuzy = 1;
   rc = nrf_fstorage_erase(&fstorage, addr, pages_cnt, NULL);
   APP_ERROR_CHECK(rc);
-  
-//  while (nrf_fstorage_is_busy(&fstorage)){
-//        sd_app_evt_wait();
-//        app_sched_execute();
-//    }
   return ;
 }
 
@@ -442,24 +482,29 @@ void int_flash_write(uint32_t addr, uint32_t* pdata, size_t size)
     uint32_t WrOffset = addr&0x0000FFF;
     uint32_t WrSize = ((WrOffset + size)>PAGE_SIZE_WORDS)? (PAGE_SIZE_WORDS - WrOffset):size;  
     
-    if(main_status.FlashEraseBuzy && main_status.FlashWriteBuzy)
-      return;
-    main_status.FlashWriteBuzy = 1;
-//    rc = nrf_fstorage_write(&fstorage,addr,pdata,4,NULL);
-//    APP_ERROR_CHECK(rc);
-//    return;//debug
-
     if((addr + size) > INT_FLESH_LAST_ADDR){
       APP_ERROR_CHECK(NRF_ERROR_INVALID_PARAM);
     } 
     do{
 //      nrf_fstorage_write(&fstorage,addr,pdata,4,NULL);
-      nrf_fstorage_write(&fstorage,addr,pdata,WrSize,NULL);
+    rc =  nrf_fstorage_write(&fstorage,addr,pdata,WrSize,NULL);
+    APP_ERROR_CHECK(rc);
 //      nrf_nvmc_write_words(addr, pdata, WrSize);
       size -= WrSize;
       pdata += WrSize;
       WrSize = (size > PAGE_SIZE_WORDS)? PAGE_SIZE_WORDS:size;   
     }while(size);  
+}
+
+static void print_flash_info(nrf_fstorage_t * p_fstorage)
+{
+    NRF_LOG_INFO("========| flash info |========");
+    NRF_LOG_INFO("Start address: \t%08x ",   p_fstorage->start_addr);
+    NRF_LOG_INFO("End address: \t%08x",     p_fstorage->end_addr);
+    NRF_LOG_INFO("event handler: \t%08x",      p_fstorage->evt_handler);
+    NRF_LOG_INFO("erase unit: \t%d bytes",      p_fstorage->p_flash_info->erase_unit);
+    NRF_LOG_INFO("program unit: \t%d bytes",    p_fstorage->p_flash_info->program_unit);
+    NRF_LOG_INFO("==============================");
 }
 
 uint32_t find_free_addr(uint32_t startAddr)
@@ -481,18 +526,24 @@ void WriteParamTab(void)
     uint32_t addr;
     uint32_t ParamTabCrc;
     uint8_t currentParamTable[sizeof(ParamTable_t)+sizeof(uint32_t)];
-
-#if 1     
+#if 0
+   uint8_t deb_buf[128];
+   uint8_t i;
+   for(i = 0;i<128;i++){
+      debug_buffer[i] = 2;
+   }
+#endif
+#if 0     
 //debug
-    int_flash_read((uint32_t)pParamTable+4, (uint32_t*)&currentParamTable, 1);
-    NRF_LOG_INFO("currentParamTable[0] = 0x%02x",currentParamTable[0]);
+    int_flash_read((uint32_t)pParamTable, (uint32_t*)&currentParamTable, 8);
+    NRF_LOG_INFO("currentParamTable[0] = 0x%02x   Address = 0x%08x",currentParamTable[4],(uint32_t)pParamTable+4);
 
 #endif
     if(nrf_fstorage_is_busy(&fstorage))
       return;
-#if 1
-    if(main_status.ParamTab_change_req != REQ_NONE){
-      main_status.ParamTab_change_req = REQ_NONE;
+#if 0
+    if(main_status.ParamTab_change_req == REQ_CHNGE){
+      main_status.ParamTab_change_req = REQ_WRITE;
       int_flash_erase((uint32_t)pParamTable, 1);
 //      wait_for_flash_ready(&fstorage);
 //      ParamTabCrc = crc32_compute((uint8_t*)&NewParamTable,sizeof(ParamTable_t),NULL);
@@ -503,23 +554,25 @@ void WriteParamTab(void)
     }
 #else
     switch(main_status.ParamTab_change_req){
-      case REQ:
-        main_status.ParamTab_change_req = REQ_ERASE_IN_PROGRESS;
-        main_status.FlashEraseBuzy = 1;
+      case REQ_CHNGE:
+        NRF_LOG_INFO("Erase ParamTable");
         int_flash_erase((uint32_t)pParamTable, 1);
         break;
-      case REQ_ERASE_IN_PROGRESS:
-        if(main_status.FlashEraseBuzy == 0){
-          main_status.FlashWriteBuzy = 1;
-          main_status.ParamTab_change_req = REQ_WRITE_IN_PROGRESS;
-//          int_flash_write(addr,(uint32_t*)&NewParamTable, sizeof(ParamTable_t)>>2);
-          int_flash_write((uint32_t)pParamTable,(uint32_t*)&NewParamTable, sizeof(ParamTable_t)>>2);
-        }
+      case REQ_WRITE:
+#if 1
+        int_flash_read((uint32_t)pParamTable, (uint32_t*) currentParamTable, 8);
+        NRF_LOG_INFO("ParamTable  %01x %01x %01x %01x %01x %01x ...",currentParamTable[0],
+           currentParamTable[1],currentParamTable[2],currentParamTable[3],currentParamTable[4],currentParamTable[5]);
+#endif
+
+        ParamTabCrc = crc32_compute(NewParamTable,sizeof(ParamTable_t),NULL);
+        memcpy(NewParamTable+sizeof(ParamTable_t),&ParamTabCrc,sizeof(ParamTabCrc));
+//        memcpy(currentParamTable+sizeof(ParamTable_t),&ParamTabCrc,sizeof(uint32_t));
+//        NRF_LOG_INFO("Write ParamTable  %01x %01x %01x %01x %01x %01x ...",currentParamTable[0],
+//          currentParamTable[1],currentParamTable[2],currentParamTable[3],currentParamTable[4],currentParamTable[5]);
+        int_flash_write((uint32_t)pParamTable,(uint32_t*)NewParamTable,sizeof(NewParamTable));
+//        int_flash_write((uint32_t)pParamTable,(uint32_t*)debug_buffer,sizeof(deb_buf));
         break;
-      case REQ_WRITE_IN_PROGRESS:
-        if(main_status.FlashWriteBuzy == 0){
-          main_status.ParamTab_change_req = REQ_NONE;
-        }
     }
 #endif
 }
@@ -528,28 +581,34 @@ static void initParamTab(void){
     uint8_t currentParamTable[sizeof(ParamTable_t)+sizeof(uint32_t)];
     uint32_t  ParamTabCrc;
     uint32_t  currCrc;
-//    NRF_LOG_INFO("initParamTab() begin");
+    NRF_LOG_INFO("initParamTab() begin");
+#define FIRST_TIME 0
+#if FIRST_TIME
+//        NRF_LOG_INFO("update ParamTable");
+//        ParamTable_t newTab = {LSENSOR_DEF, MOTOR_TIMEOUT_DEF,BATTERY_ALARM_LEVEL_DEF};
+//        memcpy(&NewParamTable,&newTab,sizeof(ParamTable_t));
+        main_status.ParamTab_change_req = REQ_CHNGE;
+        int_flash_erase((uint32_t)pParamTable, 5);
+//        WriteParamTab();
+#else
+
     int_flash_read((uint32_t)pParamTable, (uint32_t*)&currentParamTable, sizeof(currentParamTable));
-//    NRF_LOG_INFO("ParamTable: %02x %02x %02x %02x %02x",currentParamTable[0],currentParamTable[1],currentParamTable[2],currentParamTable[3],currentParamTable[4]);
+    memcpy(&NewParamTable,currentParamTable,sizeof(ParamTable_t));
     ParamTabCrc = crc32_compute(currentParamTable,sizeof(ParamTable_t),NULL);
-//    NRF_LOG_INFO("ParamTabCrc: %08x",ParamTabCrc);
-    currCrc = *(uint32_t*)(currentParamTable + sizeof(ParamTable_t));
-//    NRF_LOG_INFO("currCrc: %08x",currCrc);
+    int_flash_read((uint32_t)pParamTable + sizeof(ParamTable_t), (uint32_t*)&currCrc, sizeof(uint32_t));
+    NRF_LOG_INFO("ParamTabCrc = 0x%08x     currCrc = 0x%08x",ParamTabCrc,currCrc);
     if(ParamTabCrc != currCrc){
         NRF_LOG_INFO("update ParamTable");
-        ParamTable_t newTab = {LSENSOR_DEF, MOTOR_TIMEOUT_DEF,BATTERY_ALARM_LEVEL_DEF};
-        ParamTabCrc = crc32_compute((uint8_t*)&newTab,sizeof(ParamTable_t),NULL);
-        memcpy(currentParamTable,&newTab,sizeof(ParamTable_t));
-        memcpy(currentParamTable+sizeof(ParamTable_t),&ParamTabCrc,sizeof(uint32_t));
-        int_flash_erase((uint32_t)pParamTable, 1);
-        wait_for_flash_ready(&fstorage);
-        int_flash_write((uint32_t)pParamTable,(uint32_t*)currentParamTable,sizeof(currentParamTable));
-        wait_for_flash_ready(&fstorage);
-    }else
-    NRF_LOG_INFO("initParamTab - ParamTable is good");
+//        ParamTable_t newTab = {LSENSOR_DEF, MOTOR_TIMEOUT_DEF,HW_REVISION,BATTERY_ALARM_LEVEL_DEF};
+//        memcpy(&NewParamTable,&newTab,sizeof(ParamTable_t));
+        main_status.ParamTab_change_req = REQ_CHNGE;
+        WriteParamTab();
+    }else{
+      NRF_LOG_INFO("initParamTab - ParamTable is good");
+    }
     NRF_LOG_INFO("initParamTab() end");
+#endif
 }
-
 /************************ RTC ****************/
 
 /** @brief: Function for handling the RTC0 interrupts.
@@ -631,9 +690,10 @@ static void rtc_handler(nrf_drv_rtc_int_type_t int_type)
             motorTimeout -= RTC_TICK_TIME;
           }else{
             CaseStateLedOnTime = CASE_STATE_ERROR_LED_BLINK_TIME;
-            led_control.LED_GREEN = LED_BLINK;
-            led_control.LED_RED = LED_BLINK;
-            rtcTickRequest.led_bilnk = 1;
+            SetLedControl(LED_BLINK,LED_BLINK,LED_OFF);
+//            led_control.LED_GREEN = LED_BLINK;
+//            led_control.LED_RED = LED_BLINK;
+//            rtcTickRequest.led_bilnk = 1;
             stop_motor();
           }
         }
@@ -761,6 +821,7 @@ void init_periferal(void)
   rc = nrf_fstorage_init(&fstorage, p_fs_api, NULL);
   APP_ERROR_CHECK(rc);
   int_flash_read((uint32_t)pParamTable, (uint32_t*)&ParamTab, sizeof(ParamTable_t));
+  print_flash_info(&fstorage);
   initParamTab();
   ReportAddr = find_free_addr(REPORTS_START_ADDR);
   lsensor_init();

@@ -1,0 +1,1 @@
+04 08 B8 0B DC 05 B8 0B DC 05		Set motor time

@@ -64,9 +64,23 @@
                                   nrf_gpio_pin_clear(MOTOR_EN_PIN);	\
                                   main_status.MotorPowerOffReq = 0;     
 
-#define PARAM_TAB_ID            0x4C656F6E
-#define MOTOR_TIMEOUT_DEF {3000,1500,3000,1500}
-#define BATTERY_ALARM_LEVEL_DEF     0x0100
+
+//#define MOTOR_TIMEOUT_DEF         {3000,1500,3000,1500}
+//#define BATTERY_ALARM_LEVEL_DEF   0x0100
+//#define HW_REVISION               0x00000010
+
+#define DEF_MOTOR_ACTIVE_TIME     0xb8,0x0b,0xdc,0x05,0xb8,0x0b,0xdc,0x05
+#define DEF_HW_REVISION           0x00,0x01,0x00,0x00
+#define DEF_BAT_ALARM_LEVEL       0x00,0x03,0x00,0x00
+#define DEF_CRC                   0x00,0x00,0x00,0x00
+#define DEF_PARAM_TAB             LSENSOR_DEF,\
+                                  DEF_MOTOR_ACTIVE_TIME,\
+                                  DEF_HW_REVISION,\
+                                  DEF_BAT_ALARM_LEVEL,\
+                                  DEF_CRC
+
+
+
 
 #define RTC_TICK_TIME       125
 
@@ -102,6 +116,7 @@ void get_current_status(void);
 void WireEvent_handler(void);
 void rtc_config(void);
 void init_periferal(void);
+void SetLedControl(LED_STATE R,LED_STATE G,LED_STATE B);
 
 //void buttons_init(void);
 

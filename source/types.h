@@ -64,6 +64,10 @@ typedef struct _ParamTable_t
   uint32_t    BatteryAlarmLevel;
 }ParamTable_t;
 
+#define MOTOR_ACTIVE_TIME_OFFSET    sizeof(lsensor_t)
+#define HW_REVISEON_OFFSET       sizeof(lsensor_t)+sizeof(motor_active_time_t)
+#define BAT_ALARM_LEVEL_OFFSET         HW_REVISEON_OFFSET+sizeof(uint32_t)
+
 #define device_status_t     DEVICE_STATUS
 //typedef struct _device_status_t
 //{
@@ -108,9 +112,7 @@ typedef struct _main_status_t
   uint32_t MotorPowerOffReq        :  2;     //0 - not request , 1 - Request motor power off, 
                                             //2 -  Request motor power off after one second
   uint32_t MotorAttemptCntr        :  2;
-  uint32_t FlashEraseBuzy         :  1;
-  uint32_t FlashWriteBuzy         :  1;
-  uint32_t spare                   : 11;
+  uint32_t spare                   : 13;
 }main_status_t;
 
 typedef struct _rtc_tick_enable_t{
@@ -136,9 +138,9 @@ typedef struct _ble_status_t
 typedef enum _req_t
 {
   REQ_NONE,
-  REQ,
-  REQ_ERASE_IN_PROGRESS,
-  REQ_WRITE_IN_PROGRESS
+  REQ_CHNGE,
+  REQ_WRITE,
+  REQ_BUZY
 }req_t;
 
 typedef enum _pow_st_t

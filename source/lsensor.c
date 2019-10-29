@@ -104,9 +104,6 @@ void lsensor_sleep(void)
   uint8_t contr_reg = pParamTable->lsensor.contr_reg & 0xFE; // Stand-by mode
   nrfx_gpiote_in_event_disable(SENSOR_INT_PIN);            // desable interrupt
   lsensor_tx(LSEN_ALS_CONTR_REG,&contr_reg,1);             // send reg value
-  
-//  nrf_gpio_pin_write(LED_R_PIN,0);    // debug
-//  nrf_gpio_pin_write(LED_G_PIN,1);    // debug
 }
 
 void lsensor_weak_up(void)
@@ -116,6 +113,4 @@ void lsensor_weak_up(void)
   lsensor_tx(LSEN_ALS_CONTR_REG,&contr_reg,1);             // send reg value
   nrfx_gpiote_in_event_enable(SENSOR_INT_PIN, true);
 
-//  nrf_gpio_pin_write(LED_R_PIN,1);    // debug
-//  nrf_gpio_pin_write(LED_G_PIN,0);    // debug
 }
