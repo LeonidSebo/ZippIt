@@ -17,8 +17,8 @@ extern ble_main_service_t m_lbs;
 
 uint8_t gCommand[CHAR_COMMAND_SIZE];      /* Write */
 uint8_t gAnswer[CHAR_ANSWER_SIZE];        /* Indication */
-uint8_t gDeviceStatus[CHAR_ANSWER_SIZE];  /* Indication */
-uint8_t gFlashData[CHAR_ANSWER_SIZE];     /* Notification */
+uint8_t gMessage[CHAR_MESSAGE_SIZE];      /* Indication */
+uint8_t gFlashData[CHAR_FLASH_DATA_SIZE];     /* Notification */
 
 /* ================================== */
 
@@ -136,7 +136,7 @@ uint32_t ble_main_service_init(ble_main_service_t *p_lbs, const BLE_MAIN_SERVICE
 
   add_char_params.is_value_user = true;
   //gDeviceStatus                       = 0x0000;
-  add_char_params.p_init_value = (uint8_t *)&gDeviceStatus;
+  add_char_params.p_init_value = (uint8_t *)&gMessage;
 
   //add_char_params.read_access         = SEC_OPEN;
   add_char_params.cccd_write_access = SEC_OPEN;
@@ -152,7 +152,7 @@ uint32_t ble_main_service_init(ble_main_service_t *p_lbs, const BLE_MAIN_SERVICE
   /* === Add FLASH_DATA characteristic.   ===*/
   /* ========================================*/
   memset(&add_char_params, 0, sizeof(add_char_params));
-  add_char_params.uuid = UUID_CHAR_MESSAGE;
+  add_char_params.uuid = UUID_CHAR_FLASH_DATA;
   add_char_params.uuid_type = p_lbs->uuid_type;
   add_char_params.init_len = CHAR_FLASH_DATA_SIZE;
   add_char_params.max_len = CHAR_FLASH_DATA_SIZE;
@@ -162,7 +162,7 @@ uint32_t ble_main_service_init(ble_main_service_t *p_lbs, const BLE_MAIN_SERVICE
 
   add_char_params.is_value_user = true;
   //gDeviceStatus                       = 0x0000;
-  add_char_params.p_init_value = (uint8_t *)&gDeviceStatus;
+  add_char_params.p_init_value = (uint8_t *)&gFlashData;
 
   //add_char_params.read_access         = SEC_OPEN;
   add_char_params.cccd_write_access = SEC_OPEN;

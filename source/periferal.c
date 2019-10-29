@@ -485,7 +485,7 @@ void WriteParamTab(void)
 #if 1     
 //debug
     int_flash_read((uint32_t)pParamTable+4, (uint32_t*)&currentParamTable, 1);
-    NRF_LOG_INFO("currentParamTable[0] = 0x%02x",currentParamTable[0]);
+    //NRF_LOG_INFO("currentParamTable[0] = 0x%02x",currentParamTable[0]);
 
 #endif
     if(nrf_fstorage_is_busy(&fstorage))
@@ -763,7 +763,7 @@ void init_periferal(void)
   int_flash_read((uint32_t)pParamTable, (uint32_t*)&ParamTab, sizeof(ParamTable_t));
   initParamTab();
   ReportAddr = find_free_addr(REPORTS_START_ADDR);
-  lsensor_init();
+  //lsensor_init();
 
   {// debug start
 

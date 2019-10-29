@@ -36,8 +36,6 @@ typedef BLE_BLOCK AES_BLOCK_DATA;
 #define PRAND_FACTOR_k 7.0
 
 typedef struct _AES_CHARACTERISTIC_INFO {
-  // uint32_t CounterData;
-  // uint32_t CounterIV;
   uint32_t PRandomNo;
 } AES_CHARACTERISTIC_INFO;
 
@@ -66,12 +64,12 @@ RESULT AES_BlockDecript1(CHARACTERISTIC_ID CharacteristicID, uint8_t *pBlock16,
 void AES_XorArray2(uint8_t *pIn, uint8_t *pInOut, uint32_t Len);
 void AES_XorArray3(uint8_t *pIn0, uint8_t *pIn1, uint8_t *pOut, uint32_t Len);
 RESULT AES_RandFillArray(uint8_t *pArray, uint32_t Len);
-void AES_SetNewCharCounter(CHARACTERISTIC_ID CharacteristicID);
+void AES_SetNewCharRandomVal(CHARACTERISTIC_ID CharacteristicID);
 void AES_Connect(uint8_t *pNewCounters);
 /* uint32_t AES_GetDefaultKey(CHARACTERISTIC_ID CharacteristicID); */
-RESULT AES_GetNewCounters(uint8_t *pNewCounters);
-void AES_SetNewRandomNumbers(uint8_t *pNewCounters);
-void AES_SetCountersDefault();
+RESULT AES_GetNewRandomNumbers(uint8_t *pNewRandomNumbers);
+void AES_SetNewRandomNumbers(uint8_t *pNewRandomNumbers);
+void AES_SetRandomNumberDefault();
 
 void Debug_OFB_Encript();
 

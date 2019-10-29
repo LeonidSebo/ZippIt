@@ -77,7 +77,7 @@ typedef enum _BLE_COMMANDS_ID {
 #define ANSWER_ID_FLAG 0x80
 
 typedef enum _BLE_MESSAGE_ID {
-  MSG_NEW_COUNTERS_VALUES = 0x00,
+  MSG_NEW_RANDOM_NUMBERS = 0x00,
   MSG_DEVICE_STATUS_CHANGED = 0x01,
   MSG_DEVICE_ERROR = 0x02,
   MSG_ATTENTION = 0x03,
@@ -234,7 +234,7 @@ typedef enum _CHARACTERISTIC_ID {
   CHAR_MESSAGE
 } CHARACTERISTIC_ID;
 
-#define DEVICE_NAME "ZipplT" /**< Name of device. Will be included in the advertising data. */
+#define DEVICE_NAME "ZipplT_debug" /**< Name of device. Will be included in the advertising data. */
 
 #define UUID_BASE                                             \
   { 0x66, 0x9A, 0x0C, 0x20, 0x00, 0x08, /**/ 0x23, 0x15, /**/ \
