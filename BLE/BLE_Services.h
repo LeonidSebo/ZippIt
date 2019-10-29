@@ -64,13 +64,14 @@ typedef struct
   evhCommandWrite_t evhCommandWrite; /**< Event handler to be called when the LED Characteristic is written. */
 } BLE_MAIN_SERVICE_INIT;
 
-/**@brief LED Button Service structure. This structure contains various status information for the service. */
+/**@brief ZippIT Service structure. This structure contains various status information for the service. */
 struct BLE_MAIN_SERVICE {
-  uint16_t service_handle;               /**< Handle of Zipplt Service. */
-  ble_gatts_char_handles_t hCommandChar; /**< Handle related to the COMMAND Characteristic. */
-  ble_gatts_char_handles_t hAnswerChar;  /**< Handle related to the Answer Characteristic. */
-  ble_gatts_char_handles_t hMessageChar; /**< Handle related to the DEVICE_STSTUS Characteristic. */
-  uint8_t uuid_type;                     /**< UUID type for the LED Button Service. */
+  uint16_t service_handle;                /**< Handle of ZippIT Service. */
+  ble_gatts_char_handles_t hCommandChar;  /**< Handle related to the COMMAND Characteristic. */
+  ble_gatts_char_handles_t hAnswerChar;   /**< Handle related to the Answer Characteristic. */
+  ble_gatts_char_handles_t hMessageChar;  /**< Handle related to the DEVICE_STSTUS Characteristic. */
+  ble_gatts_char_handles_t hFlashDatChar; /**< Handle related to the DEVICE_STSTUS Characteristic. */
+  uint8_t uuid_type;                      /**< UUID type for the ZippIT Button Service. */
 
   evhCommandWrite_t evhCommandWrite; /**< Event handler to be called when the COMMAND is written. */
 };

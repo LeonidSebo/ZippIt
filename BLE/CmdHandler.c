@@ -20,7 +20,7 @@ void CmdH_Command_Write(uint16_t conn_handle, ble_main_service_t *p_lbs,
     uint16_t CommandLen, uint8_t *pCommandEncr) {
   BLE_COMMAND Command;
 
-#if ENCRIPTION_DISABLE == 1
+#if ENCRIPTION_DISABLE == 0
   CmdH_Command_Handler((BLE_COMMAND *)pCommandEncr);
   return;
 #endif
@@ -74,7 +74,7 @@ void CmdH_Command_Handler(BLE_COMMAND *pCommand) {
     Debug_Func(pCommand);
     break;
   case CMD_ID_GET_RANDOM_NUMBERS:
-    SetNewRandomNubers(false);
+    SetNewRandomNubers(true);
     break;
     //    case CMD_ID_FLASH_ERRASE:
     //      FlashErase(pCommand);
@@ -148,7 +148,7 @@ RESULT Cmd_SetMotorTimes(BLE_COMMAND *pCommand) {
     return Answer_OperationStatus(pCommand->CommandID, ERR_BLE_CMD_LEN);
   }
   //NRF_LOG_INFO("SetMotorTimes: CW = %d, CCW = %d", MotorTimes.MOTOR_CW_TIME_MS, MotorTimes.MOTOR_CCW_TIME_MS);
-  res = bleSetMotorTimes(MotorTimes);
+  res = bleSetMotorTimes(MotorTimes); 
   res = Answer_OperationStatus(pCommand->CommandID, res);
   return res;
 }
@@ -251,8 +251,8 @@ RESULT Answer_SendToHost(BLE_COMMANDS_ID CommandID, RESULT OperationStatus, uint
   RESULT_CHECK_WITH_LOG(res);
   res = Serv_SendToHost(CHAR_ANSWER, (uint8_t *)&CipherBlock16, AES_BLOCK_SIZE_BYTE);
   RESULT_CHECK_WITH_LOG(res);
-  AES_SetNewCharCounter(CHAR_COMMAND);
-  AES_SetNewCharCounter(CHAR_ANSWER);
+  AES_SetNewCharRandomVal(CHAR_COMMAND);
+  AES_SetNewCharRandomVal(CHAR_ANSWER);
   return res;
 }
 /* ================ ANSWERS ========================== */
@@ -293,7 +293,7 @@ RESULT CmdH_Message_SendToHost(BLE_MESSAGE_ID MessageID, uint8_t *pData, uint8_t
   RESULT_CHECK_WITH_LOG(res);
   res = Serv_SendToHost(CHAR_MESSAGE, (uint8_t *)&CipherBlock16, AES_BLOCK_SIZE_BYTE);
   RESULT_CHECK_WITH_LOG(res);
-  AES_SetNewCharCounter(CHAR_MESSAGE);
+  AES_SetNewCharRandomVal(CHAR_MESSAGE);
   //Debug_PrintHexArray("NewRandNumber = ", pData, DataLength);
   return ERR_NO;
 }
@@ -307,7 +307,7 @@ RESULT CmdH_Message_SendToHost(BLE_MESSAGE_ID MessageID, uint8_t *pData, uint8_t
 
 RESULT CmdH_DeviceConnected() {
   //return SetNewRandomNubers(false);
-  AES_SetCountersDefault();
+  AES_SetRandomNumberDefault();
   return ERR_NO;
 }
 
@@ -318,22 +318,22 @@ RESULT CmdH_DeviceDisconnected() {
 RESULT SetNewRandomNubers(bool AnswerChar) {
   RESULT res;
 
-  uint8_t pNewRandNumber[AES_BLOCK_COUNTER_SIZE_BYTE * CHARACTERISTICS_NO];
+  uint8_t pNewRandomNumbers[AES_BLOCK_RANDOM_NO_SIZE_BYTE * CHARACTERISTICS_NO];
 
-  res = AES_RandFillArray(pNewRandNumber, AES_BLOCK_COUNTER_SIZE_BYTE * CHARACTERISTICS_NO);
+  res = AES_RandFillArray(pNewRandomNumbers, AES_BLOCK_RANDOM_NO_SIZE_BYTE * CHARACTERISTICS_NO);
   RESULT_CHECK(res);
 
   //Debug_PrintHexArray("pNewRandNumber = ", pNewRandNumber, 9);
 
-  AES_SetCountersDefault();
+  AES_SetRandomNumberDefault();
   if (AnswerChar) {
-    res = Answer_SendToHost(CMD_ID_GET_RANDOM_NUMBERS, ERR_NO, pNewRandNumber, AES_BLOCK_COUNTER_SIZE_BYTE * CHARACTERISTICS_NO);
+    res = Answer_SendToHost(CMD_ID_GET_RANDOM_NUMBERS, ERR_NO, pNewRandomNumbers, AES_BLOCK_RANDOM_NO_SIZE_BYTE * CHARACTERISTICS_NO);
   } else {
     //NRF_LOG_INFO("CmdH_Message_SendToHost.");
-    res = CmdH_Message_SendToHost(MSG_NEW_COUNTERS_VALUES, pNewRandNumber, AES_BLOCK_COUNTER_SIZE_BYTE * CHARACTERISTICS_NO);
+    res = CmdH_Message_SendToHost(MSG_NEW_RANDOM_NUMBERS, pNewRandomNumbers, AES_BLOCK_RANDOM_NO_SIZE_BYTE * CHARACTERISTICS_NO);
   }
   if (res == ERR_NO) {
-    AES_SetNewRandomNumbers(pNewRandNumber);
+    AES_SetNewRandomNumbers(pNewRandomNumbers);
   }
   return res;
 }

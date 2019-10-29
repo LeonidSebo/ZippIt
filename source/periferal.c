@@ -824,7 +824,7 @@ void init_periferal(void)
   print_flash_info(&fstorage);
   initParamTab();
   ReportAddr = find_free_addr(REPORTS_START_ADDR);
-  lsensor_init();
+  //lsensor_init();
 
   {// debug start
 

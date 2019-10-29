@@ -13,10 +13,12 @@ extern ble_main_service_t m_lbs;
 #define CHAR_COMMAND_SIZE 16
 #define CHAR_ANSWER_SIZE 16
 #define CHAR_MESSAGE_SIZE 16
+#define CHAR_FLASH_DATA_SIZE 256
 
-uint8_t gCommand[CHAR_COMMAND_SIZE];     /* Write */
-uint8_t gAnswer[CHAR_ANSWER_SIZE];       /* Write */
-uint8_t gDeviceStatus[CHAR_ANSWER_SIZE]; /* Read/Notification */
+uint8_t gCommand[CHAR_COMMAND_SIZE];      /* Write */
+uint8_t gAnswer[CHAR_ANSWER_SIZE];        /* Indication */
+uint8_t gMessage[CHAR_MESSAGE_SIZE];      /* Indication */
+uint8_t gFlashData[CHAR_FLASH_DATA_SIZE];     /* Notification */
 
 /* ================================== */
 
@@ -134,7 +136,7 @@ uint32_t ble_main_service_init(ble_main_service_t *p_lbs, const BLE_MAIN_SERVICE
 
   add_char_params.is_value_user = true;
   //gDeviceStatus                       = 0x0000;
-  add_char_params.p_init_value = (uint8_t *)&gDeviceStatus;
+  add_char_params.p_init_value = (uint8_t *)&gMessage;
 
   //add_char_params.read_access         = SEC_OPEN;
   add_char_params.cccd_write_access = SEC_OPEN;
@@ -142,6 +144,32 @@ uint32_t ble_main_service_init(ble_main_service_t *p_lbs, const BLE_MAIN_SERVICE
   err_code = characteristic_add(p_lbs->service_handle,
       &add_char_params,
       &p_lbs->hMessageChar);
+  if (err_code != NRF_SUCCESS) {
+    return err_code;
+  }
+
+  /* ========================================*/
+  /* === Add FLASH_DATA characteristic.   ===*/
+  /* ========================================*/
+  memset(&add_char_params, 0, sizeof(add_char_params));
+  add_char_params.uuid = UUID_CHAR_FLASH_DATA;
+  add_char_params.uuid_type = p_lbs->uuid_type;
+  add_char_params.init_len = CHAR_FLASH_DATA_SIZE;
+  add_char_params.max_len = CHAR_FLASH_DATA_SIZE;
+  //add_char_params.char_props.read     = 1;
+  add_char_params.char_props.notify   = 1;
+  //add_char_params.char_props.indicate = 1;
+
+  add_char_params.is_value_user = true;
+  //gDeviceStatus                       = 0x0000;
+  add_char_params.p_init_value = (uint8_t *)&gFlashData;
+
+  //add_char_params.read_access         = SEC_OPEN;
+  add_char_params.cccd_write_access = SEC_OPEN;
+
+  err_code = characteristic_add(p_lbs->service_handle,
+      &add_char_params,
+      &p_lbs->hFlashDatChar);
   if (err_code != NRF_SUCCESS) {
     return err_code;
   }
@@ -199,7 +227,13 @@ RESULT Serv_SendToHost(CHARACTERISTIC_ID CharId, uint8_t *pData, uint16_t DataLe
     params.type = BLE_GATT_HVX_INDICATION;
     params.handle = m_lbs.hMessageChar.value_handle;
     break;
+  
+  default:
+    return ERR_BLE_CHARACTERISTIC_ID;
   }
+
+  
+
   params.p_data = pData;
   params.p_len = &DataLen;
 

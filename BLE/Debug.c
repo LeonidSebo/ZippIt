@@ -122,7 +122,7 @@ void Debug_CheckEncDec() {
   uint8_t CipherBlock16[16];
   uint8_t ClearBlock[16];
 
-  AES_SetCountersDefault();
+  AES_SetRandomNumberDefault();
 
   res = AES_BlockEncript(CHAR_COMMAND, CommandCaseFullClose, 3, CipherBlock16);
   res = AES_BlockDecript(CHAR_COMMAND, CipherBlock16, ClearBlock);
@@ -144,11 +144,11 @@ void Debug_GetEncrCommand() {
 
   uint8_t i;
 
-  AES_SetNewCharCounter(CHAR_COMMAND);
+  AES_SetNewCharRandomVal(CHAR_COMMAND);
 
   CmdH_Command_Write(NULL, NULL,
       16, CmdFullLock);
-  AES_SetNewCharCounter(CHAR_COMMAND);
+  AES_SetNewCharRandomVal(CHAR_COMMAND);
 
   CmdH_Command_Write(NULL, NULL,
       16, CmdFullLock);
