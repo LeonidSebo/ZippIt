@@ -1,17 +1,6 @@
 <!DOCTYPE CrossStudio_Session_File>
 <session>
- <Bookmarks>
-  <BookmarkItem objectName="" line="299" column="0" path="D:/Project/ZippIT/MC/source/periferal.c" number="10" extra="void StoreDevStatus(void)" color="5"/>
-  <BookmarkItem objectName="" line="359" column="0" path="D:/Project/ZippIT/MC/source/periferal.c" number="11" extra="void saadc_callback(nrf_drv_saadc_evt_t const * p_event)" color="5"/>
-  <BookmarkItem objectName="" line="440" column="0" path="D:/Project/ZippIT/MC/source/periferal.c" number="8" extra="static void fstorage_evt_handler(nrf_fstorage_evt_t * p_evt)" color="5"/>
-  <BookmarkItem objectName="" line="444" column="0" path="D:/Project/ZippIT/MC/source/periferal.c" number="4" extra="void int_flash_read(uint32_t addr, uint32_t* pdata, size_t size)" color="5"/>
-  <BookmarkItem objectName="" line="454" column="0" path="D:/Project/ZippIT/MC/source/periferal.c" number="2" extra="void int_flash_erase(uint32_t addr, size_t pages_cnt)" color="5"/>
-  <BookmarkItem objectName="" line="468" column="0" path="D:/Project/ZippIT/MC/source/periferal.c" number="3" extra="void int_flash_write(uint32_t addr, uint32_t* pdata, size_t size)" color="5"/>
-  <BookmarkItem objectName="" line="515" column="0" path="D:/Project/ZippIT/MC/source/periferal.c" number="5" extra="void WriteParamTab(void)" color="5"/>
-  <BookmarkItem objectName="" line="571" column="0" path="D:/Project/ZippIT/MC/source/periferal.c" number="6" extra="static void initParamTab(void){" color="5"/>
-  <BookmarkItem objectName="" line="608" column="0" path="D:/Project/ZippIT/MC/source/periferal.c" number="7" extra="static void rtc_handler(nrf_drv_rtc_int_type_t int_type)" color="5"/>
-  <BookmarkItem objectName="" line="802" column="0" path="D:/Project/ZippIT/MC/source/periferal.c" number="9" extra="void init_periferal(void)" color="5"/>
- </Bookmarks>
+ <Bookmarks/>
  <Breakpoints groups="Breakpoints" active_group="Breakpoints">
   <Exceptions set="MemManage;UsageFault_Coprocessor;UsageFault_CheckingError;UsageFault_StateError;BusFault;ExceptionEntryReturnFault;HardFault"/>
  </Breakpoints>
@@ -20,7 +9,7 @@
   <FrameBufferWindow bufferHeight="-1" addressSpace="" addressText="" bufferWidth="-1"/>
  </FrameBufferWindow>
  <Memory1>
-  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" addressOrder="0" columnsText="" refreshPeriod="0" name="ZipplT" radix="16" sizeText="512" addressText="0x003A000"/>
+  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" addressOrder="0" columnsText="" refreshPeriod="0" name="ZipplT" radix="16" sizeText="512" addressText="0x003B000"/>
  </Memory1>
  <Memory2>
   <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" addressOrder="0" columnsText="" refreshPeriod="0" name="ZipplT" radix="16" sizeText="" addressText="0x2000ffa8"/>
@@ -37,6 +26,7 @@
   <ProjectSessionItem path="ZipplT;ZipplT;Application"/>
   <ProjectSessionItem path="ZipplT;ZipplT;Application;BLE"/>
   <ProjectSessionItem path="ZipplT;ZipplT;nRF_Libraries"/>
+  <ProjectSessionItem path="ZipplT;ZipplT;nRF_Segger_RTT"/>
   <ProjectSessionItem path="ZipplT;ZipplT;nRF_SoftDevice"/>
   <ProjectSessionItem path="ZipplT;ZipplT;Segger Startup Files"/>
   <ProjectSessionItem path="ZipplT;ZipplT;UTF8/UTF16 converter"/>
@@ -61,18 +51,10 @@
  </TraceWindow>
  <Watch1>
   <Watches active="1" update="Never">
-   <Watchpoint expression="pParamTable" name="pParamTable" radix="-1" linenumber="604" filename="source/periferal.c"/>
-   <Watchpoint expression="sizeof(ParamTable_t)" name="sizeof(ParamTable_t)" radix="16" linenumber="600" filename="source/periferal.c"/>
-   <Watchpoint expression="pdata[0]" name="pdata[0]" radix="16" linenumber="444" filename="source/periferal.c"/>
-   <Watchpoint expression="NewParamTable" name="NewParamTable" radix="-1" linenumber="479" filename="source/periferal.c"/>
-   <Watchpoint expression="currentParamTable" name="currentParamTable" radix="16" linenumber="477" filename="source/periferal.c"/>
-   <Watchpoint expression="pdata[2]" name="pdata[2]" radix="16" linenumber="149" filename="C:/Nordic_Semi/nRF5_SDK_15_3_0/components/libraries/fstorage/nrf_fstorage.c"/>
-   <Watchpoint expression="pdata[1]" name="pdata[1]" radix="-1" linenumber="0" filename="../MC"/>
-   <Watchpoint expression="m_p_cur_op" name="m_p_cur_op" radix="-1" linenumber="154" filename="C:/Nordic_Semi/nRF5_SDK_15_3_0/components/libraries/fstorage/nrf_fstorage_sd.c"/>
-   <Watchpoint expression="debug_buffer" name="debug_buffer" radix="-1" linenumber="38" filename="source/periferal.c"/>
-   <Watchpoint expression="pdata" name="pdata" radix="-1" linenumber="0" filename=""/>
-   <Watchpoint expression="p_src" name="p_src[0]" radix="-1" linenumber="149" filename="C:/Nordic_Semi/nRF5_SDK_15_3_0/components/libraries/fstorage/nrf_fstorage.c"/>
-   <Watchpoint expression="p_data" name="p_data" radix="-1" linenumber="53" filename="C:/Nordic_Semi/nRF5_SDK_15_3_0/components/libraries/crc32/crc32.c"/>
+   <Watchpoint expression="Answer" name="Answer" radix="16" linenumber="0" filename="../MC"/>
+   <Watchpoint expression="pCipherBlock16" name="pCipherBlock16" radix="-1" linenumber="0" filename="../MC"/>
+   <Watchpoint expression="pClearBlock" name="pClearBlock" radix="-1" linenumber="0" filename="../MC"/>
+   <Watchpoint expression="Command" name="Command" radix="-1" linenumber="0" filename="../MC"/>
   </Watches>
  </Watch1>
  <Watch2>
@@ -85,21 +67,25 @@
   <Watches active="0" update="Never"/>
  </Watch4>
  <Files>
-  <SessionOpenFile windowGroup="DockEditLeft" x="38" y="628" useTextEdit="1" useBinaryEdit="0" left="0" path="source/periferal.c" selected="1" top="612" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="1" y="161" useTextEdit="1" useBinaryEdit="0" left="0" path="source/bleCmdHandler.c" selected="0" top="15" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="55" useTextEdit="1" useBinaryEdit="0" left="0" path="BLE/CmdHandler.c" selected="0" top="54" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="11" y="148" useTextEdit="1" useBinaryEdit="0" left="0" path="ble/BLE_Def.h" selected="0" top="127" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="127" useTextEdit="1" useBinaryEdit="0" left="0" path="main.c" selected="0" top="112" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="5" y="103" useTextEdit="1" useBinaryEdit="0" left="0" path="source/periferal.h" selected="0" top="94" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="53" useTextEdit="1" useBinaryEdit="0" left="0" path="C:/Nordic_Semi/nRF5_SDK_15_3_0/components/libraries/fstorage/nrf_fstorage_sd.h" selected="0" top="45" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="22" y="177" useTextEdit="1" useBinaryEdit="0" left="0" path="C:/Nordic_Semi/nRF5_SDK_15_3_0/components/libraries/fstorage/nrf_fstorage.h" selected="0" top="164" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="28" y="108" useTextEdit="1" useBinaryEdit="0" left="0" path="source/types.h" selected="0" top="99" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="405" useTextEdit="1" useBinaryEdit="0" left="0" path="C:/Nordic_Semi/nRF5_SDK_15_3_0/components/toolchain/cmsis/include/cmsis_gcc.h" selected="0" top="392" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="43" y="7019" useTextEdit="1" useBinaryEdit="0" left="0" path="config/sdk_config.h" selected="0" top="7003" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="56" y="132" useTextEdit="1" useBinaryEdit="0" left="0" path="C:/Nordic_Semi/nRF5_SDK_15_3_0/components/libraries/fstorage/nrf_fstorage.c" selected="0" top="129" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="408" useTextEdit="1" useBinaryEdit="0" left="0" path="C:/Nordic_Semi/nRF5_SDK_15_3_0/components/libraries/fstorage/nrf_fstorage_sd.c" selected="0" top="401" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="107" useTextEdit="1" useBinaryEdit="0" left="0" path="source/lsensor.c" selected="0" top="87" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="48" y="63" useTextEdit="1" useBinaryEdit="0" left="0" path="source/lsensor.h" selected="0" top="51" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="294" useTextEdit="1" useBinaryEdit="0" left="0" path="BLE/CmdHandler.c" selected="1" top="285" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="247" useTextEdit="1" useBinaryEdit="0" left="0" path="BLE/BLE_Services.c" selected="0" top="237" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="68" useTextEdit="1" useBinaryEdit="0" left="0" path="ble/BLE_Def.h" selected="0" top="54" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="98" useTextEdit="1" useBinaryEdit="0" left="0" path="C:/NordicSemi/nRF5_SDK_15.3.0_59ac345/components/softdevice/s132/headers/ble_gatt.h" selected="0" top="85" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="72" useTextEdit="1" useBinaryEdit="0" left="0" path="BLE/BLE_Services.h" selected="0" top="57" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="24" useTextEdit="1" useBinaryEdit="0" left="0" path="BLE/Debug.c" selected="0" top="10" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="82" useTextEdit="1" useBinaryEdit="0" left="0" path="main.c" selected="0" top="0" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="49" useTextEdit="1" useBinaryEdit="0" left="0" path="BLE/CmdHandler.h" selected="0" top="22" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="99" useTextEdit="1" useBinaryEdit="0" left="0" path="C:/NordicSemi/nRF5_SDK_15.3.0_59ac345/components/libraries/util/app_error_weak.c" selected="0" top="79" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="793" useTextEdit="1" useBinaryEdit="0" left="0" path="source/periferal.c" selected="0" top="48" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="0" useTextEdit="1" useBinaryEdit="0" left="0" path="source/types.h" selected="0" top="150" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="0" useTextEdit="1" useBinaryEdit="0" left="0" path="BLE/AES_Security.h" selected="0" top="75" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="7" useTextEdit="1" useBinaryEdit="0" left="0" path="BLE/AES_Security.c" selected="0" top="0" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="306" useTextEdit="1" useBinaryEdit="0" left="0" path="C:/NordicSemi/nRF5_SDK_15.3.0_59ac345/components/softdevice/common/nrf_sdh_ble.c" selected="0" top="292" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="622" useTextEdit="1" useBinaryEdit="0" left="0" path="C:/NordicSemi/nRF5_SDK_15.3.0_59ac345/components/softdevice/s132/headers/ble_gatts.h" selected="0" top="616" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="145" useTextEdit="1" useBinaryEdit="0" left="0" path="C:/NordicSemi/nRF5_SDK_15.3.0_59ac345/components/libraries/fstorage/nrf_fstorage.c" selected="0" top="118" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="77" useTextEdit="1" useBinaryEdit="0" left="0" path="C:/NordicSemi/nRF5_SDK_15.3.0_59ac345/components/softdevice/s132/headers/nrf_error.h" selected="0" top="57" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="0" useTextEdit="1" useBinaryEdit="0" left="0" path="source/periferal.h" selected="0" top="48" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="14" useTextEdit="1" useBinaryEdit="0" left="0" path="source/bleCmdHandler.c" selected="0" top="0" codecName="Default"/>
  </Files>
- <ARMCrossStudioWindow activeProject="ZipplT" fileDialogDefaultFilter="*.c" autoConnectTarget="J-Link" buildConfiguration="Debug" sessionSettings="" debugSearchFileMap="" fileDialogInitialDirectory="C:/Nordic_Semi/nRF5_SDK_15_3_0/modules/nrfx/drivers/src" debugSearchPath="" autoConnectCapabilities="3711"/>
+ <ARMCrossStudioWindow activeProject="ZipplT" fileDialogDefaultFilter="*.c" autoConnectTarget="J-Link" buildConfiguration="Release" sessionSettings="" debugSearchFileMap="" fileDialogInitialDirectory="D:/Project/ZippIT/MC" debugSearchPath="" autoConnectCapabilities="3199"/>
 </session>

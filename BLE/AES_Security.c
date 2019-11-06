@@ -3,57 +3,58 @@
 #include "math.h"
 #include "nrf_crypto_error.h"
 #include "nrf_delay.h"
+#include "Debug.h"
+
+#define DEBUG_PRINT_RANDOM_AND_KEY_EN     0
+#define CHAR_ANSWER_ENCRIPTION_DISABLE    0
 
 #define NRF_CRYPTO_EXAMPLE_AES_MAX_TEXT_SIZE 120
 #define RNG_BYTE_WAIT_US (124UL)
 #define AES_DATA_OFFSET 0
 
-//#define AES_ERROR_CHECK(error)  \
-//    do {            \
-//        if (error)  \
-//        {           \
-//            NRF_LOG_RAW_INFO("\r\nError = 0x%x\r\n%s\r\n",           \
-//                             (error),                                \
-//                             nrf_crypto_error_string_get(error));    \
-//            return ERR_NRF_CRYPTO; \
-//        }           \
-//    } while (0);
-//
 
 AES_CHARACTERISTIC_INFO gCharInfo[CHARACTERISTICS_NO];
 
-//static uint8_t gKey[16] = {
-//    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-//    0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F};
-//
-//static uint8_t gIV[16] = {
-//    0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77,
-//    0x78, 0x79, 0x7A, 0x7B, 0x7C, 0x7D, 0x7E, 0x7F};
-
 static uint8_t gKey[16] = {
-    0x00, 0x8e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6,
-    0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c};
+    0x79, 0x2F, 0x42, 0x3F, 0x45, 0x28, 0x48, 0x2B,
+    0x4D, 0x62, 0x51, 0x65, 0x54, 0x68, 0x57, 0x6D};
 
 static uint8_t gIV[16] = {
-    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-    0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f};
-
+    0x46, 0x29, 0x4A, 0x40, 0x4E, 0x63, 0x52, 0x66, 
+    0x55, 0x6A, 0x57, 0x6E, 0x5A, 0x72, 0x34, 0x75};
+/*
 #define DEFAULT_VAL_PRANDOM_CHAR_COMMAND 0x0306
 #define DEFAULT_VAL_PRANDOM_CHAR_ANSWER 0x0306
 #define DEFAULT_VAL_PRANDOM_CHAR_MESSAGE 0x0306
+*/
 
 RESULT AES_Init() {
-  AES_SetCountersDefault();
+  AES_SetRandomNumberDefault();
 }
 
-void AES_SetCountersDefault() {
+void AES_SetRandomNumberDefault() 
+{
+  uint32_t RandomDefault;
+  
+  RandomDefault = gKey[0] + (gKey[1] << 8) + (gKey[2] << 16);
   memset(gCharInfo, 0, sizeof(AES_CHARACTERISTIC_INFO) * CHARACTERISTICS_NO);
+  
+  gCharInfo[CHAR_COMMAND].PRandomNo = RandomDefault;
+  gCharInfo[CHAR_ANSWER].PRandomNo = RandomDefault;
+  gCharInfo[CHAR_MESSAGE].PRandomNo = RandomDefault;
+  /*
   gCharInfo[CHAR_COMMAND].PRandomNo = DEFAULT_VAL_PRANDOM_CHAR_COMMAND;
   gCharInfo[CHAR_ANSWER].PRandomNo = DEFAULT_VAL_PRANDOM_CHAR_ANSWER;
   gCharInfo[CHAR_MESSAGE].PRandomNo = DEFAULT_VAL_PRANDOM_CHAR_MESSAGE;
+  */
+
+#if DEBUG_PRINT_RANDOM_AND_KEY_EN
+   NRF_LOG_INFO("AES_SetRandomNumberDefault: 0x%06x, 0x%06x, 0x%06x", gCharInfo[CHAR_COMMAND].PRandomNo, 
+   gCharInfo[CHAR_ANSWER].PRandomNo, gCharInfo[CHAR_MESSAGE].PRandomNo);
+#endif
 }
 
-void AES_SetNewCharCounter(CHARACTERISTIC_ID CharacteristicID) {
+void AES_SetNewCharRandomVal(CHARACTERISTIC_ID CharacteristicID) {
   int32_t m;
   uint32_t Counter;
   uint32_t Temp;
@@ -61,15 +62,32 @@ void AES_SetNewCharCounter(CHARACTERISTIC_ID CharacteristicID) {
   Counter = gCharInfo[CharacteristicID].PRandomNo;
   Temp = (Counter * PRAND_FACTOR_a) + PRAND_FACTOR_b;
   gCharInfo[CharacteristicID].PRandomNo = Temp % m;
+
+#if DEBUG_PRINT_RANDOM_AND_KEY_EN
+   NRF_LOG_INFO("AES_SetNewCharRandomVal: Characteristic %d - 0x%06x", CharacteristicID, gCharInfo[CharacteristicID].PRandomNo); 
+   //gCharInfo[CHAR_ANSWER].PRandomNo, gCharInfo[CHAR_MESSAGE].PRandomNo);
+#endif
 }
 
-RESULT AES_GetNewCounters(uint8_t *pNewCounters) {
+RESULT AES_GetNewRandomNumbers(uint8_t *pNewRandomNumbers) {
   RESULT res;
   int32_t i;
 
   /* Generate new Counters values*/
-  res = AES_RandFillArray(pNewCounters, AES_BLOCK_COUNTER_SIZE_BYTE * CHARACTERISTICS_NO);
+  res = AES_RandFillArray(pNewRandomNumbers, AES_BLOCK_RANDOM_NO_SIZE_BYTE * CHARACTERISTICS_NO);
   RESULT_CHECK(res);
+  
+  Debug_PrintHexArray("AES_GetNewRandomNumbers: ", pNewRandomNumbers, 9);
+
+//  uint32_t val;
+//  val = 0x111111;
+//  memset(pNewRandomNumbers, val, 3);
+//  val = 0x222222;
+//  memset(pNewRandomNumbers + 3, val, 3);
+//  val = 0x333333;
+//  memset(pNewRandomNumbers + 6, val, 3);
+  
+  
   //  for(i = 0; i < CHARACTERISTICS_NO; i++)
   //  {
   //    gCharInfo[i].PRandomNo = 0;
@@ -78,24 +96,24 @@ RESULT AES_GetNewCounters(uint8_t *pNewCounters) {
   //  }
 }
 
-void AES_SetNewRandomNumbers(uint8_t *pNewRandNumber) {
+void AES_SetNewRandomNumbers(uint8_t *pNewRandomNumbers) {
   int32_t i;
   for (i = 0; i < CHARACTERISTICS_NO; i++) {
     gCharInfo[i].PRandomNo = 0;
     memcpy(&(gCharInfo[i].PRandomNo),
-        pNewRandNumber + AES_BLOCK_COUNTER_SIZE_BYTE * i, AES_BLOCK_COUNTER_SIZE_BYTE);
-    NRF_LOG_INFO("Key %d %02x", i, gCharInfo[i].PRandomNo);
+        pNewRandomNumbers + AES_BLOCK_RANDOM_NO_SIZE_BYTE * i, AES_BLOCK_RANDOM_NO_SIZE_BYTE);
+    NRF_LOG_INFO("Old Random %d %02x", i, gCharInfo[i].PRandomNo);
   }
-  AES_SetNewCharCounter(CHAR_COMMAND);
-  AES_SetNewCharCounter(CHAR_ANSWER);
-  AES_SetNewCharCounter(CHAR_MESSAGE);
+  AES_SetNewCharRandomVal(CHAR_COMMAND);
+  AES_SetNewCharRandomVal(CHAR_ANSWER);
+  AES_SetNewCharRandomVal(CHAR_MESSAGE);
   for (i = 0; i < CHARACTERISTICS_NO; i++) {
-    NRF_LOG_INFO("New Key %d %06x", i, gCharInfo[i].PRandomNo);
+    NRF_LOG_INFO("New Random %d %06x", i, gCharInfo[i].PRandomNo);
   }
 }
 
 RESULT AES_BlockEncript(CHARACTERISTIC_ID CharacteristicID, uint8_t *pClearBlock, uint8_t ClearBlockLen,
-    uint8_t *pCipherBlock16) {
+  uint8_t *pCipherBlock16) {
   uint8_t EncrBuffer[AES_BLOCK_SIZE_BYTE];
   uint8_t NewKey[AES_KEY_SIZE_BYTE];
   RESULT res;
@@ -105,20 +123,32 @@ RESULT AES_BlockEncript(CHARACTERISTIC_ID CharacteristicID, uint8_t *pClearBlock
   /* Copy Security Key */
   memcpy(NewKey, gKey, AES_KEY_SIZE_BYTE);
   /* Copy Counter */
-  memcpy(NewKey, &(gCharInfo[CharacteristicID].PRandomNo), AES_BLOCK_COUNTER_SIZE_BYTE);
+  memcpy(NewKey, &(gCharInfo[CharacteristicID].PRandomNo), AES_BLOCK_RANDOM_NO_SIZE_BYTE);
 
   /* Fill the buffer with random numbers  */
-  //res = AES_RandFillArray(pCipherBlock16, AES_BLOCK_SIZE_BYTE);
-  //RESULT_CHECK(res);
-  memset(pCipherBlock16, 0, AES_BLOCK_SIZE_BYTE);
+  res = AES_RandFillArray(pCipherBlock16, AES_BLOCK_SIZE_BYTE);
+  RESULT_CHECK(res);
+  //memset(pCipherBlock16, 0, AES_BLOCK_SIZE_BYTE);
 
   /* Fill Data */
   memcpy(pCipherBlock16 + AES_DATA_OFFSET, pClearBlock, DataLen);
   /* Encription IV */
-  res = AES_EncodeBlock(NewKey, gIV, EncrBuffer);
+  #if(!CHAR_ANSWER_ENCRIPTION_DISABLE)
+  {
+    res = AES_EncodeBlock(NewKey, gIV, EncrBuffer);
   RESULT_CHECK(res);
-  /* Xor ClearData with Encription IV*/
-  AES_XorArray2(EncrBuffer, pCipherBlock16, AES_BLOCK_SIZE_BYTE);
+    /* Xor ClearData with Encription IV*/
+    AES_XorArray2(EncrBuffer, pCipherBlock16, AES_BLOCK_SIZE_BYTE);
+      res = AES_EncodeBlock(NewKey, gIV, EncrBuffer);
+      RESULT_CHECK(res);
+  }
+  #endif
+
+#if DEBUG_PRINT_RANDOM_AND_KEY_EN 
+  NRF_LOG_INFO("Characteritic %d:", CharacteristicID);
+  Debug_PrintHexArray("In  AES_BlockEncript", pClearBlock, 16);
+  Debug_PrintHexArray("Out AES_BlockEncript", pCipherBlock16, 16);
+#endif
   return ERR_NO;
 }
 
@@ -131,7 +161,7 @@ RESULT AES_BlockDecript(CHARACTERISTIC_ID CharacteristicID,
   /* Copy Security Key */
   memcpy(NewKey, gKey, AES_KEY_SIZE_BYTE);
   /* Copy PRandom number */
-  memcpy(NewKey, &(gCharInfo[CharacteristicID].PRandomNo), AES_BLOCK_COUNTER_SIZE_BYTE);
+  memcpy(NewKey, &(gCharInfo[CharacteristicID].PRandomNo), AES_BLOCK_RANDOM_NO_SIZE_BYTE);
 
   /* Encription IV */
   res = AES_EncodeBlock(NewKey, gIV, DecrBuffer);
@@ -139,11 +169,16 @@ RESULT AES_BlockDecript(CHARACTERISTIC_ID CharacteristicID,
   /* Xor Chiper Data with Encription IV*/
   AES_XorArray3(DecrBuffer, pCipherBlock16, pClearBlock, AES_BLOCK_SIZE_BYTE);
 
+#if DEBUG_PRINT_RANDOM_AND_KEY_EN
+  NRF_LOG_INFO("Characteritic %d:", CharacteristicID);
+  Debug_PrintHexArray("In  AES_BlockDecript", pCipherBlock16, 16);
+  Debug_PrintHexArray("Out AES_BlockDecript", pClearBlock, 16);
+#endif
   return ERR_NO;
 }
 
 RESULT AES_BlockEncript1(CHARACTERISTIC_ID CharacteristicID, uint8_t ID,
-    uint8_t *pClearData, uint8_t ClearDataLength, uint8_t *pCipherBlock16) {
+  uint8_t *pClearData, uint8_t ClearDataLength, uint8_t *pCipherBlock16) {
   uint8_t EncrBuffer[AES_BLOCK_SIZE_BYTE];
   uint8_t NewKey[AES_KEY_SIZE_BYTE];
   RESULT res;
@@ -151,7 +186,7 @@ RESULT AES_BlockEncript1(CHARACTERISTIC_ID CharacteristicID, uint8_t ID,
   /* Copy Security Key */
   memcpy(NewKey, gKey, AES_KEY_SIZE_BYTE);
   /* Copy PRandom number */
-  memcpy(NewKey, &(gCharInfo[CharacteristicID].PRandomNo), AES_BLOCK_COUNTER_SIZE_BYTE);
+  memcpy(NewKey, &(gCharInfo[CharacteristicID].PRandomNo), AES_BLOCK_RANDOM_NO_SIZE_BYTE);
 
   res = AES_RandFillArray(pCipherBlock16, AES_BLOCK_SIZE_BYTE);
   RESULT_CHECK(res);
@@ -174,7 +209,7 @@ RESULT AES_BlockDecript1(CHARACTERISTIC_ID CharacteristicID, uint8_t *pBlock16,
   RESULT res;
 
   memcpy(NewKey, gKey, AES_KEY_SIZE_BYTE);
-  memcpy(NewKey, &(gCharInfo[CharacteristicID].PRandomNo), AES_BLOCK_COUNTER_SIZE_BYTE);
+  memcpy(NewKey, &(gCharInfo[CharacteristicID].PRandomNo), AES_BLOCK_RANDOM_NO_SIZE_BYTE);
 
   AES_EncodeBlock(NewKey, gIV, DecrBuffer);
   AES_XorArray2(DecrBuffer, pBlock16, AES_BLOCK_SIZE_BYTE);
@@ -186,6 +221,7 @@ RESULT AES_BlockDecript1(CHARACTERISTIC_ID CharacteristicID, uint8_t *pBlock16,
   return ERR_NO;
 }
 
+/*
 uint32_t AES_GetDefaultKey(CHARACTERISTIC_ID CharacteristicID) {
   switch (CharacteristicID) {
   case CHAR_COMMAND:
@@ -197,6 +233,7 @@ uint32_t AES_GetDefaultKey(CHARACTERISTIC_ID CharacteristicID) {
   }
   return 0;
 }
+*/
 
 RESULT AES_EncodeBlock(uint8_t *pKey, uint8_t *pCleartext, uint8_t *pCiphertext) {
   nrf_ecb_hal_data_t aes;
@@ -275,97 +312,3 @@ void Debug_OFB_Encript() {
   AES_EncodeBlock(Key, IV, DecBuffer);
   AES_XorArray2(EncdBuffer, DecBuffer, SOC_ECB_CIPHERTEXT_LENGTH);
 }
-//RESULT AES_Encrypt(uint8_t Len_In, uint8_t *pData_In, uint8_t *pLen_Out, uint8_t *pData_Out)
-//{
-////    /* Encryption phase */
-//   ret_code_t ret_val;
-//    static nrf_crypto_aes_context_t cbc_encr_128_ctx; // AES CBC encryption context
-//
-//    /* Init encryption context for 128 bit key and PKCS7 padding mode */
-//    ret_val = nrf_crypto_aes_init(&cbc_encr_128_ctx,
-//                                  &g_nrf_crypto_aes_cbc_128_info,
-//                                  //&g_nrf_crypto_aes_cbc_128_pad_pkcs7_info,
-//                                  NRF_CRYPTO_ENCRYPT);
-//
-//    AES_ERROR_CHECK(ret_val);
-//
-//    /* Set key for encryption context - only first 128 key bits will be used */
-//    ret_val = nrf_crypto_aes_key_set(&cbc_encr_128_ctx, gKey);
-//    AES_ERROR_CHECK(ret_val);
-//
-//    //    memset(gIV, 0, sizeof(gIV));
-//    /* Set IV for encryption context */
-//
-//    ret_val = nrf_crypto_aes_iv_set(&cbc_encr_128_ctx, gIV);
-//    AES_ERROR_CHECK(ret_val);
-//
-//    //Len_In = strlen(m_plain_text);
-//    //len_out = sizeof(encrypted_text);
-//
-//    /* Encrypt text
-//       When padding is selected m_encrypted_text buffer shall be at least 16 bytes larger
-//       than text_len. */
-//    ret_val = nrf_crypto_aes_finalize(&cbc_encr_128_ctx,
-//                                      pData_In,
-//                                      Len_In,
-//                                      pData_Out,
-//                                      (size_t*)pLen_Out);
-//    AES_ERROR_CHECK(ret_val);
-//
-//    // print the encrypted text
-//    //encrypted_text_print(encrypted_text, len_out);
-//
-//    return ERR_NO;
-//}
-//
-//RESULT AES_Decrypt(uint8_t Len_In, uint8_t *pData_In, uint8_t *pLen_Out, uint8_t *pData_Out)
-//{
-//    /* Decryption phase */
-//    ret_code_t ret_val;
-//    static nrf_crypto_aes_context_t cbc_decr_128_ctx; // AES CBC decryption context
-//
-//    /* Init decryption context for 128 bit key and PKCS7 padding mode */
-//    ret_val = nrf_crypto_aes_init(&cbc_decr_128_ctx,
-//                                  &g_nrf_crypto_aes_cbc_128_info,
-//                                  //&g_nrf_crypto_aes_cbc_128_pad_pkcs7_info,
-//                                  NRF_CRYPTO_DECRYPT);
-//    AES_ERROR_CHECK(ret_val);
-//
-//
-//    /* Set key for decryption context - only first 128 key bits will be used */
-//    ret_val = nrf_crypto_aes_key_set(&cbc_decr_128_ctx, gKey);
-//    //AES_ERROR_CHECK(ret_val);
-//
-//    memset(gIV, 0, sizeof(gIV));
-//    /* Set IV for decryption context */
-//
-//    ret_val = nrf_crypto_aes_iv_set(&cbc_decr_128_ctx, gIV);
-//    AES_ERROR_CHECK(ret_val);
-//
-//    /* Decrypt text */
-//    ret_val = nrf_crypto_aes_finalize(&cbc_decr_128_ctx,
-//                                      pData_In,
-//                                      Len_In,
-//                                      pData_Out,
-//                                      (size_t*)pLen_Out);
-//    //AES_ERROR_CHECK(ret_val);
-//
-//    /* trim padding */
-//    //pData_Out[len_out] = '\0';
-//
-//    //decrypted_text_print(decrypted_text, len_out);
-//
-////    NRF_LOG_FLUSH();
-////    if (memcmp(m_plain_text, decrypted_text, strlen(m_plain_text)) == 0)
-////    {
-////        NRF_LOG_RAW_INFO("AES CBC example with padding executed successfully.\r\n");
-////    }
-////    else
-////    {
-////        NRF_LOG_RAW_INFO("AES CBC example with padding failed!!!\r\n");
-////    }
-////
-//
-////    return (RESULT)ret_val;//ERR_NO;
-//    return ERR_NO;
-//}

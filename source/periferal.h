@@ -33,7 +33,7 @@
 
 #define  LED_BLINK_ON_TIME_TICK     2
 
-#define  SW_EVENT_TIMEOUT           4
+#define  SW_EVENT_TIMEOUT           2
 
 //#define MOTOR_STOP()              nrf_gpio_pin_clear(MOTOR_IN1_PIN);	\
 //                                  nrf_gpio_pin_clear(MOTOR_IN2_PIN);	\
@@ -65,13 +65,9 @@
                                   main_status.MotorPowerOffReq = 0;     
 
 
-//#define MOTOR_TIMEOUT_DEF         {3000,1500,3000,1500}
-//#define BATTERY_ALARM_LEVEL_DEF   0x0100
-//#define HW_REVISION               0x00000010
-
 #define DEF_MOTOR_ACTIVE_TIME     0xb8,0x0b,0xdc,0x05,0xb8,0x0b,0xdc,0x05
 #define DEF_HW_REVISION           0x00,0x01,0x00,0x00
-#define DEF_BAT_ALARM_LEVEL       0x00,0x03,0x00,0x00
+#define DEF_BAT_ALARM_LEVEL       0xBC,0x02,0x00,0x00
 #define DEF_CRC                   0x00,0x00,0x00,0x00
 #define DEF_PARAM_TAB             LSENSOR_DEF,\
                                   DEF_MOTOR_ACTIVE_TIME,\
@@ -79,14 +75,13 @@
                                   DEF_BAT_ALARM_LEVEL,\
                                   DEF_CRC
 
-
-
+#define     LIGHT_SENSOR_WEAKUP_ENABLE()              main_status.LightSensorWeakupTime = SW_EVENT_TIMEOUT
 
 #define RTC_TICK_TIME       125
 
 #define INT_FLESH_START_ADDR    0x10000
 #define INT_FLESH_LAST_ADDR     0x7FFFF
-#define REPORTS_START_ADDR      0x3A000
+#define INT_FLESH_ALMOST_FULL_ADDR      (INT_FLESH_LAST_ADDR - 0x100)
 
 #define PARAM_TAB_ADDR      0x10000
 #define PAGE_SIZE           0x01000
@@ -97,27 +92,12 @@
 #define  ALARM_BLINK_TIME                     301
 
 uint32_t find_free_addr(uint32_t start_addr);
-//void fstorage_init(void);
 void int_flash_read(uint32_t addr, uint32_t* pdata, size_t size);
 void int_flash_erase(uint32_t addr, size_t pages_cnt);
 void int_flash_write(uint32_t addr, uint32_t* pdata, size_t size);
-void WriteParamTab(void);
-
-
-void gpio_init(void);
-//void motor_ctrl(void);
-void saadc_init(void);
-void incr_date_time(DateTime_t* pDateTime);
-void set_date_time(DateTime_int_t* CurrentDateTime, uint32_t NewDateTime);
-uint32_t get_current_date_time(void);
-void LockSwitchEvent_handler(void);
-void StoreDevStatus(void);
 void get_current_status(void);
-void WireEvent_handler(void);
-void rtc_config(void);
 void init_periferal(void);
-void SetLedControl(LED_STATE R,LED_STATE G,LED_STATE B);
+void logEventStorageReq(log_event_id_t event,uint8_t param0,uint8_t param1,uint8_t param2);
 
-//void buttons_init(void);
 
 #endif

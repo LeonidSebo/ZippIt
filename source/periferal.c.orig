@@ -2,35 +2,40 @@
 #include "bleCmdHandler.h"
 
 
+//extern const report_t  reports;
 extern uint8_t  NewParamTable[sizeof(ParamTable_t) + sizeof(uint32_t)];
-extern main_status_t main_status;
 
-__attribute__ ((section(".ParamTab")))
-const uint32_t endOfPrg = 0;
-
-const ParamTable_t* pParamTable = (ParamTable_t*) ((uint8_t*)&endOfPrg + 0x1000);
-const nrf_drv_rtc_t rtc = NRF_DRV_RTC_INSTANCE(2); /**< Declaring an instance of nrf_drv_rtc for RTC0. */
 
 DateTime_int_t CurrentDateTime = {0};
 uint32_t ReportAddr;
 uint32_t CaseStateLedOnTime = 0;
+
+
+extern main_status_t main_status;
 uint32_t NewDateTime;
+
+const nrf_drv_rtc_t rtc = NRF_DRV_RTC_INSTANCE(2); /**< Declaring an instance of nrf_drv_rtc for RTC0. */
+
+
 uint32_t BatVoltage;
+
 main_status_t main_status = {0};
 device_status_t device_status;
 led_control_t led_control = {0,0,0};
 uint32_t motorTimeout = 0;
 rtc_tick_enable_t rtcTickRequest = {0,0,0};
-ParamTable_t  ParamTab;
-
-log_event_store_t log_event;
-
-uint8_t debug_buffer[128];
 
 
 #define COMPARE_COUNTERTIME  (3UL)                                        /**< Get Compare event COMPARE_TIME seconds after the counter starts from 0. */
 
 
+__attribute__ ((section(".ParamTab")))
+const uint32_t endOfPrg = 0;
+
+const ParamTable_t* pParamTable = (ParamTable_t*) ((uint8_t*)&endOfPrg + 0x1000);
+ParamTable_t  ParamTab;
+
+uint8_t debug_buffer[128];
 
 static void fstorage_evt_handler(nrf_fstorage_evt_t * p_evt)
 {
@@ -46,30 +51,15 @@ static void fstorage_evt_handler(nrf_fstorage_evt_t * p_evt)
         {
             NRF_LOG_INFO("--> Event received: wrote %d bytes at address 0x%x.",
                          p_evt->len, p_evt->addr);
-//            NRF_LOG_INFO("--> wrote %02x %02x %02x %02x %02x %02x ",((uint8_t*)&NewParamTable)[0],
-//                        ((uint8_t*)&NewParamTable)[1],((uint8_t*)&NewParamTable)[2],((uint8_t*)&NewParamTable)[3],
-//                        ((uint8_t*)&NewParamTable)[4],((uint8_t*)&NewParamTable)[5]);
+            NRF_LOG_INFO("--> wrote %02x %02x %02x %02x %02x %02x ",((uint8_t*)&NewParamTable)[0],
+                        ((uint8_t*)&NewParamTable)[1],((uint8_t*)&NewParamTable)[2],((uint8_t*)&NewParamTable)[3],
+                        ((uint8_t*)&NewParamTable)[4],((uint8_t*)&NewParamTable)[5]);
             int_flash_read((uint32_t)pParamTable, (uint32_t*) debug_buffer, sizeof(debug_buffer));
-//            NRF_LOG_INFO("--> readed %02x %02x %02x %02x %02x %02x ",((uint8_t*)&debug_buffer)[0],
-//                        ((uint8_t*)&debug_buffer)[1],((uint8_t*)&debug_buffer)[2],((uint8_t*)&debug_buffer)[3],
-//                        ((uint8_t*)&debug_buffer)[4],((uint8_t*)&debug_buffer)[5]);
-            if(log_event.log_event[log_event.log_event_rd_idx].store_flag == LOG_STORE_REQ){
-              uint32_t lReportAddr = ReportAddr;
-              ReportAddr += p_evt->len;
-              log_event.log_event[log_event.log_event_rd_idx].store_flag = LOG_STORE_NO_REQ;
-              if(log_event.log_event_rd_idx == LOG_EVENT_MAX_CNT){
-                log_event.log_event_rd_idx = 0;
-              }else{
-                log_event.log_event_rd_idx++;
-              }
-              if((lReportAddr<INT_FLESH_ALMOST_FULL_ADDR)&&(ReportAddr>=INT_FLESH_ALMOST_FULL_ADDR)){
-                device_status.DEVSTAT_FLASH_LOG_FULL = 1;
-                device_status.DEVSTAT_FLASH_LOG_FULL_CHANGED = YES;
-                Message_DeviceStatus(device_status);           // Flash almost full event
-                device_status.DEVSTAT_FLASH_LOG_FULL_CHANGED = NO;
-                logEventStorageReq(LOG_EVENT_LOW_FLASH_MEMORY,0,0,0);
-              }
-            }
+            NRF_LOG_INFO("--> readed %02x %02x %02x %02x %02x %02x ",((uint8_t*)&debug_buffer)[0],
+                        ((uint8_t*)&debug_buffer)[1],((uint8_t*)&debug_buffer)[2],((uint8_t*)&debug_buffer)[3],
+                        ((uint8_t*)&debug_buffer)[4],((uint8_t*)&debug_buffer)[5]);
+
+
             if(main_status.ParamTab_change_req == REQ_WRITE){
               main_status.ParamTab_change_req = REQ_NONE;
             }
@@ -79,11 +69,7 @@ static void fstorage_evt_handler(nrf_fstorage_evt_t * p_evt)
         {
             NRF_LOG_INFO("--> Event received: erased %d page from address 0x%x.",
                          p_evt->len, p_evt->addr);
-            if(main_status.FlashErase_req == 1){
-              main_status.FlashErase_req = 0;
-              device_status.DEVSTAT_FLASH_LOG_FULL = 0;
-              ReportAddr = (uint32_t)pParamTable + 0x1000;
-            }
+      
             if(main_status.ParamTab_change_req == REQ_CHNGE){
               main_status.ParamTab_change_req = REQ_WRITE;
             }
@@ -119,13 +105,18 @@ void get_current_status(void)
   device_status.DEVSTAT_LIGHT_PENETRATION = nrf_gpio_pin_read(SENSOR_INT_PIN); // debug
 }
 
+void lsensor_int_handler(nrf_drv_gpiote_pin_t pin, nrf_gpiote_polarity_t action)
+{
+  main_status.StoreDevStatusReq = 1;
+}
+
 static void stop_motor(void)
 {
   MOTOR_STOP();     
   get_current_status();
   if((main_status.change_case_state_req == CASE_STATE_REQ_LOOK)&&(device_status.DEVSTAT_STATE_OF_SW_3 == 0)||
      (main_status.change_case_state_req == CASE_STATE_REQ_UNLOOK)&&(device_status.DEVSTAT_STATE_OF_SW_1 == 0)||
-     (main_status.change_case_state_req == CASE_STATE_REQ_HANDEL_OPEN)&&(device_status.DEVSTAT_STATE_OF_SW_2 == 0)){
+     (main_status.change_case_state_req == CASE_STATE_REQ_MANUAL)&&(device_status.DEVSTAT_STATE_OF_SW_2 == 0)){
         // Case is in true state
         main_status.change_case_state_req = CASE_STATE_REQ_IDLE;  
         main_status.change_case_state_buzy = 0;
@@ -153,117 +144,68 @@ static void stop_motor(void)
         case CASE_STATE_REQ_UNLOOK:
           motorTimeout = ParamTab.MotorActiveTime.MOTOR_CW_FULL_TIME_MS;
           break;
-        case CASE_STATE_REQ_HANDEL_OPEN:
+        case CASE_STATE_REQ_MANUAL:
           motorTimeout = ParamTab.MotorActiveTime.MOTOR_CW_HALF_TIME_MS;
           break;
       }
   }
-}
 
-void logEventStorageReq(log_event_id_t event,uint8_t param0,uint8_t param1,uint8_t param2)
-{
-  if(log_event.log_event[log_event.log_event_wr_idx].store_flag == LOG_STORE_NO_REQ){
-    log_event.log_event[log_event.log_event_wr_idx].log_event = event;
-    log_event.log_event[log_event.log_event_wr_idx].param0 = param0;
-    log_event.log_event[log_event.log_event_wr_idx].param1 = param1;
-    log_event.log_event[log_event.log_event_wr_idx].param2 = param2;
-    log_event.log_event[log_event.log_event_wr_idx].store_flag = LOG_STORE_REQ;
-    memcpy( &log_event.log_event[log_event.log_event_wr_idx].DateTime,&CurrentDateTime,sizeof(DateTime_t));
-    if(log_event.log_event_wr_idx == (LOG_EVENT_MAX_CNT-1))
-      log_event.log_event_wr_idx = 0;
-    else
-      log_event.log_event_wr_idx++;
-  }
-} 
-
-static void SetLedControl(LED_STATE R,LED_STATE G,LED_STATE B)
-{
-  uint32_t state;
-  led_control.LED_RED = R;
-  led_control.LED_GREEN = G;
-  led_control.LED_BLUE = B;
-
-   NRF_LOG_INFO("Led State - 0x%02x", *(uint8_t*)&led_control);
-
-  if((R == LED_BLINK)||(G == LED_BLINK)||(B == LED_BLINK)){
-    NRF_LOG_INFO("RGB - 0x%02x  0x%02x  0x%02x", *(uint8_t*)&R, *(uint8_t*)&G, *(uint8_t*)&B);
-     rtcTickRequest.led_bilnk = 1;
-  }
-  if(R == LED_ON)
-    nrf_gpio_pin_set(LED_R_PIN);
-  else 
-    nrf_gpio_pin_clear(LED_R_PIN);
-  if(G == LED_ON)
-    nrf_gpio_pin_set(LED_G_PIN);
-  else 
-    nrf_gpio_pin_clear(LED_G_PIN);
-  if(B == LED_ON)
-    nrf_gpio_pin_set(LED_B_PIN);
-  else 
-    nrf_gpio_pin_clear(LED_B_PIN);
 
 }
-
+//static void switch_int_handler(nrf_drv_gpiote_pin_t pin, nrf_gpiote_polarity_t action)
 static void switch_int_handler(uint8_t pin, uint8_t action)
 {
   get_current_status();
   switch(pin){
     case nSW1_PIN:  // case is open
+      device_status.DEVSTAT_STATE_OF_SW_1_CHANGED = 1; 
       if(main_status.change_case_state_req == CASE_STATE_REQ_UNLOOK){
-        logEventStorageReq(LOG_EVENT_CASE_OPEN, 0,0,0);
-        main_status.CaseState = CASE_UNLOCK;
-        lsensor_sleep();
-        device_status.DEVSTAT_STATE_OF_SW_1_CHANGED = YES; 
         SetLedControl(LED_OFF,LED_ON,LED_OFF);
+//        nrf_gpio_pin_set(LED_G_PIN);
         CaseStateLedOnTime = CASE_STATE_LED_ON_TIME;
         stop_motor();
       }
       break;
-    case nSW2_PIN: // case is in handel open mode
-      if(main_status.change_case_state_req == CASE_STATE_REQ_HANDEL_OPEN){
-        logEventStorageReq(LOG_EVENT_CASE_HANDLE_OPEN, 0,0,0);
-        main_status.CaseState = CASE_HANDEL_OPEN;
-        LIGHT_SENSOR_WEAKUP_ENABLE();
-        device_status.DEVSTAT_STATE_OF_SW_2_CHANGED = YES; 
+    case nSW2_PIN: // case is in manual mode
+      device_status.DEVSTAT_STATE_OF_SW_2_CHANGED = 1; 
+      if(main_status.change_case_state_req == CASE_STATE_REQ_MANUAL){
         SetLedControl(LED_OFF,LED_OFF,LED_ON);
+//        nrf_gpio_pin_set(LED_B_PIN);
         CaseStateLedOnTime = CASE_STATE_LED_ON_TIME;
         stop_motor();
       }
       break;
     case nSW3_PIN: // case is closed
+      main_status.LockSwitchEventTime = SW_EVENT_TIMEOUT;
+      device_status.DEVSTAT_STATE_OF_SW_3_CHANGED = 1; 
       if(main_status.change_case_state_req == CASE_STATE_REQ_LOOK){
-        logEventStorageReq(LOG_EVENT_CASE_CLOSED, 0,0,0);
-        main_status.CaseState = CASE_LOCK;
-        LIGHT_SENSOR_WEAKUP_ENABLE();
-        device_status.DEVSTAT_STATE_OF_SW_3_CHANGED = YES; 
         SetLedControl(LED_ON,LED_OFF,LED_OFF);
+//        nrf_gpio_pin_set(LED_R_PIN);
         CaseStateLedOnTime = CASE_STATE_LED_ON_TIME;
         stop_motor();
       }
       break;
     case nWIRE_PIN:
-      if(main_status.CaseState == CASE_LOCK){
-        logEventStorageReq(LOG_EVENT_WIRE_CHANGED, 0,0,0);
-        device_status.DEVSTAT_WIRE_PIN_CHANGED = YES; 
-      }
+      device_status.DEVSTAT_WIRE_PIN_CHANGED = 1; 
+      main_status.WireEventTime = 5;        //test switch state after 4 sec 
       break;
 
     case SENSOR_INT_PIN:
-      device_status.DEVSTAT_LIGHT_PENETRATION_CHANGED = YES;
-      if((main_status.CaseState == CASE_LOCK)||(main_status.CaseState == CASE_HANDEL_OPEN))
-        logEventStorageReq(LOG_EVENT_LIGHT_CHANGED, 0,0,0);
+      device_status.DEVSTAT_LIGHT_PENETRATION_CHANGED = 1;
+      main_status.StoreDevStatusReq = 1;
 
       CaseStateLedOnTime = ALARM_BLINK_TIME;
       SetLedControl(LED_BLINK,LED_OFF,LED_OFF);
+//      led_control.LED_RED = LED_BLINK;
       rtcTickRequest.led_bilnk = 1;
       break;
   }
-  Message_DeviceStatus( device_status);             // switches state changed event
-  device_status.DEVSTAT_STATE_OF_SW_1_CHANGED = NO; 
-  device_status.DEVSTAT_STATE_OF_SW_2_CHANGED = NO; 
-  device_status.DEVSTAT_STATE_OF_SW_3_CHANGED = NO; 
-  device_status.DEVSTAT_WIRE_PIN_CHANGED = NO; 
-  device_status.DEVSTAT_LIGHT_PENETRATION_CHANGED = NO;
+  Message_DeviceStatus( device_status);
+  device_status.DEVSTAT_STATE_OF_SW_1_CHANGED = 0; 
+  device_status.DEVSTAT_STATE_OF_SW_2_CHANGED = 0; 
+  device_status.DEVSTAT_STATE_OF_SW_3_CHANGED = 0; 
+  device_status.DEVSTAT_WIRE_PIN_CHANGED = 0; 
+  device_status.DEVSTAT_LIGHT_PENETRATION_CHANGED = 0;
 }
 
 static void switch_init(void)
@@ -284,13 +226,22 @@ static void switch_init(void)
 
     err_code = app_button_enable();
     APP_ERROR_CHECK(err_code);
+
+//    nrfx_gpiote_in_event_disable(nSW1_PIN);
+//    nrfx_gpiote_in_event_enable(nSW1_PIN, true);
 }
+
+
+//void wire_int_handler(nrf_drv_gpiote_pin_t pin, nrf_gpiote_polarity_t action)
+//{
+//  main_status.WireEventTime = 5;        //test switch state after 4 sec
+//}
 
 /**
  * @brief Function for configuring: SENSOR_INT_PIN pin for input, RED_LED pin for output,
  * and configures GPIOTE to give an interrupt on pin change.
  */
-static void gpio_init(void)
+void gpio_init(void)
 {
     ret_code_t err_code;
     switch_init();
@@ -325,32 +276,82 @@ static void gpio_init(void)
     in_config.pull = NRF_GPIO_PIN_PULLUP;
 }
 
-static void StoreDevLog(void)
+void SetLedControl(LED_STATE R,LED_STATE G,LED_STATE B)
+{
+  uint32_t state;
+  led_control.LED_RED = R;
+  led_control.LED_GREEN = G;
+  led_control.LED_BLUE = B;
+
+   NRF_LOG_INFO("Led State - 0x%02x", *(uint8_t*)&led_control);
+
+  if((R == LED_BLINK)||(G == LED_BLINK)||(B == LED_BLINK)){
+    NRF_LOG_INFO("RGB - 0x%02x  0x%02x  0x%02x", *(uint8_t*)&R, *(uint8_t*)&G, *(uint8_t*)&B);
+     rtcTickRequest.led_bilnk = 1;
+  }
+  if(R == LED_ON)
+    nrf_gpio_pin_set(LED_R_PIN);
+  else 
+    nrf_gpio_pin_clear(LED_R_PIN);
+  if(G == LED_ON)
+    nrf_gpio_pin_set(LED_G_PIN);
+  else 
+    nrf_gpio_pin_clear(LED_G_PIN);
+  if(B == LED_ON)
+    nrf_gpio_pin_set(LED_B_PIN);
+  else 
+    nrf_gpio_pin_clear(LED_B_PIN);
+
+}
+
+void StoreDevStatus(void)
 {
   if(nrf_fstorage_is_busy(&fstorage))
     return;
-  if(log_event.log_event[log_event.log_event_rd_idx].store_flag == LOG_STORE_REQ){
-    uint32_t DtateTime = *(uint32_t*)&log_event.log_event[log_event.log_event_rd_idx].DateTime;
-    uint8_t event = *(uint8_t*)&log_event.log_event[log_event.log_event_rd_idx].log_event;
-    //NRF_LOG_INFO("StoreDevLog at addr = 0x%08x   date = 0x%08x  event = %d",ReportAddr,DtateTime,event);
-    int_flash_write(ReportAddr,(uint32_t*)&log_event.log_event[log_event.log_event_rd_idx], EVENT_LOG_SIZE);
+  if(main_status.StoreDevStatusReq){
+    report_t report_t;
+    get_current_status();
+    report_t.DateTime.AsInt = CurrentDateTime.AsInt;
+    *(uint32_t*)&report_t.current_status =*(uint32_t*)&device_status;
+    int_flash_write(ReportAddr, &report_t.DateTime.AsInt, sizeof(report_t));
+    ReportAddr += sizeof(report_t);
+    main_status.StoreDevStatusReq = 0;
   }
 }
 
-static void LockSwitchEvent_handler(void)
+void LockSwitchEvent_handler(void)
 {
-  switch(main_status.LightSensorWeakupTime)
+  switch(main_status.LockSwitchEventTime)
   {
     case 0:   // do nothing
       break;
     case 1:   // stable state
-      if((main_status.CaseState == CASE_LOCK)||(main_status.CaseState == CASE_HANDEL_OPEN)){
+      device_status.DEVSTAT_STATE_OF_SW_3 = nrf_gpio_pin_read(nSW3_PIN);
+      if(device_status.DEVSTAT_STATE_OF_SW_3 == 0){    //case closed
         lsensor_weak_up();
+        main_status.StoreDevStatusReq = 1;        
+      }
+      else{
+        lsensor_sleep();
       }
     default:   // debounce time
-      main_status.LightSensorWeakupTime--;
+      main_status.LockSwitchEventTime--;
   }
 }
+
+void WireEvent_handler(void)
+{
+  switch(main_status.WireEventTime)
+  {
+    case 0:   // do nothing
+      break;
+    case 1:   // stable state
+      main_status.StoreDevStatusReq = 1;        
+    default:  // debounce time
+      main_status.WireEventTime--;
+  }
+}
+
 
 
 /************* SAADC ***************************/
@@ -359,11 +360,12 @@ static void LockSwitchEvent_handler(void)
 volatile uint8_t state = 1;
 
 static nrf_saadc_value_t     m_buffer_pool[2][SAMPLES_IN_BUFFER];
+//static nrf_ppi_channel_t     m_ppi_channel;
 static uint32_t              m_adc_evt_counter;
+
 
 void saadc_callback(nrf_drv_saadc_evt_t const * p_event)
 {
-  static uint32_t minVoltage = 0xffffffff;
   if (p_event->type == NRF_DRV_SAADC_EVT_DONE)
   {
     ret_code_t err_code;
@@ -371,30 +373,33 @@ void saadc_callback(nrf_drv_saadc_evt_t const * p_event)
     err_code = nrf_drv_saadc_buffer_convert(p_event->data.done.p_buffer, SAMPLES_IN_BUFFER);
     APP_ERROR_CHECK(err_code);
     BatVoltage = p_event->data.done.p_buffer[0];
-    minVoltage = (minVoltage > BatVoltage)? BatVoltage:minVoltage;
-    if(motorTimeout < RTC_TICK_TIME){
-      //NRF_LOG_INFO("BatVoltage = %d   minVoltage = %d",BatVoltage,minVoltage);
-    }
+    NRF_LOG_INFO("BatVoltage = %d",BatVoltage);
+
     if(BatVoltage < pParamTable->BatteryAlarmLevel){
       NRF_LOG_INFO("Low Battery");
       if(device_status.DEVSTAT_POWER_LOW == NO){
         device_status.DEVSTAT_POWER_LOW = YES;
-        logEventStorageReq(LOG_EVENT_ERROR,0,0,0);
         device_status.DEVSTAT_POWER_LOW_CHANGED = YES;
-        get_current_status();
-        Message_DeviceStatus( device_status);       // low battery event
-       device_status.DEVSTAT_POWER_LOW_CHANGED = NO;
       }
     }
+    if(device_status.DEVSTAT_POWER_LOW_CHANGED == YES){
+      get_current_status();
+      Message_DeviceStatus( device_status);
+      device_status.DEVSTAT_POWER_LOW_CHANGED = NO;
+    }
+//    if((BatVoltage > pParamTable->BatteryAlarmLevel)&&
+//       (device_status.DEVSTAT_POWER_LOW_CHANGED != YES)){
+//        device_status.DEVSTAT_POWER_LOW = NO;
+//        device_status.DEVSTAT_POWER_LOW_CHANGED = NO;
+//    }
 // cancel the measuring  
     nrf_drv_saadc_uninit();
     NRF_SAADC->INTENCLR = (SAADC_INTENCLR_END_Clear << SAADC_INTENCLR_END_Pos);
     NVIC_ClearPendingIRQ(SAADC_IRQn);
-    main_status.FlashBuzy = NO;
   }
 }
 
-static void saadc_init(void)
+void saadc_init(void)
 {
     // reference voltage is 0.6 V.
     // resolution is 10 bit
@@ -481,8 +486,10 @@ void int_flash_write(uint32_t addr, uint32_t* pdata, size_t size)
       APP_ERROR_CHECK(NRF_ERROR_INVALID_PARAM);
     } 
     do{
+//      nrf_fstorage_write(&fstorage,addr,pdata,4,NULL);
     rc =  nrf_fstorage_write(&fstorage,addr,pdata,WrSize,NULL);
     APP_ERROR_CHECK(rc);
+//      nrf_nvmc_write_words(addr, pdata, WrSize);
       size -= WrSize;
       pdata += WrSize;
       WrSize = (size > PAGE_SIZE_WORDS)? PAGE_SIZE_WORDS:size;   
@@ -514,7 +521,7 @@ uint32_t find_free_addr(uint32_t startAddr)
   return 0xFFFFFFFF;
 }
 
-static void WriteParamTab(void)
+void WriteParamTab(void)
 {
     uint32_t addr;
     uint32_t ParamTabCrc;
@@ -528,8 +535,13 @@ static void WriteParamTab(void)
 #endif
 #if 0     
 //debug
+<<<<<<< HEAD
     int_flash_read((uint32_t)pParamTable, (uint32_t*)&currentParamTable, 8);
     NRF_LOG_INFO("currentParamTable[0] = 0x%02x   Address = 0x%08x",currentParamTable[4],(uint32_t)pParamTable+4);
+=======
+    int_flash_read((uint32_t)pParamTable+4, (uint32_t*)&currentParamTable, 1);
+    //NRF_LOG_INFO("currentParamTable[0] = 0x%02x",currentParamTable[0]);
+>>>>>>> fc5106b909b208145af284f0fdfbf3852ad04910
 
 #endif
     if(nrf_fstorage_is_busy(&fstorage))
@@ -560,7 +572,11 @@ static void WriteParamTab(void)
 
         ParamTabCrc = crc32_compute(NewParamTable,sizeof(ParamTable_t),NULL);
         memcpy(NewParamTable+sizeof(ParamTable_t),&ParamTabCrc,sizeof(ParamTabCrc));
+//        memcpy(currentParamTable+sizeof(ParamTable_t),&ParamTabCrc,sizeof(uint32_t));
+//        NRF_LOG_INFO("Write ParamTable  %01x %01x %01x %01x %01x %01x ...",currentParamTable[0],
+//          currentParamTable[1],currentParamTable[2],currentParamTable[3],currentParamTable[4],currentParamTable[5]);
         int_flash_write((uint32_t)pParamTable,(uint32_t*)NewParamTable,sizeof(NewParamTable));
+//        int_flash_write((uint32_t)pParamTable,(uint32_t*)debug_buffer,sizeof(deb_buf));
         break;
     }
 #endif
@@ -588,6 +604,8 @@ static void initParamTab(void){
     NRF_LOG_INFO("ParamTabCrc = 0x%08x     currCrc = 0x%08x",ParamTabCrc,currCrc);
     if(ParamTabCrc != currCrc){
         NRF_LOG_INFO("update ParamTable");
+//        ParamTable_t newTab = {LSENSOR_DEF, MOTOR_TIMEOUT_DEF,HW_REVISION,BATTERY_ALARM_LEVEL_DEF};
+//        memcpy(&NewParamTable,&newTab,sizeof(ParamTable_t));
         main_status.ParamTab_change_req = REQ_CHNGE;
         WriteParamTab();
     }else{
@@ -598,13 +616,124 @@ static void initParamTab(void){
 }
 /************************ RTC ****************/
 
-static void incr_date_time(DateTime_t* pDateTime)
+/** @brief: Function for handling the RTC0 interrupts.
+ * Triggered on TICK and COMPARE0 match.
+ */
+static void rtc_handler(nrf_drv_rtc_int_type_t int_type)
+{
+    static uint32_t RTC_cntr_sec = 0;
+    static uint32_t RTC_cntr_tick = 0;
+    uint32_t err_code;
+    if (int_type == NRF_DRV_RTC_INT_COMPARE0){ // one second event
+      //   RTC_cntr =  nrfx_rtc_counter_get(&rtc);
+      //    nrf_gpio_pin_toggle(RED_LED);  // for debugging only 
+        RTC_cntr_sec++;
+        RTC_cntr_tick = 0;
+        err_code = nrf_drv_rtc_cc_set(&rtc,0,nrfx_rtc_counter_get(&rtc) + TICK_PER_SEC,true);
+        APP_ERROR_CHECK(err_code);
+        incr_date_time(&CurrentDateTime.AsStruct);
+        WriteParamTab();
+//        motor_ctrl();
+//        LockSwitchEvent_handler();
+        WireEvent_handler();
+        StoreDevStatus();           
+        if((RTC_cntr_sec & 0x0F)==0){ // measure Battery Voltage every 16 second
+          saadc_init();
+          err_code = nrfx_saadc_sample();
+          APP_ERROR_CHECK(err_code);
+        }
+        if(CaseStateLedOnTime > 1){
+          CaseStateLedOnTime--;
+        }else if(CaseStateLedOnTime == 1){
+          CaseStateLedOnTime = 0;
+          *(uint32_t*)&led_control = 0;   
+          nrf_gpio_pin_clear(LED_R_PIN);
+          nrf_gpio_pin_clear(LED_G_PIN);
+          nrf_gpio_pin_clear(LED_B_PIN);
+          rtcTickRequest.led_bilnk = 0;
+        }
+
+        if(led_control.LED_BLUE == LED_BLINK){
+          nrf_gpio_pin_set(LED_B_PIN);
+        }
+        if(led_control.LED_GREEN == LED_BLINK){
+          nrf_gpio_pin_set(LED_G_PIN);
+        }
+        if(led_control.LED_RED == LED_BLINK){
+          nrf_gpio_pin_set(LED_R_PIN);
+        }
+        if(main_status.MotorPowerOffReq == 2){
+          main_status.MotorPowerOffReq--;
+        }else if(main_status.MotorPowerOffReq == 1){
+          MOTOR_POWER_OFF();
+        }
+//        if(main_status.NotifyReq){
+//          if(ble_status.connected){
+//            get_current_status();
+//            DeviceStatus_Notification( *(DEVICE_STATUS*)&device_status.AsInt);
+//            DeviceStatus_Notification( *(DEVICE_STATUS*)&device_status.AsInt);
+//            main_status.NotifyReq = 0;
+//        }
+//      }
+    }
+    else if (int_type == NRF_DRV_RTC_INT_TICK)
+    {
+        RTC_cntr_tick++;
+        if(RTC_cntr_tick == LED_BLINK_ON_TIME_TICK){
+          if(led_control.LED_BLUE == LED_BLINK){
+            nrf_gpio_pin_clear(LED_B_PIN);
+          }
+          if(led_control.LED_GREEN == LED_BLINK){
+            nrf_gpio_pin_clear(LED_G_PIN);
+          }
+          if(led_control.LED_RED == LED_BLINK){
+            nrf_gpio_pin_clear(LED_R_PIN);
+          }
+        }
+        if(main_status.change_case_state_req != CASE_STATE_REQ_IDLE){
+          if(motorTimeout > RTC_TICK_TIME){
+            motorTimeout -= RTC_TICK_TIME;
+          }else{
+            CaseStateLedOnTime = CASE_STATE_ERROR_LED_BLINK_TIME;
+            SetLedControl(LED_BLINK,LED_BLINK,LED_OFF);
+//            led_control.LED_GREEN = LED_BLINK;
+//            led_control.LED_RED = LED_BLINK;
+//            rtcTickRequest.led_bilnk = 1;
+            stop_motor();
+          }
+        }
+    }
+}
+
+/** @brief Function initialization and configuration of RTC driver instance.
+ */
+void rtc_config(void)
+{
+    uint32_t err_code;
+
+    //Initialize RTC instance
+    nrf_drv_rtc_config_t config = NRF_DRV_RTC_DEFAULT_CONFIG;
+    config.prescaler = 4095;    // 32768/4096 = 8 tiks/sec
+    err_code = nrf_drv_rtc_init(&rtc, &config, rtc_handler);
+    APP_ERROR_CHECK(err_code);
+
+    //Enable tick event & interrupt
+    nrf_drv_rtc_tick_enable(&rtc,true);
+
+    //Set compare channel to trigger interrupt after 1 seconds
+    err_code = nrf_drv_rtc_cc_set(&rtc,0,TICK_PER_SEC,true);
+    APP_ERROR_CHECK(err_code);
+
+    //Power on RTC instance
+    nrf_drv_rtc_enable(&rtc);
+}
+
+void incr_date_time(DateTime_t* pDateTime)
 {
   uint32_t february_len;
   
   if(main_status.DateTime_change_req){
     ((uint32_t*)pDateTime)[0] = NewDateTime;
-    main_status.DateTime_change_req = 0;
   }
 
   if(pDateTime->tm_sec >= SECOND_PER_MINUTE-1){
@@ -661,116 +790,13 @@ static void incr_date_time(DateTime_t* pDateTime)
   }
 }
 
-/** @brief: Function for handling the RTC0 interrupts.
- * Triggered on TICK and COMPARE0 match.
- */
-static void rtc_handler(nrf_drv_rtc_int_type_t int_type)
+void set_date_time(DateTime_int_t* CurrentDateTime, uint32_t NewDateTime)
 {
-    static uint32_t RTC_cntr_sec = 0;
-    static uint32_t RTC_cntr_tick = 0;
-    uint32_t err_code;
-    if (int_type == NRF_DRV_RTC_INT_COMPARE0){ // one second event
-        RTC_cntr_sec++;
-        RTC_cntr_tick = 0;
-        err_code = nrf_drv_rtc_cc_set(&rtc,0,nrfx_rtc_counter_get(&rtc) + TICK_PER_SEC,true);
-        APP_ERROR_CHECK(err_code);
-        incr_date_time(&CurrentDateTime.AsStruct);
-        WriteParamTab();
-        LockSwitchEvent_handler();
-        StoreDevLog();
-                   
-        if(((RTC_cntr_sec & 0x0F)==0)&&(main_status.FlashBuzy==NO)){ // measure Battery Voltage every 16 second
-          main_status.FlashBuzy = YES;
-          //NRF_LOG_INFO("Current Time = 0x%08x",CurrentDateTime.AsInt);
-          saadc_init();
-          err_code = nrfx_saadc_sample();
-          APP_ERROR_CHECK(err_code);
-        }
-        if(CaseStateLedOnTime > 1){
-          CaseStateLedOnTime--;
-        }else if(CaseStateLedOnTime == 1){
-          CaseStateLedOnTime = 0;
-          *(uint32_t*)&led_control = 0;   
-          nrf_gpio_pin_clear(LED_R_PIN);
-          nrf_gpio_pin_clear(LED_G_PIN);
-          nrf_gpio_pin_clear(LED_B_PIN);
-          rtcTickRequest.led_bilnk = 0;
-        }
-
-        if(led_control.LED_BLUE == LED_BLINK){
-          nrf_gpio_pin_set(LED_B_PIN);
-        }
-        if(led_control.LED_GREEN == LED_BLINK){
-          nrf_gpio_pin_set(LED_G_PIN);
-        }
-        if(led_control.LED_RED == LED_BLINK){
-          nrf_gpio_pin_set(LED_R_PIN);
-        }
-        if(main_status.MotorPowerOffReq == 2){
-          main_status.MotorPowerOffReq--;
-        }else if(main_status.MotorPowerOffReq == 1){
-          MOTOR_POWER_OFF();
-        }
-        if((main_status.FlashErase_req)&&(!nrf_fstorage_is_busy(&fstorage)))
-        {
-          uint32_t BlocksNo = (fstorage.end_addr - fstorage.start_addr)/0x1000 - 1;
-          int_flash_erase((uint32_t)pParamTable + 0x1000,BlocksNo);
-        }
-    }
-    else if (int_type == NRF_DRV_RTC_INT_TICK)
-    {
-        RTC_cntr_tick++;
-        if(RTC_cntr_tick == LED_BLINK_ON_TIME_TICK){
-          if(led_control.LED_BLUE == LED_BLINK){
-            nrf_gpio_pin_clear(LED_B_PIN);
-          }
-          if(led_control.LED_GREEN == LED_BLINK){
-            nrf_gpio_pin_clear(LED_G_PIN);
-          }
-          if(led_control.LED_RED == LED_BLINK){
-            nrf_gpio_pin_clear(LED_R_PIN);
-          }
-        }
-        if(main_status.change_case_state_req != CASE_STATE_REQ_IDLE){
-          if(motorTimeout > RTC_TICK_TIME){
-            motorTimeout -= RTC_TICK_TIME;
-            if((RTC_cntr_tick&0x01)&&(main_status.FlashBuzy==0)){ // SAADC
-              main_status.FlashBuzy = YES;
-              saadc_init();
-              err_code = nrfx_saadc_sample();
-              APP_ERROR_CHECK(err_code);
-            }
-          }else{
-            CaseStateLedOnTime = CASE_STATE_ERROR_LED_BLINK_TIME;
-            logEventStorageReq(LOG_EVENT_CASE_STATE_TIMEOUT,main_status.change_case_state_req,0,0);
-            SetLedControl(LED_BLINK,LED_BLINK,LED_OFF);
-            stop_motor();
-          }
-        }
-    }
+  CurrentDateTime->AsInt = NewDateTime;
 }
-
-/** @brief Function initialization and configuration of RTC driver instance.
- */
-static void rtc_config(void)
+uint32_t get_current_date_time(void)
 {
-    uint32_t err_code;
-
-    //Initialize RTC instance
-    nrf_drv_rtc_config_t config = NRF_DRV_RTC_DEFAULT_CONFIG;
-    config.prescaler = 4095;    // 32768/4096 = 8 tiks/sec
-    err_code = nrf_drv_rtc_init(&rtc, &config, rtc_handler);
-    APP_ERROR_CHECK(err_code);
-
-    //Enable tick event & interrupt
-    nrf_drv_rtc_tick_enable(&rtc,true);
-
-    //Set compare channel to trigger interrupt after 1 seconds
-    err_code = nrf_drv_rtc_cc_set(&rtc,0,TICK_PER_SEC,true);
-    APP_ERROR_CHECK(err_code);
-
-    //Power on RTC instance
-    nrf_drv_rtc_enable(&rtc);
+  return CurrentDateTime.AsInt;
 }
 
 /** @brief Function starting the internal LFCLK XTAL oscillator.
@@ -802,17 +828,11 @@ void init_periferal(void)
   int_flash_read((uint32_t)pParamTable, (uint32_t*)&ParamTab, sizeof(ParamTable_t));
   print_flash_info(&fstorage);
   initParamTab();
-  ReportAddr = find_free_addr((uint32_t)pParamTable + 0x1000);
-  lsensor_init();
-  memset(&log_event,0,sizeof(log_event_store_t));
-  get_current_status();
-  if(device_status.DEVSTAT_STATE_OF_SW_1 == 0){
-    main_status.CaseState = CASE_UNLOCK;
-  }else if(device_status.DEVSTAT_STATE_OF_SW_2 == 0){
-    main_status.CaseState = CASE_HANDEL_OPEN;
-  }else if(device_status.DEVSTAT_STATE_OF_SW_3 == 0){
-    main_status.CaseState = CASE_LOCK;
-  }else{
-    main_status.CaseState = CASE_UNRESOLVED;
-  }
+  ReportAddr = find_free_addr(REPORTS_START_ADDR);
+  //lsensor_init();
+
+  {// debug start
+
+  }// debug end
+
 }

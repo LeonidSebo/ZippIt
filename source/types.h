@@ -67,28 +67,9 @@ typedef struct _ParamTable_t
 #define MOTOR_ACTIVE_TIME_OFFSET    sizeof(lsensor_t)
 #define HW_REVISEON_OFFSET       sizeof(lsensor_t)+sizeof(motor_active_time_t)
 #define BAT_ALARM_LEVEL_OFFSET         HW_REVISEON_OFFSET+sizeof(uint32_t)
+#define LSENS_LOWER_THRESH_OFFSET      2
 
-#define device_status_t     DEVICE_STATUS
-//typedef struct _device_status_t
-//{
-//  uint32_t DEVSTAT_SW1          : 1;
-//  uint32_t DEVSTAT_SW2          : 1;
-//  uint32_t DEVSTAT_SW3          : 1;
-//  uint32_t DEVSTAT_WIRE_PIN     : 1;
-//  uint32_t DEVSTAT_POWER        : 1;
-//  uint32_t LIGHT_SENSOR         : 1;
-//  uint32_t unused0              : 2;
-//  uint32_t ALARM_POWER          : 2;
-//  uint32_t ALARM_LIGHT          : 2;
-//
-//  uint32_t DEVSTAT_Reserved_0   : 23;  
-//}device_status_t;
-
-//typedef union _current_state_int_t 
-//{
-//  device_status_t  AsStruct;
-//  uint32_t        AsInt;
-//}device_status_int_t;
+#define device_status_t     DEVICE_STATUS_EVENT
 
 //The type is for reports table. This table is stored in the flash
 // and can be changed during operations.
@@ -105,20 +86,22 @@ typedef struct _main_status_t
   uint32_t change_case_state_buzy  :  1;
   uint32_t DateTime_change_req     :  1;
   uint32_t ParamTab_change_req     :  2;
-  uint32_t LockSwitchEventTime     :  3;
-  uint32_t StoreDevStatusReq       :  1;
+  uint32_t LightSensorWeakupTime   :  3;
+  uint32_t LightSensorProblem      :  1;
   uint32_t NotifyReq               :  1;
-  uint32_t WireEventTime           :  3;
   uint32_t MotorPowerOffReq        :  2;     //0 - not request , 1 - Request motor power off, 
                                             //2 -  Request motor power off after one second
   uint32_t MotorAttemptCntr        :  2;
+  uint32_t FlashErase_req          :  1;
+  uint32_t FlashBuzy               :  1;
+  uint32_t CaseState               :  2;
   uint32_t spare                   : 13;
 }main_status_t;
 
 typedef struct _rtc_tick_enable_t{
   uint32_t led_bilnk               :  1;
-  uint32_t motor_buzy                       :  1;
-  uint32_t spare                   : 20;
+  uint32_t motor_buzy              :  1;
+  uint32_t spare                   :  6;
 }rtc_tick_enable_t;
 
 typedef enum _case_state_req_t
@@ -126,7 +109,7 @@ typedef enum _case_state_req_t
   CASE_STATE_REQ_IDLE,
   CASE_STATE_REQ_LOOK,
   CASE_STATE_REQ_UNLOOK,
-  CASE_STATE_REQ_MANUAL,
+  CASE_STATE_REQ_HANDEL_OPEN,
 }case_state_req_t;
 
 typedef struct _ble_status_t
@@ -163,5 +146,46 @@ typedef enum _alarm_t
 #define led_control_t  LED_CONTROL
 #define led_state_t    LED_STATE
 
+typedef enum _log_store_t
+{
+  LOG_STORE_NO_REQ,
+  LOG_STORE_REQ,
+  LOG_STORE_BUZY
+}_log_store_t;
 
+typedef enum _log_event_id_t
+{
+  LOG_EVENT_DEVICE_CONNECTED,
+  LOG_EVENT_DEVICE_DISCONNECTED,
+  LOG_EVENT_CASE_OPEN,
+  LOG_EVENT_CASE_CLOSED,
+  LOG_EVENT_CASE_HANDLE_OPEN,
+  LOG_EVENT_CASE_STATE_TIMEOUT,
+  LOG_EVENT_WIRE_CHANGED,
+  LOG_EVENT_LIGHT_CHANGED,
+  LOG_EVENT_BATTERY_LOW,
+  LOG_EVENT_UNAUTHORIZED_CMD,
+  LOG_EVENT_ERROR,
+  LOG_EVENT_LOW_FLASH_MEMORY,
+  LOG_EVENT_GPS_LOCATION
+}log_event_id_t;
+
+typedef  struct _log_event_t 
+{
+  DateTime_t DateTime;
+  uint8_t log_event;
+  uint8_t param0;
+  uint8_t param1;
+  uint8_t param2;
+  uint32_t  store_flag;
+}log_event_t;
+
+#define EVENT_LOG_SIZE    (sizeof(log_event_t)-sizeof(uint32_t))
+#define LOG_EVENT_MAX_CNT   4
+typedef struct _log_event_store_t
+{
+  log_event_t log_event[LOG_EVENT_MAX_CNT];
+  uint8_t log_event_wr_idx;
+  uint8_t log_event_rd_idx;
+}log_event_store_t;
 #endif  //TYPES_H
