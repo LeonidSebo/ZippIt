@@ -160,3 +160,35 @@ void Debug_GetEncrCommand() {
   //  memcpy(pCommand, CmdFullOpen, 16);
   //  memcpy(pCommand, CmdFullLock, 16);
 }
+
+//typedef struct _RTC_VALUE {
+//  uint32_t SECOND : 6;
+//  uint32_t MINUTE : 6;
+//  uint32_t HOUR : 5;
+//  uint32_t DAY : 5;
+//  uint32_t MONTH : 5;
+//  uint32_t YEAR : 5;
+//} RTC_VALUE;
+
+uint32_t Time_To_uint32_t(RTC_VALUE RTC_time)
+{
+  uint32_t value = 0;
+  value = RTC_time.SECOND +
+  (RTC_time.MINUTE << 6) +
+  (RTC_time.HOUR << 12) +
+  (RTC_time.DAY << 17) +
+  (RTC_time.MONTH << 22) +
+  (RTC_time.YEAR << 27);
+}
+
+RTC_VALUE uint32_t_To_Time(uint32_t value)
+{
+  RTC_VALUE RTC_time;
+  
+  RTC_time.SECOND = value & 0b111111;
+  RTC_time.MINUTE = (value >> 6) & 0b111111;
+  RTC_time.HOUR = (value >> 12) & 0b11111;
+  RTC_time.DAY = (value >> 17) & 0b11111;
+  RTC_time.MONTH = (value >> 22) & 0b11111;
+  RTC_time.YEAR = (value >> 27) & 0b11111;
+}

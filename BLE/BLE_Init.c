@@ -215,11 +215,67 @@ static void advertising_init(void) {
 
 /**@brief Function for starting advertising.
  */
-static void advertising_start(void) {
+
+static RESULT advertising_start(void) {
   ret_code_t err_code;
 
   err_code = sd_ble_gap_adv_start(m_adv_handle, APP_BLE_CONN_CFG_TAG);
-  APP_ERROR_CHECK(err_code);
+  if (err_code != NRF_SUCCESS) 
+  {
+    return ERR_SD_BLE_GAP_ADV_START;
+  }
+  //APP_ERROR_CHECK(err_code);
+}
+
+static RESULT advertising_stop(void) {
+  ret_code_t err_code;
+
+  err_code = sd_ble_gap_adv_stop(m_adv_handle);
+  if (err_code != NRF_SUCCESS) 
+  {
+    return ERR_SD_BLE_GAP_ADV_STOP;
+  }
+//  APP_ERROR_CHECK(err_code);
+}
+
+RESULT sleep(void)
+{
+	uint32_t err_code;
+        RESULT res;
+
+	// If connected, disconnect
+	if (m_conn_handle != BLE_CONN_HANDLE_INVALID)
+	{
+		err_code = sd_ble_gap_disconnect(m_adv_handle,  BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
+		if (err_code != NRF_SUCCESS)
+                {
+                  return ERR_SD_BLE_GAP_DISCONNECT;
+                }
+        }
+
+	// Stop advertising
+        res = advertising_stop();
+	err_code = sd_ble_gap_adv_stop(m_adv_handle);
+	if (err_code != NRF_SUCCESS) return err_code;
+
+	// Disable the radio tasks as scytulip suggested
+	// devzone.nordicsemi.com/.../
+	NRF_RADIO->TASKS_DISABLE = 1;
+
+	return res;
+}
+
+RESULT wake(void)
+{
+	RESULT err_code;
+        /*
+         //== https://devzone.nordicsemi.com/f/nordic-q-a/3198/completely-disabling-bluetooth  ==//
+         NRF_RADIO->TASK_ENABLE = 1;
+        */
+	return advertising_start();
+	//if (err_code != NRF_SUCCESS) return err_code;
+
+	//return NRF_SUCCESS;
 }
 
 static void on_conn_params_evt(ble_conn_params_evt_t *p_evt) {
