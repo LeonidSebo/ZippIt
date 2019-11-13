@@ -21,6 +21,8 @@ bool gCmdGetRandomNumberNotFirstCount;
 bool gCmd_ID_ErrorCount;
 //-------------------------------------------------------//
 
+NUMBER_RETRIES gNumberRetries = COUNT_ATTENTION_EVENT_MAX_VALUE;
+
 void CmdH_Command_Write(uint16_t conn_handle, ble_main_service_t *p_lbs, uint16_t CommandLen, uint8_t *pCommandEncr) {
   BLE_COMMAND Command;
   RESULT res = ERR_NO;
@@ -250,11 +252,13 @@ RESULT Cmd_SetLightAlarmLevel(BLE_COMMAND *pCommand) {
 
 RESULT Cmd_SetNumberRetries(BLE_COMMAND *pCommand) {
   RESULT res                   = ERR_NO;
-  NUMBER_RETRIES NumberRetries = pCommand->Data[0];
-  NRF_LOG_INFO("SetNumberRetries: NumberRetries = %d", NumberRetries);
+  
   if (pCommand->DataLength != sizeof(NUMBER_RETRIES)) {
     return Answer_OperationStatus(pCommand->CommandID, ERR_BLE_CMD_LEN);
   }
+
+  gNumberRetries = pCommand->Data[0];
+  NRF_LOG_INFO("SetNumberRetries: NumberRetries = %d", gNumberRetries);
   // res = bleSetNumberRetriel(LightAlarmLevel);
   res = Answer_OperationStatus(pCommand->CommandID, res);
   return res;
