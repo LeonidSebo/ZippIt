@@ -14,6 +14,14 @@ RESULT bleSetLedState(LED_CONTROL LedControl);
 RESULT bleSetMotorTimes(MOTOR_ACTIVE_TIME MotorTimes);
 RESULT bleSetRtcTime(uint32_t DateTime);
 RESULT bleSetBatteryAlarmLevel(uint32_t BatLevel);
+RESULT bleFlashLogErase(void);
+RESULT bleGetBatteryVoltage(uint16_t* BatteryVoltage);
+RESULT bleSetLightAlarmLevel(uint16_t LightAlarm);
+RESULT bleSetHardwareVersion(HARDWARE_VERSION HardwareVersion);
+RESULT bleGetDeviceStatus(DEVICE_STATUS* pDeviceStatus);
+
+void bleShowParamTab(void);
+
 
 #define bleFlashErase     int_flash_erase   //    (uint32_t addr, size_t pages_cnt)
 #define bleFlashWrite     int_flash_write   //    (uint32_t addr, uint32_t* pdata, size_t size)

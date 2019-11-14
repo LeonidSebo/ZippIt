@@ -32,3 +32,5 @@ _ReSharper*/
 packages/
 *.emSession
 ZipplT.emSession
+*.jlink
+/ZipplT.emSession

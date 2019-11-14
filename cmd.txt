@@ -1,1 +1,6 @@
 04 08 B8 0B DC 05 B8 0B DC 05		Set motor time
+01 01 00							Case unlook
+03 01 01							Red led on
+03 01 02							Red led blink
+05 04 01 02 03 04					Set time
+06 02 05 06							set battery alarm

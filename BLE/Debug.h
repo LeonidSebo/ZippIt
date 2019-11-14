@@ -13,4 +13,5 @@ void Debug_Func(BLE_COMMAND *pCommand);
 void Debug_GetEncrCommand();
 void Debug_MessageSend();
 RESULT Message_DeviceError(RESULT Result);
+void Debug_CheckFrameLength();
 #endif // APP_DEBUG_H__

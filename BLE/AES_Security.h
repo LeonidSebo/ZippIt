@@ -33,7 +33,8 @@ typedef BLE_BLOCK AES_BLOCK_DATA;
 #define PRAND_FACTOR_a 13
 #define PRAND_FACTOR_b 17
 #define PRAND_FACTOR_c 3
-#define PRAND_FACTOR_k 7.0
+#define PRAND_FACTOR_k 23.0
+//#define PRAND_FACTOR_k 7.0//751.0
 
 typedef struct _AES_CHARACTERISTIC_INFO {
   uint32_t PRandomNo;

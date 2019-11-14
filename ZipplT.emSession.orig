@@ -1,0 +1,90 @@
+<!DOCTYPE CrossStudio_Session_File>
+<session>
+ <Bookmarks/>
+ <Breakpoints groups="Breakpoints" active_group="Breakpoints"/>
+=======
+  <BookmarkItem objectName="" line="519" column="0" path="D:/Project/ZippIT/MC/source/periferal.c" number="2" extra="static void initParamTab(void){" color="5"/>
+  <BookmarkItem objectName="" line="275" column="0" path="D:/Project/ZippIT/MC/source/periferal.c" number="1" extra="void saadc_callback(nrf_drv_saadc_evt_t const * p_event)" color="5"/>
+  <BookmarkItem objectName="" line="478" column="0" path="D:/Project/ZippIT/MC/source/periferal.c" number="3" extra="void WriteParamTab(void)" color="5"/>
+  <BookmarkItem objectName="" line="550" column="0" path="D:/Project/ZippIT/MC/source/periferal.c" number="1" extra="static void rtc_handler(nrf_drv_rtc_int_type_t int_type)" color="5"/>
+>>>>>>> fc5106b909b208145af284f0fdfbf3852ad04910
+ <ExecutionProfileWindow/>
+ <FrameBufferWindow>
+  <FrameBufferWindow bufferHeight="-1" addressSpace="" addressText="" bufferWidth="-1"/>
+ </FrameBufferWindow>
+ <Memory1/>
+ <Memory2/>
+ <Memory3/>
+ <Memory4/>
+  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" addressOrder="0" columnsText="" refreshPeriod="0" name="ZipplT" radix="16" sizeText="" addressText="0x38000"/>
+>>>>>>> fc5106b909b208145af284f0fdfbf3852ad04910
+ <Project>
+  <ProjectSessionItem path="ZipplT"/>
+  <ProjectSessionItem path="ZipplT;ZipplT"/>
+  <ProjectSessionItem path="ZipplT;ZipplT;Application"/>
+  <ProjectSessionItem path="ZipplT;ZipplT;Application;BLE"/>
+<<<<<<< HEAD
+=======
+  <ProjectSessionItem path="ZipplT;ZipplT;nRF_Drivers"/>
+  <ProjectSessionItem path="ZipplT;ZipplT;nRF_Libraries"/>
+>>>>>>> fc5106b909b208145af284f0fdfbf3852ad04910
+ </Project>
+ <Register1/>
+ <Register2/>
+ <Register3/>
+ <Register4/>
+ <Threads>
+  <ThreadsWindow showLists=""/>
+ </Threads>
+ <TraceWindow>
+  <Trace enabled="Yes"/>
+ </TraceWindow>
+ <Watch1>
+  <Watches active="1" update="Never"/>
+<<<<<<< HEAD
+=======
+   <Watchpoint expression="pParamTable" name="pParamTable" radix="-1" linenumber="544" filename="source/periferal.c"/>
+   <Watchpoint expression="sizeof(ParamTable_t)" name="sizeof(ParamTable_t)" radix="16" linenumber="536" filename="source/periferal.c"/>
+>>>>>>> fc5106b909b208145af284f0fdfbf3852ad04910
+ </Watch1>
+ <Watch2>
+  <Watches active="0" update="Never"/>
+ </Watch2>
+ <Watch3>
+  <Watches active="0" update="Never"/>
+ </Watch3>
+ <Watch4>
+  <Watches active="0" update="Never"/>
+ </Watch4>
+ <Files>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="32" useTextEdit="1" useBinaryEdit="0" left="0" path="BLE/BLE_Def.h" selected="0" top="259" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="0" useTextEdit="1" useBinaryEdit="0" left="0" path="BLE/CmdHandler.c" selected="0" top="0" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="0" useTextEdit="1" useBinaryEdit="0" left="0" path="BLE/AES_Security.c" selected="0" top="271" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="69" useTextEdit="1" useBinaryEdit="0" left="0" path="BLE/AES_Security.h" selected="0" top="51" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="0" useTextEdit="1" useBinaryEdit="0" left="0" path="BLE/CmdHandler.h" selected="0" top="30" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="0" useTextEdit="1" useBinaryEdit="0" left="0" path="BLE/BLE_Services.h" selected="0" top="75" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="0" useTextEdit="1" useBinaryEdit="0" left="0" path="BLE/BLE_Init.c" selected="0" top="325" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="5" useTextEdit="1" useBinaryEdit="0" left="0" path="BLE/BLE_Init.h" selected="1" top="0" codecName="Default"/>
+ </Files>
+ <ARMCrossStudioWindow activeProject="ZipplT" fileDialogDefaultFilter="*.c" autoConnectTarget="J-Link" buildConfiguration="Debug" sessionSettings="" debugSearchFileMap="" fileDialogInitialDirectory="" debugSearchPath="" autoConnectCapabilities="3199"/>
+=======
+  <SessionOpenFile windowGroup="DockEditLeft" x="49" y="456" useTextEdit="1" useBinaryEdit="0" left="0" path="source/periferal.c" selected="0" top="444" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="127" useTextEdit="1" useBinaryEdit="0" left="0" path="main.c" selected="0" top="118" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="53" useTextEdit="1" useBinaryEdit="0" left="0" path="source/types.h" selected="0" top="0" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="60" useTextEdit="1" useBinaryEdit="0" left="0" path="source/periferal.h" selected="0" top="59" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="4" y="174" useTextEdit="1" useBinaryEdit="0" left="0" path="source/bleCmdHandler.c" selected="0" top="148" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="26" y="18" useTextEdit="1" useBinaryEdit="0" left="0" path="source/bleCmdHandler.h" selected="0" top="0" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="10" useTextEdit="1" useBinaryEdit="0" left="0" path="config/sdk_config.h" selected="0" top="0" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="28" y="249" useTextEdit="1" useBinaryEdit="0" left="0" path="BLE/BLE_Def.h" selected="0" top="235" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="56" y="332" useTextEdit="1" useBinaryEdit="0" left="0" path="BLE/CmdHandler.c" selected="0" top="315" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="55" y="164" useTextEdit="1" useBinaryEdit="0" left="0" path="BLE/BLE_Services.c" selected="0" top="194" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="14" y="85" useTextEdit="1" useBinaryEdit="0" left="0" path="BLE/AES_Security.c" selected="1" top="70" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="1" y="107" useTextEdit="1" useBinaryEdit="0" left="0" path="BLE/Debug.c" selected="0" top="89" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="17" useTextEdit="1" useBinaryEdit="0" left="0" path="BLE/AES_Security.h" selected="0" top="0" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="17" useTextEdit="1" useBinaryEdit="0" left="0" path="BLE/CmdHandler.h" selected="0" top="0" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="24" y="262" useTextEdit="1" useBinaryEdit="0" left="0" path="BLE/BLE_Init.c" selected="0" top="299" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="54" useTextEdit="1" useBinaryEdit="0" left="0" path="C:/Program Files/SEGGER/SEGGER Embedded Studio for ARM 4.20a/include/stddef.h" selected="0" top="41" codecName="Default"/>
+ </Files>
+ <ARMCrossStudioWindow activeProject="ZipplT" fileDialogDefaultFilter="*.c" autoConnectTarget="J-Link" buildConfiguration="Debug" sessionSettings="" debugSearchFileMap="" fileDialogInitialDirectory="C:/Nordic_Semi/nRF5_SDK_15_3_0/modules/nrfx/drivers/src" debugSearchPath="" autoConnectCapabilities="3199"/>
+>>>>>>> fc5106b909b208145af284f0fdfbf3852ad04910
+</session>

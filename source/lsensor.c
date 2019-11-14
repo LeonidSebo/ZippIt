@@ -10,11 +10,12 @@
 #include "boards.h"
 #include "types.h"
 
-
+void logEventStorageReq(log_event_id_t event,uint8_t param0,uint8_t param1,uint8_t param2);
 
 /* TWI instance ID. */
 #define TWI_INSTANCE_ID     0
 extern const ParamTable_t*  pParamTable;
+extern main_status_t main_status;
 
 
 /* Indicates if operation on TWI has ended. */
@@ -44,24 +45,22 @@ void twi_init(void)
 
 void lsensor_tx(uint8_t reg_addr, uint8_t const* pdata, size_t size)
 {
-    ret_code_t ret;
-    uint32_t i;
-    uint32_t repetition_cntr = I2C_REPETITION_MAX;
-    uint8_t buffer[LSENSOR_MAX_TRANSACTION_SIZE + 1]; /* Addr + data */
-    for(i = 0;i < size; i++){
-      buffer[0] = reg_addr + i;
-      buffer[1] = pdata[i];
-      while(repetition_cntr--){
-        ret = nrf_drv_twi_tx(&m_twi, LSENSOR_I2C_ADDR, buffer,I2C_ADDR_LEN + 1, false);
-        if(ret == NRF_SUCCESS){
-          break;
-        }
-        if(ret == NRF_ERROR_DRV_TWI_ERR_ANACK){
-          continue;
-        }
-        APP_ERROR_CHECK(ret);
+  ret_code_t ret;
+  uint32_t i;
+  uint8_t buffer[LSENSOR_MAX_TRANSACTION_SIZE + 1]; /* Addr + data */
+  for(i = 0;i<size;i++){
+    buffer[0] = reg_addr + i;
+    buffer[1] = pdata[i];
+    ret = nrf_drv_twi_tx(&m_twi, LSENSOR_I2C_ADDR, buffer,I2C_ADDR_LEN + 1, false);
+    if(ret != NRF_SUCCESS){
+      if(!main_status.LightSensorProblem){
+        logEventStorageReq(LOG_EVENT_ERROR,ERR_LIGHT_SENSOR_PROBLEM,0,0);
+        main_status.LightSensorProblem = 1;
+      }else{
+        main_status.LightSensorProblem = 0;
       }
     }
+  }
 }
 
 void lsensor_rx(uint8_t reg_addr, uint8_t* pdata, size_t size)
@@ -72,19 +71,25 @@ void lsensor_rx(uint8_t reg_addr, uint8_t* pdata, size_t size)
     uint8_t buffer; 
     for(i = 0;i<size;i++){
       buffer = reg_addr + i;
-      while(repetition_cntr--){
-        ret = nrf_drv_twi_tx(&m_twi, LSENSOR_I2C_ADDR, &buffer, I2C_ADDR_LEN, false);
-        if(ret == NRF_SUCCESS){
-          break;
+      ret = nrf_drv_twi_tx(&m_twi, LSENSOR_I2C_ADDR, &buffer, I2C_ADDR_LEN, false);
+      if(ret != NRF_SUCCESS){
+        if(!main_status.LightSensorProblem){
+          logEventStorageReq(LOG_EVENT_ERROR,ERR_LIGHT_SENSOR_PROBLEM,0,0);
+          main_status.LightSensorProblem = 1;
+        }else{
+          main_status.LightSensorProblem = 0;
         }
-        if(ret == NRF_ERROR_DRV_TWI_ERR_ANACK){
-          continue;
-        }
-        APP_ERROR_CHECK(ret);
       }
       ret = nrf_drv_twi_rx(&m_twi, LSENSOR_I2C_ADDR, pdata+i, 1);
-      APP_ERROR_CHECK(ret);
-    }
+      if(ret != NRF_SUCCESS){
+        if(!main_status.LightSensorProblem){
+          logEventStorageReq(LOG_EVENT_ERROR,ERR_LIGHT_SENSOR_PROBLEM,0,0);
+          main_status.LightSensorProblem = 1;
+        }else{
+          main_status.LightSensorProblem = 0;
+        }
+      }
+   }
 }
 
 void lsensor_init(void)
@@ -101,6 +106,7 @@ void lsensor_init(void)
 
 void lsensor_sleep(void)
 {
+  NRF_LOG_INFO("lsensor_sleep");
   uint8_t contr_reg = pParamTable->lsensor.contr_reg & 0xFE; // Stand-by mode
   nrfx_gpiote_in_event_disable(SENSOR_INT_PIN);            // desable interrupt
   lsensor_tx(LSEN_ALS_CONTR_REG,&contr_reg,1);             // send reg value
@@ -108,6 +114,7 @@ void lsensor_sleep(void)
 
 void lsensor_weak_up(void)
 {
+  NRF_LOG_INFO("lsensor_weak_up");
   uint8_t contr_reg = pParamTable->lsensor.contr_reg | 0x01; // Active mode
   nrfx_gpiote_in_event_disable(SENSOR_INT_PIN);            // desable interrupt
   lsensor_tx(LSEN_ALS_CONTR_REG,&contr_reg,1);             // send reg value

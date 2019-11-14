@@ -230,6 +230,12 @@ RESULT Serv_SendToHost(CHARACTERISTIC_ID CharId, uint8_t *pData, uint16_t DataLe
   
   default:
     return ERR_BLE_CHARACTERISTIC_ID;
+    params.handle = m_lbs.hFlashDatChar.value_handle;
+    break;
+    
+  
+  default:
+    return ERR_BLE_CHARACTERISTIC_ID;
   }
 
   
@@ -242,7 +248,7 @@ RESULT Serv_SendToHost(CHARACTERISTIC_ID CharId, uint8_t *pData, uint16_t DataLe
 
     res = ERR_BLE_MESSAGE_SEND;
   }
-  NRF_LOG_INFO("Serv_SendToHost: res = %d, res32 = %d", res, res32);
+  NRF_LOG_INFO("Serv_SendToHost: Characteristic %d, res = %d, res32 = %d", CharId,res, res32);
   return res;
 }
 

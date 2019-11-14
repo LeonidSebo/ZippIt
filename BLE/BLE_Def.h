@@ -23,15 +23,17 @@
 /*----------------------------------------*/
 //#include "Debug.h"
 
-#define VERSION_MAJOR 1
-#define VERSION_MINOR 0
-#define VERSION_BUILD 1
+#define DEVICE_NAME "ZippIT" /**< Name of device. Will be included in the advertising data. */
+
 
 typedef enum _RESULT {
   ERR_NO,
   ERR_BLE_DEVICE_NOT_CONNECTED,
   ERR_BLE_CHARACTERISTIC_ID,
+  //
   ERR_BLE_CMD_ID,
+  ERR_CMD_GET_RANDOM_NUMBERS_NOT_FIRST,
+  //
   ERR_BLE_CMD_LEN,
   ERR_BLE_CMD_DATA,
 
@@ -41,7 +43,14 @@ typedef enum _RESULT {
 
   ERR_AES_ECB_BLOCK_ENCRYPT,
   ERR_GET_RAND_BYTES,
-  ERR_LOW_BATTERY
+
+  ERR_LOW_BATTERY,      /*12*/
+  ERR_LIGHT_SENSOR_PROBLEM,
+
+  ERR_SD_BLE_GAP_DISCONNECT,
+  ERR_SD_BLE_GAP_ADV_START,
+  ERR_SD_BLE_GAP_ADV_STOP,
+
 } RESULT;
 
 typedef RESULT OPERATION_STATUS;
@@ -68,9 +77,6 @@ typedef enum _BLE_COMMANDS_ID {
   CMD_ID_FLASH_SETUP_READ = 0x0C,
   CMD_ID_FLASH_LOG_ERRASE = 0x0D,
   CMD_ID_FLASH_LOG_READ = 0x0E,
-  //  CMD_ID_FLASH_READ               = 0x0A,
-  //  CMD_ID_FLASH_ERRASE             = 0x0B,
-  //  CMD_ID_FLASH_WRITE              = 0x0C,
   //--------------------------------------
   CMD_NO,
   //--------------------------------------
@@ -84,7 +90,7 @@ typedef enum _BLE_COMMANDS_ID {
 typedef enum _BLE_MESSAGE_ID {
   MSG_NEW_RANDOM_NUMBERS = 0x00,
   MSG_DEVICE_STATUS_CHANGED = 0x01,
-  MSG_DEVICE_ERROR = 0x02,
+  MSG_DEVICE_ERROR = 0x02, /* TBD */
   MSG_ATTENTION = 0x03,
   MSG_BLE_CMD_ID_UNKNOWN = 0x04,
   MSG_LOG_FILE_IS_FULL = 0x05,
@@ -115,7 +121,9 @@ typedef enum _LOG_RECORD_ID {
 #define IDX_CMD_DATA 2
 
 #define BLE_BLOCK_SIZE_BYTE 16
-#define BLE_BLOCK_HEADER_SIZE_BYTE 2
+#define BLE_BLOCK_COMMAND_HEADER_SIZE_BYTE 2
+#define BLE_BLOCK_ANSWER_HEADER_SIZE_BYTE 3
+#define BLE_BLOCK_MESSAGE_HEADER_SIZE_BYTE 2
 #define BLE_BLOCK_ID_SIZE_BYTE 1
 #define BLE_BLOCK_DATALEN_SIZE_BYTE 1
 #define BLE_BLOCK_OPERATION_STATUS_SIZE_BYTE 1
@@ -149,6 +157,12 @@ typedef struct _BLE_MESSAGE {
 
 //===============================================
 
+typedef struct _HARDWARE_VERSION {
+  uint8_t HV_VERSION_MINOR;
+  uint8_t HV_VERSION_MAJOR;
+  uint16_t HV_RESERVED;
+} HARDWARE_VERSION;
+
 typedef struct _LED_CONTROL {
   uint8_t LED_RED : 2;
   uint8_t LED_GREEN : 2;
@@ -171,7 +185,7 @@ typedef enum _MOTOR_STATE {
 
 typedef enum _CASE_STATE {
   CASE_UNLOCK,
-  CASE_MANUAL,
+  CASE_HANDEL_OPEN,
   CASE_LOCK,
 } CASE_STATE;
 
@@ -201,8 +215,21 @@ typedef struct _DEVICE_STATE {
   uint32_t FLASH_LOG_FULL : 1;
   uint32_t Reserved_1 : 20;
 } DEVICE_STATE;
-
 typedef struct _DEVICE_STATUS {
+  uint32_t STATE_OF_SW_1 : 1;
+  uint32_t STATE_OF_SW_2 : 1;
+  uint32_t STATE_OF_SW_3 : 1;
+  uint32_t WIRE_PIN : 1;
+  uint32_t LIGHT_PENETRATION : 1;
+  uint32_t POWER_LOW : 1;
+  uint32_t Reserved_0 : 10;
+  /*-------------------------------*/
+  uint32_t LIGHT_SENSOR_NOT_PRESENT : 1; /* Not implemented */
+  uint32_t FLASH_LOG_FULL : 1;
+  uint32_t Reserved_1 : 14;
+} DEVICE_STATUS;
+
+typedef struct _DEVICE_STATUS_EVENT {
   uint32_t DEVSTAT_STATE_OF_SW_1 : 1;
   uint32_t DEVSTAT_STATE_OF_SW_1_CHANGED : 1;
   uint32_t DEVSTAT_STATE_OF_SW_2 : 1;
@@ -215,9 +242,9 @@ typedef struct _DEVICE_STATUS {
   uint32_t DEVSTAT_LIGHT_PENETRATION_CHANGED : 1;
   uint32_t DEVSTAT_POWER_LOW : 1;
   uint32_t DEVSTAT_POWER_LOW_CHANGED : 1;
-  uint32_t DEVSTAT_Reserved_0 : 20;
-} DEVICE_STATUS;
-
+  uint32_t DEVSTAT_FLASH_LOG_FULL : 1;
+  uint32_t DEVSTAT_FLASH_LOG_FULL_CHANGED : 1;
+  uint32_t DEVSTAT_Reserved_0 : 18;
 typedef struct _MOTOR_ACTIVE_TIME {
   uint16_t MOTOR_CW_FULL_TIME_MS;
   uint16_t MOTOR_CW_HALF_TIME_MS;
@@ -236,7 +263,8 @@ typedef struct _DEVICE_INFO {
 typedef enum _CHARACTERISTIC_ID {
   CHAR_COMMAND,
   CHAR_ANSWER,
-  CHAR_MESSAGE
+  CHAR_MESSAGE,
+  CHAR_FLASH_DATA
 } CHARACTERISTIC_ID;
 
 #define DEVICE_NAME "ZipplT_debug" /**< Name of device. Will be included in the advertising data. */

@@ -6,38 +6,27 @@
 #include "Debug.h"
 
 #define DEBUG_PRINT_RANDOM_AND_KEY_EN    1
+#define CHAR_ANSWER_ENCRIPTION_DISABLE    0
 
 #define NRF_CRYPTO_EXAMPLE_AES_MAX_TEXT_SIZE 120
 #define RNG_BYTE_WAIT_US (124UL)
 #define AES_DATA_OFFSET 0
 
-//#define AES_ERROR_CHECK(error)  \
-//    do {            \
-//        if (error)  \
-//        {           \
-//            NRF_LOG_RAW_INFO("\r\nError = 0x%x\r\n%s\r\n",           \
-//                             (error),                                \
-//                             nrf_crypto_error_string_get(error));    \
-//            return ERR_NRF_CRYPTO; \
-//        }           \
-//    } while (0);
-//
 
 AES_CHARACTERISTIC_INFO gCharInfo[CHARACTERISTICS_NO];
 
 /*
 static uint8_t gKey[16] = {
-    0x00, 0x8e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6,
-    0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c};
+    0x79, 0x2F, 0x42, 0x3F, 0x45, 0x28, 0x48, 0x2B,
+    0x4D, 0x62, 0x51, 0x65, 0x54, 0x68, 0x57, 0x6D};
 
 static uint8_t gIV[16] = {
-    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-    0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f};
+    0x46, 0x29, 0x4A, 0x40, 0x4E, 0x63, 0x52, 0x66, 
+    0x55, 0x6A, 0x57, 0x6E, 0x5A, 0x72, 0x34, 0x75};
 */
 static uint8_t gKey[16] = {
     0x79, 0x2F, 0x42, 0x3F, 0x45, 0x28, 0x48, 0x2B,
     0x4D, 0x62, 0x51, 0x65, 0x54, 0x68, 0x57, 0x6D};
-
 static uint8_t gIV[16] = {
     0x46, 0x29, 0x4A, 0x40, 0x4E, 0x63, 0x52, 0x66, 
     0x55, 0x6A, 0x57, 0x6E, 0x5A, 0x72, 0x34, 0x75};
@@ -106,6 +95,7 @@ RESULT AES_GetNewRandomNumbers(uint8_t *pNewRandomNumbers) {
 //  memset(pNewRandomNumbers + 6, val, 3);
   
   
+  
   //  for(i = 0; i < CHARACTERISTICS_NO; i++)
   //  {
   //    gCharInfo[i].PRandomNo = 0;
@@ -131,7 +121,7 @@ void AES_SetNewRandomNumbers(uint8_t *pNewRandomNumbers) {
 }
 
 RESULT AES_BlockEncript(CHARACTERISTIC_ID CharacteristicID, uint8_t *pClearBlock, uint8_t ClearBlockLen,
-    uint8_t *pCipherBlock16) {
+  uint8_t *pCipherBlock16) {
   uint8_t EncrBuffer[AES_BLOCK_SIZE_BYTE];
   uint8_t NewKey[AES_KEY_SIZE_BYTE];
   RESULT res;
@@ -144,18 +134,25 @@ RESULT AES_BlockEncript(CHARACTERISTIC_ID CharacteristicID, uint8_t *pClearBlock
   memcpy(NewKey, &(gCharInfo[CharacteristicID].PRandomNo), AES_BLOCK_RANDOM_NO_SIZE_BYTE);
 
   /* Fill the buffer with random numbers  */
-  //res = AES_RandFillArray(pCipherBlock16, AES_BLOCK_SIZE_BYTE);
-  //RESULT_CHECK(res);
-  memset(pCipherBlock16, 0, AES_BLOCK_SIZE_BYTE);
+  res = AES_RandFillArray(pCipherBlock16, AES_BLOCK_SIZE_BYTE);
+  RESULT_CHECK(res);
+  //memset(pCipherBlock16, 0, AES_BLOCK_SIZE_BYTE);
 
   /* Fill Data */
   memcpy(pCipherBlock16 + AES_DATA_OFFSET, pClearBlock, DataLen);
   /* Encription IV */
-  res = AES_EncodeBlock(NewKey, gIV, EncrBuffer);
+  #if(!CHAR_ANSWER_ENCRIPTION_DISABLE)
+  {
+    res = AES_EncodeBlock(NewKey, gIV, EncrBuffer);
   RESULT_CHECK(res);
-  /* Xor ClearData with Encription IV*/
-  AES_XorArray2(EncrBuffer, pCipherBlock16, AES_BLOCK_SIZE_BYTE);
+    /* Xor ClearData with Encription IV*/
+    AES_XorArray2(EncrBuffer, pCipherBlock16, AES_BLOCK_SIZE_BYTE);
 #if DEBUG_PRINT_RANDOM_AND_KEY_EN == 1  
+  NRF_LOG_INFO("Characteritic %d:", CharacteristicID);
+  Debug_PrintHexArray("In  AES_BlockEncript", pClearBlock, 16);
+  Debug_PrintHexArray("Out AES_BlockEncript", pCipherBlock16, 16);
+#endif
+#if DEBUG_PRINT_RANDOM_AND_KEY_EN 
   NRF_LOG_INFO("Characteritic %d:", CharacteristicID);
   Debug_PrintHexArray("In  AES_BlockEncript", pClearBlock, 16);
   Debug_PrintHexArray("Out AES_BlockEncript", pCipherBlock16, 16);
@@ -189,7 +186,7 @@ RESULT AES_BlockDecript(CHARACTERISTIC_ID CharacteristicID,
 }
 
 RESULT AES_BlockEncript1(CHARACTERISTIC_ID CharacteristicID, uint8_t ID,
-    uint8_t *pClearData, uint8_t ClearDataLength, uint8_t *pCipherBlock16) {
+  uint8_t *pClearData, uint8_t ClearDataLength, uint8_t *pCipherBlock16) {
   uint8_t EncrBuffer[AES_BLOCK_SIZE_BYTE];
   uint8_t NewKey[AES_KEY_SIZE_BYTE];
   RESULT res;
@@ -323,6 +320,7 @@ void Debug_OFB_Encript() {
   AES_EncodeBlock(Key, IV, DecBuffer);
   AES_XorArray2(EncdBuffer, DecBuffer, SOC_ECB_CIPHERTEXT_LENGTH);
 }
+
 //RESULT AES_Encrypt(uint8_t Len_In, uint8_t *pData_In, uint8_t *pLen_Out, uint8_t *pData_Out)
 //{
 ////    /* Encryption phase */
