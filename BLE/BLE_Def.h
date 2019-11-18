@@ -25,6 +25,13 @@
 
 #define DEVICE_NAME "ZippIT" /**< Name of device. Will be included in the advertising data. */
 
+#define AES_BLOCK_SIZE_BYTE 16
+
+/* ==== Characteristics size ==== */
+#define CHAR_COMMAND_SIZE     AES_BLOCK_SIZE_BYTE
+#define CHAR_ANSWER_SIZE      AES_BLOCK_SIZE_BYTE
+#define CHAR_MESSAGE_SIZE     AES_BLOCK_SIZE_BYTE
+#define CHAR_FLASH_DATA_SIZE  AES_BLOCK_SIZE_BYTE * 16
 
 typedef enum _RESULT {
   ERR_NO,
@@ -95,6 +102,10 @@ typedef enum _BLE_MESSAGE_ID {
   //MSG_RANDOM_NUMBERS              = 0x05,
 } BLE_MESSAGE_ID;
 
+typedef enum _BLE_FLASH_DATA_ID {
+  FD_DATA_LOG_FILE = 0x00,
+} BLE_FLASH_DATA_ID;
+
 typedef enum _LOG_RECORD_ID {
   LOG_ERROR = 0x00,
   LOG_ATTENTION = 0x01,
@@ -152,6 +163,15 @@ typedef struct _BLE_MESSAGE {
   uint8_t DataLength;
   uint8_t Data[BLE_BLOCK_DATA_SIZE_BYTE];
 } BLE_MESSAGE;
+
+#define BLE_FLASH_DATA_HEADER_LEN               4
+#define BLE_FLASH_DATA_OPERATION_STATUS_LEN     1
+typedef struct _BLE_FLASH_DATA {
+  uint8_t DataID;
+  uint16_t DataLength;
+  uint8_t OperationStatus;
+  uint8_t Data[BLE_BLOCK_DATA_SIZE_BYTE - BLE_BLOCK_OPERATION_STATUS_SIZE_BYTE];
+} BLE_FLASH_DATA;
 
 //===============================================
 
@@ -247,7 +267,7 @@ typedef struct _DEVICE_INFO {
   uint8_t HW_VERSION_MAJOR;
 } DEVICE_INFO;
 
-#define CHARACTERISTICS_NO 3
+#define CHARACTERISTICS_NO 4
 typedef enum _CHARACTERISTIC_ID {
   CHAR_COMMAND,
   CHAR_ANSWER,
