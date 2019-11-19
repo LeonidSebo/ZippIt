@@ -79,13 +79,11 @@
 
 #define RTC_TICK_TIME       125
 
-#define INT_FLESH_START_ADDR    0x10000
-#define INT_FLESH_LAST_ADDR     0x7FFFF
-#define INT_FLESH_ALMOST_FULL_ADDR      (INT_FLESH_LAST_ADDR - 0x100)
+#define INT_FLESH_ALMOST_FULL_REST    100
 
-#define PARAM_TAB_ADDR      0x10000
+//#define PARAM_TAB_ADDR      0x10000
 #define PAGE_SIZE           0x01000
-#define PAGE_SIZE_WORDS     0x00400
+//#define PAGE_SIZE_WORDS     0x00400
 
 #define  CASE_STATE_LED_ON_TIME               6
 #define  CASE_STATE_ERROR_LED_BLINK_TIME      31

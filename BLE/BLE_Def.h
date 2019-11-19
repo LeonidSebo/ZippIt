@@ -25,6 +25,13 @@
 
 #define DEVICE_NAME "ZippIT" /**< Name of device. Will be included in the advertising data. */
 
+#define AES_BLOCK_SIZE_BYTE 16
+
+/* ==== Characteristics size ==== */
+#define CHAR_COMMAND_SIZE AES_BLOCK_SIZE_BYTE
+#define CHAR_ANSWER_SIZE AES_BLOCK_SIZE_BYTE
+#define CHAR_MESSAGE_SIZE AES_BLOCK_SIZE_BYTE
+#define CHAR_FLASH_DATA_SIZE AES_BLOCK_SIZE_BYTE * 16
 
 typedef enum _RESULT {
   ERR_NO,
@@ -51,7 +58,11 @@ typedef enum _RESULT {
   ERR_SD_BLE_GAP_ADV_START,
   ERR_SD_BLE_GAP_ADV_STOP,
 
+  ERR_MODULE_BUZY,
+  ERR_CASE_STATE
 } RESULT;
+
+typedef RESULT OPERATION_STATUS;
 
 typedef RESULT OPERATION_STATUS;
 
@@ -67,16 +78,13 @@ typedef enum _BLE_COMMANDS_ID {
   CMD_ID_SET_NUMBER_RETRIES = 0x08,
   CMD_ID_GET_RANDOM_NUMBERS = 0x09,
   CMD_ID_GET_BATTERY_CHARGING_LEVEL = 0x0A,
+  CMD_ID_SET_HARDWARE_VERSION = 0x0B,
+
   //----------------------------
-  CMD_ID_FLASH_SETUP_WRITE = 0x0B,
-  CMD_ID_FLASH_SETUP_READ = 0x0C,
-  CMD_ID_FLASH_LOG_ERRASE = 0x0D,
-  CMD_ID_FLASH_LOG_READ = 0x0E,  CMD_ID_GET_BATTERY_CHARGING_LEVEL = 0x0A,
-  //----------------------------
-  CMD_ID_FLASH_SETUP_WRITE = 0x0B,
-  CMD_ID_FLASH_SETUP_READ = 0x0C,
-  CMD_ID_FLASH_LOG_ERRASE = 0x0D,
-  CMD_ID_FLASH_LOG_READ = 0x0E,
+  CMD_ID_FLASH_LOG_ERRASE = 0x0C,
+  CMD_ID_FLASH_LOG_READ = 0x0D,
+  //  CMD_ID_FLASH_SETUP_WRITE = 0x0C,
+  //  CMD_ID_FLASH_SETUP_READ = 0x0D,
   //--------------------------------------
   CMD_NO,
   //--------------------------------------
@@ -88,14 +96,20 @@ typedef enum _BLE_COMMANDS_ID {
 #define ANSWER_ID_FLAG 0x80
 
 typedef enum _BLE_MESSAGE_ID {
-  MSG_NEW_RANDOM_NUMBERS = 0x00,
+  MSG_NEW_RANDOM_NUMBERS = 0x00, /* not used */
   MSG_DEVICE_STATUS_CHANGED = 0x01,
   MSG_DEVICE_ERROR = 0x02, /* TBD */
   MSG_ATTENTION = 0x03,
   MSG_BLE_CMD_ID_UNKNOWN = 0x04,
   MSG_LOG_FILE_IS_FULL = 0x05,
+  MSG_DISCOVERED_RETRIES_NO = 0x06,
+
   //MSG_RANDOM_NUMBERS              = 0x05,
 } BLE_MESSAGE_ID;
+
+typedef enum _BLE_FLASH_DATA_ID {
+  FD_DATA_LOG_FILE = 0x00,
+} BLE_FLASH_DATA_ID;
 
 typedef enum _LOG_RECORD_ID {
   LOG_ERROR = 0x00,
@@ -155,6 +169,15 @@ typedef struct _BLE_MESSAGE {
   uint8_t Data[BLE_BLOCK_DATA_SIZE_BYTE];
 } BLE_MESSAGE;
 
+#define BLE_FLASH_DATA_HEADER_LEN 4
+#define BLE_FLASH_DATA_OPERATION_STATUS_LEN 1
+typedef struct _BLE_FLASH_DATA {
+  uint8_t DataID;
+  uint16_t DataLength;
+  uint8_t OperationStatus;
+  uint8_t Data[BLE_BLOCK_DATA_SIZE_BYTE - BLE_BLOCK_OPERATION_STATUS_SIZE_BYTE];
+} BLE_FLASH_DATA;
+
 //===============================================
 
 typedef struct _HARDWARE_VERSION {
@@ -187,6 +210,7 @@ typedef enum _CASE_STATE {
   CASE_UNLOCK,
   CASE_HANDEL_OPEN,
   CASE_LOCK,
+  CASE_UNRESOLVED,
 } CASE_STATE;
 
 typedef uint16_t BATTERY_ALARM_LEVEL;
@@ -202,19 +226,6 @@ typedef struct _RTC_VALUE {
   uint32_t YEAR : 5;
 } RTC_VALUE;
 
-typedef struct _DEVICE_STATE {
-  uint32_t STATE_OF_SW_1 : 1;
-  uint32_t STATE_OF_SW_2 : 1;
-  uint32_t STATE_OF_SW_3 : 1;
-  uint32_t WIRE_PIN : 1;
-  uint32_t LIGHT_PENETRATION : 1;
-  uint32_t POWER_LOW : 1;
-  uint32_t Reserved_0 : 10;
-  /*-------------------------------*/
-  uint32_t LIGHT_SENSOR_NOT_PRESENT : 1;
-  uint32_t FLASH_LOG_FULL : 1;
-  uint32_t Reserved_1 : 20;
-} DEVICE_STATE;
 typedef struct _DEVICE_STATUS {
   uint32_t STATE_OF_SW_1 : 1;
   uint32_t STATE_OF_SW_2 : 1;
@@ -245,6 +256,8 @@ typedef struct _DEVICE_STATUS_EVENT {
   uint32_t DEVSTAT_FLASH_LOG_FULL : 1;
   uint32_t DEVSTAT_FLASH_LOG_FULL_CHANGED : 1;
   uint32_t DEVSTAT_Reserved_0 : 18;
+} DEVICE_STATUS_EVENT;
+
 typedef struct _MOTOR_ACTIVE_TIME {
   uint16_t MOTOR_CW_FULL_TIME_MS;
   uint16_t MOTOR_CW_HALF_TIME_MS;
@@ -259,15 +272,16 @@ typedef struct _DEVICE_INFO {
   uint8_t HW_VERSION_MAJOR;
 } DEVICE_INFO;
 
-#define CHARACTERISTICS_NO 3
+#define CHARACTERISTICS_NO 4
 typedef enum _CHARACTERISTIC_ID {
   CHAR_COMMAND,
   CHAR_ANSWER,
   CHAR_MESSAGE,
-  CHAR_FLASH_DATA
+  CHAR_FLASH_DATA,
+  /*------------------*/
+  //CHARACTERISTICS_NO
+  /*------------------*/
 } CHARACTERISTIC_ID;
-
-#define DEVICE_NAME "ZipplT_debug" /**< Name of device. Will be included in the advertising data. */
 
 #define UUID_BASE                                             \
   { 0x66, 0x9A, 0x0C, 0x20, 0x00, 0x08, /**/ 0x23, 0x15, /**/ \

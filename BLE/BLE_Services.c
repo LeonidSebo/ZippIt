@@ -9,16 +9,16 @@ extern uint16_t m_conn_handle;
 extern ble_main_service_t m_lbs;
 
 /* BLE Characteristics */
-/* ==== Characteristics variable ==== */
-#define CHAR_COMMAND_SIZE 16
-#define CHAR_ANSWER_SIZE 16
-#define CHAR_MESSAGE_SIZE 16
-#define CHAR_FLASH_DATA_SIZE 256
+///* ==== Characteristics variable ==== */
+//#define CHAR_COMMAND_SIZE 16
+//#define CHAR_ANSWER_SIZE 16
+//#define CHAR_MESSAGE_SIZE 16
+//#define CHAR_FLASH_DATA_SIZE 256
 
-uint8_t gCommand[CHAR_COMMAND_SIZE];      /* Write */
-uint8_t gAnswer[CHAR_ANSWER_SIZE];        /* Indication */
-uint8_t gMessage[CHAR_MESSAGE_SIZE];      /* Indication */
-uint8_t gFlashData[CHAR_FLASH_DATA_SIZE];     /* Notification */
+uint8_t gCommand[CHAR_COMMAND_SIZE];        /* Write */
+uint8_t gAnswer[CHAR_ANSWER_SIZE];          /* Indication */
+uint8_t gMessage[CHAR_MESSAGE_SIZE];        /* Indication */
+uint8_t gFlashData[CHAR_FLASH_DATA_SIZE];   /* Notification */
 
 /* ================================== */
 

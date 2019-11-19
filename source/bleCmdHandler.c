@@ -12,7 +12,7 @@ extern uint32_t motorTimeout;
 extern rtc_tick_enable_t rtcTickRequest;
 extern uint32_t BatVoltage;
 
-uint16_t sw_rewision  = 0x0103;
+uint16_t sw_rewision  = 0x0104;
 uint8_t  NewParamTable[sizeof(ParamTable_t) + sizeof(uint32_t)] = {DEF_PARAM_TAB};
 
 RESULT bleGetDeviceInfo(DEVICE_INFO* pDeviceInfo)
@@ -28,7 +28,8 @@ RESULT bleSetCaseState(CASE_STATE CaseState)
 {
   NRF_LOG_INFO("bleSetCaseState   0x%02x ",(uint8_t)CaseState);
   if(main_status.change_case_state_req != CASE_STATE_REQ_IDLE){
-    return ERR_BLE_MODULE_BUZY;
+    NRF_LOG_INFO("ERR_MODULE_BUZY");
+    return ERR_MODULE_BUZY;
   }
   get_current_status();
   switch(CaseState){
@@ -125,7 +126,7 @@ RESULT  bleSetMotorTimes(MOTOR_ACTIVE_TIME MotorTimes)
   {
 
     if(main_status.ParamTab_change_req != REQ_NONE){
-      return ERR_BLE_MODULE_BUZY;
+      return ERR_MODULE_BUZY;
     }
     int_flash_read((uint32_t)pParamTable, (uint32_t*)&NewParamTable, sizeof(ParamTable_t));
     MotorActiveTime.MOTOR_CCW_FULL_TIME_MS = MotorTimes.MOTOR_CCW_FULL_TIME_MS;
@@ -155,7 +156,7 @@ RESULT bleSetBatteryAlarmLevel(uint32_t BatLevel)
   uint32_t addr;
   if(pParamTable->BatteryAlarmLevel != BatLevel){
     if(main_status.ParamTab_change_req != REQ_NONE){
-      return ERR_BLE_MODULE_BUZY;
+      return ERR_MODULE_BUZY;
     }
     int_flash_read((uint32_t)pParamTable, (uint32_t*)&NewParamTable, sizeof(ParamTable_t));
     memcpy(NewParamTable+BAT_ALARM_LEVEL_OFFSET,&BatLevel,sizeof(BatLevel));
@@ -170,7 +171,7 @@ RESULT bleSetLightAlarmLevel(uint16_t LightAlarm)
   if((pParamTable->lsensor.upper_thresh_low != LightAlarm & 0xFF)||
      (pParamTable->lsensor.upper_thresh_hight != ((LightAlarm >> 8)&0xFF))){
     if(main_status.ParamTab_change_req != REQ_NONE){
-      return ERR_BLE_MODULE_BUZY;
+      return ERR_MODULE_BUZY;
     }
     int_flash_read((uint32_t)pParamTable, (uint32_t*)&NewParamTable, sizeof(ParamTable_t));
     memcpy(NewParamTable+LSENS_LOWER_THRESH_OFFSET,&LightAlarm,sizeof(LightAlarm));

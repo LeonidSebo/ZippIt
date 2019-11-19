@@ -8,7 +8,7 @@ extern main_status_t main_status;
 __attribute__ ((section(".ParamTab")))
 const uint32_t endOfPrg = 0;
 
-const ParamTable_t* pParamTable = (ParamTable_t*) ((uint8_t*)&endOfPrg + 0x1000);
+const ParamTable_t* pParamTable = (ParamTable_t*) ((uint8_t*)&endOfPrg + PAGE_SIZE);
 const nrf_drv_rtc_t rtc = NRF_DRV_RTC_INSTANCE(2); /**< Declaring an instance of nrf_drv_rtc for RTC0. */
 
 DateTime_int_t CurrentDateTime = {0};
@@ -30,7 +30,20 @@ uint8_t debug_buffer[128];
 
 #define COMPARE_COUNTERTIME  (3UL)                                        /**< Get Compare event COMPARE_TIME seconds after the counter starts from 0. */
 
+static void fstorage_evt_handler(nrf_fstorage_evt_t * p_evt);
 
+NRF_FSTORAGE_DEF(nrf_fstorage_t fstorage) =
+{
+    /* Set a handler for fstorage events. */
+    .evt_handler = fstorage_evt_handler,
+
+    /* These below are the boundaries of the flash space assigned to this instance of fstorage.
+     * You must set these manually, even at runtime, before nrf_fstorage_init() is called.
+     * The function nrf5_flash_end_addr_get() can be used to retrieve the last address on the
+     * last page of flash available to write data. */
+    .start_addr = (uint32_t)&endOfPrg, 
+    .end_addr   = 0x7ffff,
+};
 
 static void fstorage_evt_handler(nrf_fstorage_evt_t * p_evt)
 {
@@ -46,13 +59,13 @@ static void fstorage_evt_handler(nrf_fstorage_evt_t * p_evt)
         {
             NRF_LOG_INFO("--> Event received: wrote %d bytes at address 0x%x.",
                          p_evt->len, p_evt->addr);
-//            NRF_LOG_INFO("--> wrote %02x %02x %02x %02x %02x %02x ",((uint8_t*)&NewParamTable)[0],
-//                        ((uint8_t*)&NewParamTable)[1],((uint8_t*)&NewParamTable)[2],((uint8_t*)&NewParamTable)[3],
-//                        ((uint8_t*)&NewParamTable)[4],((uint8_t*)&NewParamTable)[5]);
+            NRF_LOG_INFO("--> wrote %02x %02x %02x %02x %02x %02x ",((uint8_t*)&NewParamTable)[0],
+                        ((uint8_t*)&NewParamTable)[1],((uint8_t*)&NewParamTable)[2],((uint8_t*)&NewParamTable)[3],
+                        ((uint8_t*)&NewParamTable)[4],((uint8_t*)&NewParamTable)[5]);
             int_flash_read((uint32_t)pParamTable, (uint32_t*) debug_buffer, sizeof(debug_buffer));
-//            NRF_LOG_INFO("--> readed %02x %02x %02x %02x %02x %02x ",((uint8_t*)&debug_buffer)[0],
-//                        ((uint8_t*)&debug_buffer)[1],((uint8_t*)&debug_buffer)[2],((uint8_t*)&debug_buffer)[3],
-//                        ((uint8_t*)&debug_buffer)[4],((uint8_t*)&debug_buffer)[5]);
+            NRF_LOG_INFO("--> readed %02x %02x %02x %02x %02x %02x ",((uint8_t*)&debug_buffer)[0],
+                        ((uint8_t*)&debug_buffer)[1],((uint8_t*)&debug_buffer)[2],((uint8_t*)&debug_buffer)[3],
+                        ((uint8_t*)&debug_buffer)[4],((uint8_t*)&debug_buffer)[5]);
             if(log_event.log_event[log_event.log_event_rd_idx].store_flag == LOG_STORE_REQ){
               uint32_t lReportAddr = ReportAddr;
               ReportAddr += p_evt->len;
@@ -62,7 +75,7 @@ static void fstorage_evt_handler(nrf_fstorage_evt_t * p_evt)
               }else{
                 log_event.log_event_rd_idx++;
               }
-              if((lReportAddr<INT_FLESH_ALMOST_FULL_ADDR)&&(ReportAddr>=INT_FLESH_ALMOST_FULL_ADDR)){
+              if((lReportAddr<fstorage.end_addr - INT_FLESH_ALMOST_FULL_REST)&&(ReportAddr>=fstorage.end_addr - INT_FLESH_ALMOST_FULL_REST)){
                 device_status.DEVSTAT_FLASH_LOG_FULL = 1;
                 device_status.DEVSTAT_FLASH_LOG_FULL_CHANGED = YES;
                 Message_DeviceStatus(device_status);           // Flash almost full event
@@ -97,18 +110,6 @@ static void fstorage_evt_handler(nrf_fstorage_evt_t * p_evt)
 
 
 
-NRF_FSTORAGE_DEF(nrf_fstorage_t fstorage) =
-{
-    /* Set a handler for fstorage events. */
-    .evt_handler = fstorage_evt_handler,
-
-    /* These below are the boundaries of the flash space assigned to this instance of fstorage.
-     * You must set these manually, even at runtime, before nrf_fstorage_init() is called.
-     * The function nrf5_flash_end_addr_get() can be used to retrieve the last address on the
-     * last page of flash available to write data. */
-    .start_addr = (uint32_t)&endOfPrg, 
-    .end_addr   = 0x3ffff,
-};
 
 void get_current_status(void)
 {
@@ -332,7 +333,7 @@ static void StoreDevLog(void)
   if(log_event.log_event[log_event.log_event_rd_idx].store_flag == LOG_STORE_REQ){
     uint32_t DtateTime = *(uint32_t*)&log_event.log_event[log_event.log_event_rd_idx].DateTime;
     uint8_t event = *(uint8_t*)&log_event.log_event[log_event.log_event_rd_idx].log_event;
-    //NRF_LOG_INFO("StoreDevLog at addr = 0x%08x   date = 0x%08x  event = %d",ReportAddr,DtateTime,event);
+    NRF_LOG_INFO("StoreDevLog at addr = 0x%08x   date = 0x%08x  event = %d",ReportAddr,DtateTime,event);
     int_flash_write(ReportAddr,(uint32_t*)&log_event.log_event[log_event.log_event_rd_idx], EVENT_LOG_SIZE);
   }
 }
@@ -373,7 +374,7 @@ void saadc_callback(nrf_drv_saadc_evt_t const * p_event)
     BatVoltage = p_event->data.done.p_buffer[0];
     minVoltage = (minVoltage > BatVoltage)? BatVoltage:minVoltage;
     if(motorTimeout < RTC_TICK_TIME){
-      //NRF_LOG_INFO("BatVoltage = %d   minVoltage = %d",BatVoltage,minVoltage);
+      NRF_LOG_INFO("BatVoltage = %d   minVoltage = %d",BatVoltage,minVoltage);
     }
     if(BatVoltage < pParamTable->BatteryAlarmLevel){
       NRF_LOG_INFO("Low Battery");
@@ -472,21 +473,23 @@ void int_flash_erase(uint32_t addr, size_t pages_cnt)
 void int_flash_write(uint32_t addr, uint32_t* pdata, size_t size)
 {
     ret_code_t rc;
-    uint32_t i;
-    uint32_t PageAddr = addr&0xFFFFF000;
-    uint32_t WrOffset = addr&0x0000FFF;
-    uint32_t WrSize = ((WrOffset + size)>PAGE_SIZE_WORDS)? (PAGE_SIZE_WORDS - WrOffset):size;  
-    
-    if((addr + size) > INT_FLESH_LAST_ADDR){
-      APP_ERROR_CHECK(NRF_ERROR_INVALID_PARAM);
-    } 
-    do{
-    rc =  nrf_fstorage_write(&fstorage,addr,pdata,WrSize,NULL);
+    rc =  nrf_fstorage_write(&fstorage,addr,pdata,size,NULL);
     APP_ERROR_CHECK(rc);
-      size -= WrSize;
-      pdata += WrSize;
-      WrSize = (size > PAGE_SIZE_WORDS)? PAGE_SIZE_WORDS:size;   
-    }while(size);  
+//    uint32_t i;
+//    uint32_t PageAddr = addr&0xFFFFF000;
+//    uint32_t WrPageOffset = addr&0x0000FFF;
+//    uint32_t WrSize = ((WrPageOffset + size)>PAGE_SIZE)? (PAGE_SIZE - WrPageOffset):size;  
+//    
+//    if((addr + size) > fstorage.end_addr /*INT_FLESH_LAST_ADDR*/){
+//      APP_ERROR_CHECK(NRF_ERROR_INVALID_PARAM);
+//    } 
+//    do{
+//    rc =  nrf_fstorage_write(&fstorage,addr,pdata,WrSize,NULL);
+//    APP_ERROR_CHECK(rc);
+//      size -= WrSize;
+//      pdata += WrSize;
+//      WrSize = (size > PAGE_SIZE)? PAGE_SIZE:size;   
+//    }while(size);  
 }
 
 static void print_flash_info(nrf_fstorage_t * p_fstorage)
@@ -510,7 +513,7 @@ uint32_t find_free_addr(uint32_t startAddr)
     if (data == 0xFFFFFFFF) 
       return (uint32_t)addr;
     addr += (sizeof(report_t));
-  } while ((uint32_t)addr < (INT_FLESH_LAST_ADDR - 1)); 
+  } while ((uint32_t)addr < (fstorage.end_addr /*INT_FLESH_LAST_ADDR*/ - 1)); 
   return 0xFFFFFFFF;
 }
 
@@ -661,6 +664,20 @@ static void incr_date_time(DateTime_t* pDateTime)
   }
 }
 
+static void GetCaseState(void)
+{
+  get_current_status();
+  if(device_status.DEVSTAT_STATE_OF_SW_1 == 0){
+    main_status.CaseState = CASE_UNLOCK;
+  }else if(device_status.DEVSTAT_STATE_OF_SW_2 == 0){
+    main_status.CaseState = CASE_HANDEL_OPEN;
+  }else if(device_status.DEVSTAT_STATE_OF_SW_3 == 0){
+    main_status.CaseState = CASE_LOCK;
+  }else{
+    main_status.CaseState = CASE_UNRESOLVED;
+  }
+}
+
 /** @brief: Function for handling the RTC0 interrupts.
  * Triggered on TICK and COMPARE0 match.
  */
@@ -681,7 +698,7 @@ static void rtc_handler(nrf_drv_rtc_int_type_t int_type)
                    
         if(((RTC_cntr_sec & 0x0F)==0)&&(main_status.FlashBuzy==NO)){ // measure Battery Voltage every 16 second
           main_status.FlashBuzy = YES;
-          //NRF_LOG_INFO("Current Time = 0x%08x",CurrentDateTime.AsInt);
+          NRF_LOG_INFO("Current Time = 0x%08x",CurrentDateTime.AsInt);
           saadc_init();
           err_code = nrfx_saadc_sample();
           APP_ERROR_CHECK(err_code);
@@ -713,8 +730,8 @@ static void rtc_handler(nrf_drv_rtc_int_type_t int_type)
         }
         if((main_status.FlashErase_req)&&(!nrf_fstorage_is_busy(&fstorage)))
         {
-          uint32_t BlocksNo = (fstorage.end_addr - fstorage.start_addr)/0x1000 - 1;
-          int_flash_erase((uint32_t)pParamTable + 0x1000,BlocksNo);
+          uint32_t BlocksNo = (fstorage.end_addr - fstorage.start_addr)/PAGE_SIZE - 1;
+          int_flash_erase((uint32_t)pParamTable + PAGE_SIZE,BlocksNo);
         }
     }
     else if (int_type == NRF_DRV_RTC_INT_TICK)
@@ -741,8 +758,23 @@ static void rtc_handler(nrf_drv_rtc_int_type_t int_type)
               APP_ERROR_CHECK(err_code);
             }
           }else{
+            uint8_t param0;   // requered case state
+            uint8_t param1;   // current case state
+            GetCaseState();
+            switch(main_status.change_case_state_req){
+              case CASE_STATE_REQ_LOOK:
+                param0 = CASE_LOCK;
+                break;
+              case CASE_STATE_REQ_UNLOOK:
+                param0 = CASE_UNLOCK;
+                break;
+              case CASE_STATE_REQ_HANDEL_OPEN:
+                param0 = CASE_HANDEL_OPEN;
+                break;
+            }
+            param1 = main_status.CaseState;
             CaseStateLedOnTime = CASE_STATE_ERROR_LED_BLINK_TIME;
-            logEventStorageReq(LOG_EVENT_CASE_STATE_TIMEOUT,main_status.change_case_state_req,0,0);
+            logEventStorageReq(LOG_EVENT_CASE_STATE_TIMEOUT,param0,param1,0);
             SetLedControl(LED_BLINK,LED_BLINK,LED_OFF);
             stop_motor();
           }
@@ -786,7 +818,6 @@ static void lfclk_config(void)
     while (!nrf_clock_lf_is_running()) {;}
 }
 
-
 void init_periferal(void)
 {
   ret_code_t rc;
@@ -802,17 +833,18 @@ void init_periferal(void)
   int_flash_read((uint32_t)pParamTable, (uint32_t*)&ParamTab, sizeof(ParamTable_t));
   print_flash_info(&fstorage);
   initParamTab();
-  ReportAddr = find_free_addr((uint32_t)pParamTable + 0x1000);
-  //lsensor_init();
+  ReportAddr = find_free_addr((uint32_t)pParamTable + PAGE_SIZE);
+  lsensor_init();
   memset(&log_event,0,sizeof(log_event_store_t));
-  get_current_status();
-  if(device_status.DEVSTAT_STATE_OF_SW_1 == 0){
-    main_status.CaseState = CASE_UNLOCK;
-  }else if(device_status.DEVSTAT_STATE_OF_SW_2 == 0){
-    main_status.CaseState = CASE_HANDEL_OPEN;
-  }else if(device_status.DEVSTAT_STATE_OF_SW_3 == 0){
-    main_status.CaseState = CASE_LOCK;
-  }else{
-    main_status.CaseState = CASE_UNRESOLVED;
-  }
+  GetCaseState();
+//  get_current_status();
+//  if(device_status.DEVSTAT_STATE_OF_SW_1 == 0){
+//    main_status.CaseState = CASE_UNLOCK;
+//  }else if(device_status.DEVSTAT_STATE_OF_SW_2 == 0){
+//    main_status.CaseState = CASE_HANDEL_OPEN;
+//  }else if(device_status.DEVSTAT_STATE_OF_SW_3 == 0){
+//    main_status.CaseState = CASE_LOCK;
+//  }else{
+//    main_status.CaseState = CASE_UNRESOLVED;
+//  }
 }

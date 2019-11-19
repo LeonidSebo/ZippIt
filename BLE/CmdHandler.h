@@ -47,5 +47,6 @@ RESULT Message_SendToHost(BLE_MESSAGE_ID MessageID, uint8_t *pData, uint8_t Data
 
 /* FLASH_DATA Characteristic */
 RESULT Flash_LogRead(uint32_t offset, uint32_t DataLength);
+RESULT FlashData_SendToHost(BLE_FLASH_DATA_ID MessageID, RESULT OperationStatus, uint8_t *pData, uint8_t DataLength);
 
 #endif // CMD_HANDLER_H__
