@@ -28,10 +28,10 @@
 #define AES_BLOCK_SIZE_BYTE 16
 
 /* ==== Characteristics size ==== */
-#define CHAR_COMMAND_SIZE     AES_BLOCK_SIZE_BYTE
-#define CHAR_ANSWER_SIZE      AES_BLOCK_SIZE_BYTE
-#define CHAR_MESSAGE_SIZE     AES_BLOCK_SIZE_BYTE
-#define CHAR_FLASH_DATA_SIZE  AES_BLOCK_SIZE_BYTE * 16
+#define CHAR_COMMAND_SIZE AES_BLOCK_SIZE_BYTE
+#define CHAR_ANSWER_SIZE AES_BLOCK_SIZE_BYTE
+#define CHAR_MESSAGE_SIZE AES_BLOCK_SIZE_BYTE
+#define CHAR_FLASH_DATA_SIZE AES_BLOCK_SIZE_BYTE * 16
 
 typedef enum _RESULT {
   ERR_NO,
@@ -59,7 +59,10 @@ typedef enum _RESULT {
   ERR_SD_BLE_GAP_ADV_STOP,
 
   ERR_MODULE_BUZY,
+  ERR_CASE_STATE
 } RESULT;
+
+typedef RESULT OPERATION_STATUS;
 
 typedef RESULT OPERATION_STATUS;
 
@@ -80,8 +83,8 @@ typedef enum _BLE_COMMANDS_ID {
   //----------------------------
   CMD_ID_FLASH_LOG_ERRASE = 0x0C,
   CMD_ID_FLASH_LOG_READ = 0x0D,
-//  CMD_ID_FLASH_SETUP_WRITE = 0x0C,
-//  CMD_ID_FLASH_SETUP_READ = 0x0D,
+  //  CMD_ID_FLASH_SETUP_WRITE = 0x0C,
+  //  CMD_ID_FLASH_SETUP_READ = 0x0D,
   //--------------------------------------
   CMD_NO,
   //--------------------------------------
@@ -93,12 +96,14 @@ typedef enum _BLE_COMMANDS_ID {
 #define ANSWER_ID_FLAG 0x80
 
 typedef enum _BLE_MESSAGE_ID {
-  MSG_NEW_RANDOM_NUMBERS = 0x00,/* not used */
+  MSG_NEW_RANDOM_NUMBERS = 0x00, /* not used */
   MSG_DEVICE_STATUS_CHANGED = 0x01,
   MSG_DEVICE_ERROR = 0x02, /* TBD */
   MSG_ATTENTION = 0x03,
   MSG_BLE_CMD_ID_UNKNOWN = 0x04,
   MSG_LOG_FILE_IS_FULL = 0x05,
+  MSG_DISCOVERED_RETRIES_NO = 0x06,
+
   //MSG_RANDOM_NUMBERS              = 0x05,
 } BLE_MESSAGE_ID;
 
@@ -164,8 +169,8 @@ typedef struct _BLE_MESSAGE {
   uint8_t Data[BLE_BLOCK_DATA_SIZE_BYTE];
 } BLE_MESSAGE;
 
-#define BLE_FLASH_DATA_HEADER_LEN               4
-#define BLE_FLASH_DATA_OPERATION_STATUS_LEN     1
+#define BLE_FLASH_DATA_HEADER_LEN 4
+#define BLE_FLASH_DATA_OPERATION_STATUS_LEN 1
 typedef struct _BLE_FLASH_DATA {
   uint8_t DataID;
   uint16_t DataLength;
@@ -272,9 +277,11 @@ typedef enum _CHARACTERISTIC_ID {
   CHAR_COMMAND,
   CHAR_ANSWER,
   CHAR_MESSAGE,
-  CHAR_FLASH_DATA
+  CHAR_FLASH_DATA,
+  /*------------------*/
+  //CHARACTERISTICS_NO
+  /*------------------*/
 } CHARACTERISTIC_ID;
-
 
 #define UUID_BASE                                             \
   { 0x66, 0x9A, 0x0C, 0x20, 0x00, 0x08, /**/ 0x23, 0x15, /**/ \

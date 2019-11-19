@@ -5,7 +5,7 @@
 #include "nrf_delay.h"
 #include "Debug.h"
 
-#define DEBUG_PRINT_RANDOM_AND_KEY_EN     0
+#define DEBUG_PRINT_RANDOM_AND_KEY_EN     1
 #define CHAR_ANSWER_ENCRIPTION_DISABLE    0
 
 #define NRF_CRYPTO_EXAMPLE_AES_MAX_TEXT_SIZE 120
@@ -22,11 +22,6 @@ static uint8_t gKey[16] = {
 static uint8_t gIV[16] = {
     0x46, 0x29, 0x4A, 0x40, 0x4E, 0x63, 0x52, 0x66, 
     0x55, 0x6A, 0x57, 0x6E, 0x5A, 0x72, 0x34, 0x75};
-/*
-#define DEFAULT_VAL_PRANDOM_CHAR_COMMAND 0x0306
-#define DEFAULT_VAL_PRANDOM_CHAR_ANSWER 0x0306
-#define DEFAULT_VAL_PRANDOM_CHAR_MESSAGE 0x0306
-*/
 
 RESULT AES_Init() {
   AES_SetRandomNumberDefault();
@@ -42,11 +37,7 @@ void AES_SetRandomNumberDefault()
   gCharInfo[CHAR_COMMAND].PRandomNo = RandomDefault;
   gCharInfo[CHAR_ANSWER].PRandomNo = RandomDefault;
   gCharInfo[CHAR_MESSAGE].PRandomNo = RandomDefault;
-  /*
-  gCharInfo[CHAR_COMMAND].PRandomNo = DEFAULT_VAL_PRANDOM_CHAR_COMMAND;
-  gCharInfo[CHAR_ANSWER].PRandomNo = DEFAULT_VAL_PRANDOM_CHAR_ANSWER;
-  gCharInfo[CHAR_MESSAGE].PRandomNo = DEFAULT_VAL_PRANDOM_CHAR_MESSAGE;
-  */
+  gCharInfo[CHAR_FLASH_DATA].PRandomNo = RandomDefault;
 
 #if DEBUG_PRINT_RANDOM_AND_KEY_EN
    NRF_LOG_INFO("AES_SetRandomNumberDefault: 0x%06x, 0x%06x, 0x%06x", gCharInfo[CHAR_COMMAND].PRandomNo, 
@@ -64,7 +55,7 @@ void AES_SetNewCharRandomVal(CHARACTERISTIC_ID CharacteristicID) {
   gCharInfo[CharacteristicID].PRandomNo = Temp % m;
 
 #if DEBUG_PRINT_RANDOM_AND_KEY_EN
-   NRF_LOG_INFO("AES_SetNewCharRandomVal: Characteristic %d - 0x%06x", CharacteristicID, gCharInfo[CharacteristicID].PRandomNo); 
+   //NRF_LOG_INFO("AES_SetNewCharRandomVal: Characteristic %d - 0x%06x", CharacteristicID, gCharInfo[CharacteristicID].PRandomNo); 
    //gCharInfo[CHAR_ANSWER].PRandomNo, gCharInfo[CHAR_MESSAGE].PRandomNo);
 #endif
 }
@@ -98,6 +89,7 @@ RESULT AES_GetNewRandomNumbers(uint8_t *pNewRandomNumbers) {
 
 void AES_SetNewRandomNumbers(uint8_t *pNewRandomNumbers) {
   int32_t i;
+  NRF_LOG_FLUSH();
   for (i = 0; i < CHARACTERISTICS_NO; i++) {
     gCharInfo[i].PRandomNo = 0;
     memcpy(&(gCharInfo[i].PRandomNo),
@@ -107,6 +99,7 @@ void AES_SetNewRandomNumbers(uint8_t *pNewRandomNumbers) {
   AES_SetNewCharRandomVal(CHAR_COMMAND);
   AES_SetNewCharRandomVal(CHAR_ANSWER);
   AES_SetNewCharRandomVal(CHAR_MESSAGE);
+  AES_SetNewCharRandomVal(CHAR_FLASH_DATA);
   for (i = 0; i < CHARACTERISTICS_NO; i++) {
     NRF_LOG_INFO("New Random %d %06x", i, gCharInfo[i].PRandomNo);
   }

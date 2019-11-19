@@ -13,6 +13,15 @@ extern uint8_t gAnswer[CHAR_ANSWER_SIZE];        /* Indication */
 extern uint8_t gMessage[CHAR_MESSAGE_SIZE];      /* Indication */
 extern uint8_t gFlashData[CHAR_FLASH_DATA_SIZE]; /* Notification */
 
+uint8_t gRetries; /* value from FLASh */
+uint16_t gRetriesCmdCounter;
+int16_t gRetriesAlertTimer;
+bool gRetriesStopDevice;
+
+#define TIMER_TICK_sec 16                     /*sec*/
+#define RETRIES_ALERT_DEVICE_STOP_TIME_MIN 30 /*min*/
+#define RETRIES_ALERT_DEVICE_STOP_TIME_16secTick (RETRIES_ALERT_DEVICE_STOP_TIME_MIN * 60 / TIMER_TICK_sec)
+
 #define CHAR_COMMAND_ENCRIPTION_DISABLE 0
 //-------------------------------------------------------//
 #define COUNT_ATTENTION_EVENT_MAX_VALUE 10
@@ -36,7 +45,7 @@ void CmdH_Command_Write(uint16_t conn_handle, ble_main_service_t *p_lbs, uint16_
   CmdH_Command_Handler((BLE_COMMAND *)pCommandEncr);
   return;
 #endif
-
+  gRetriesCmdCounter++;
   if (CommandLen != AES_BLOCK_SIZE_BYTE) {
     return;
   }
@@ -388,13 +397,17 @@ RESULT Message_SendToHost(BLE_MESSAGE_ID MessageID, uint8_t *pData, uint8_t Data
   return ERR_NO;
 }
 
+
 /* ================ MESSAGES ========================= */
 
 RESULT CmdH_DeviceConnected() {
   AES_SetRandomNumberDefault();
   gCmdGetRandomNumberWait = true;
-  gCmdGetRandomNumberNotFirstCount = 0;
+  //gCmdGetRandomNumberNotFirstCount = 0;
   gCmd_ID_ErrorCount = 0;
+  gRetriesCmdCounter = 0;
+  gRetriesAlertTimer = 0;
+  gRetriesStopDevice = false;
   logEventStorageReq(LOG_EVENT_DEVICE_CONNECTED, 0, 0, 0);
   return ERR_NO;
 }
@@ -458,11 +471,33 @@ RESULT FlashData_SendToHost(BLE_FLASH_DATA_ID DataID, RESULT OperationStatus, ui
     res = AES_BlockEncript(CHAR_FLASH_DATA, (uint8_t *)pData + Offset, CurrentBlockLength, gFlashData + Offset);
     RESULT_CHECK_WITH_LOG(res);
     /* AES_SetNewCharRandomVal(CHAR_FLASH_DATA); */
-    
   }
 
   res = Serv_SendToHost(CHAR_FLASH_DATA, (uint8_t *)gFlashData, DataLength);
   RESULT_CHECK_WITH_LOG(res);
   AES_SetNewCharRandomVal(CHAR_FLASH_DATA);
   return ERR_NO;
+}
+/*============== RETRIES ==============*/
+void TickRetries_16s() {
+  if (gRetriesStopDevice) {
+    if (gRetriesAlertTimer > 0) {
+      gRetriesAlertTimer--;
+    }
+    else
+    {
+      gRetriesAlertTimer = 0;
+      gRetriesStopDevice = false;
+      wake();
+    }
+    return;
+  }
+
+  if (gRetriesCmdCounter > gRetries) {
+    gRetriesStopDevice = true;
+    gRetriesAlertTimer = RETRIES_ALERT_DEVICE_STOP_TIME_16secTick;
+    Message_Byte_1(MSG_DISCOVERED_RETRIES_NO, gRetriesCmdCounter);
+    sleep();
+  }
+  gRetriesCmdCounter = 0;
 }
