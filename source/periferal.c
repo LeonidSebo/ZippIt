@@ -22,10 +22,11 @@ led_control_t led_control = {0,0,0};
 uint32_t motorTimeout = 0;
 rtc_tick_enable_t rtcTickRequest = {0,0,0};
 ParamTable_t  ParamTab;
+case_state_t  CaseState = {0,0,0,0,0};
 
 log_event_store_t log_event;
 
-uint8_t debug_buffer[128];
+//uint8_t debug_buffer[128];
 
 
 #define COMPARE_COUNTERTIME  (3UL)                                        /**< Get Compare event COMPARE_TIME seconds after the counter starts from 0. */
@@ -62,10 +63,10 @@ static void fstorage_evt_handler(nrf_fstorage_evt_t * p_evt)
             NRF_LOG_INFO("--> wrote %02x %02x %02x %02x %02x %02x ",((uint8_t*)&NewParamTable)[0],
                         ((uint8_t*)&NewParamTable)[1],((uint8_t*)&NewParamTable)[2],((uint8_t*)&NewParamTable)[3],
                         ((uint8_t*)&NewParamTable)[4],((uint8_t*)&NewParamTable)[5]);
-            int_flash_read((uint32_t)pParamTable, (uint32_t*) debug_buffer, sizeof(debug_buffer));
-            NRF_LOG_INFO("--> readed %02x %02x %02x %02x %02x %02x ",((uint8_t*)&debug_buffer)[0],
-                        ((uint8_t*)&debug_buffer)[1],((uint8_t*)&debug_buffer)[2],((uint8_t*)&debug_buffer)[3],
-                        ((uint8_t*)&debug_buffer)[4],((uint8_t*)&debug_buffer)[5]);
+//            int_flash_read((uint32_t)pParamTable, (uint32_t*) debug_buffer, sizeof(debug_buffer));
+//            NRF_LOG_INFO("--> readed %02x %02x %02x %02x %02x %02x ",((uint8_t*)&debug_buffer)[0],
+//                        ((uint8_t*)&debug_buffer)[1],((uint8_t*)&debug_buffer)[2],((uint8_t*)&debug_buffer)[3],
+//                        ((uint8_t*)&debug_buffer)[4],((uint8_t*)&debug_buffer)[5]);
             if(log_event.log_event[log_event.log_event_rd_idx].store_flag == LOG_STORE_REQ){
               uint32_t lReportAddr = ReportAddr;
               ReportAddr += p_evt->len;
@@ -95,7 +96,7 @@ static void fstorage_evt_handler(nrf_fstorage_evt_t * p_evt)
             if(main_status.FlashErase_req == 1){
               main_status.FlashErase_req = 0;
               device_status.DEVSTAT_FLASH_LOG_FULL = 0;
-              ReportAddr = (uint32_t)pParamTable + 0x1000;
+              ReportAddr = LOG_EVENT_TAB_START_ADDR;
             }
             if(main_status.ParamTab_change_req == REQ_CHNGE){
               main_status.ParamTab_change_req = REQ_WRITE;
@@ -124,41 +125,91 @@ static void stop_motor(void)
 {
   MOTOR_STOP();     
   get_current_status();
-  if((main_status.change_case_state_req == CASE_STATE_REQ_LOOK)&&(device_status.DEVSTAT_STATE_OF_SW_3 == 0)||
-     (main_status.change_case_state_req == CASE_STATE_REQ_UNLOOK)&&(device_status.DEVSTAT_STATE_OF_SW_1 == 0)||
-     (main_status.change_case_state_req == CASE_STATE_REQ_HANDEL_OPEN)&&(device_status.DEVSTAT_STATE_OF_SW_2 == 0)){
+// put off motor
+  motorTimeout = 0;
+  rtcTickRequest.motor_buzy = 0;
+  if(*(uint32_t*)&rtcTickRequest == 0)
+     nrf_drv_rtc_tick_disable(&rtc);
+// control state
+  if((CaseState.change_case_state_req == CASE_STATE_REQ_LOOK)&&(device_status.DEVSTAT_STATE_OF_SW_3 == 0)||
+     (CaseState.change_case_state_req == CASE_STATE_REQ_UNLOOK)&&(device_status.DEVSTAT_STATE_OF_SW_1 == 0)||
+     (CaseState.change_case_state_req == CASE_STATE_REQ_HANDEL_OPEN)&&(device_status.DEVSTAT_STATE_OF_SW_2 == 0)){
         // Case is in true state
-        main_status.change_case_state_req = CASE_STATE_REQ_IDLE;  
-        main_status.change_case_state_buzy = 0;
-        main_status.MotorAttemptCntr = 0;
-        motorTimeout = 0;
-        rtcTickRequest.motor_buzy = 0;
-        if(*(uint32_t*)&rtcTickRequest == 0)
-           nrf_drv_rtc_tick_disable(&rtc);	
-  }else if(main_status.MotorAttemptCntr > 0){
-        // Case is in FALSE state after second attempt 
-        // send warning ERROR_CASE_STATE
-        main_status.change_case_state_req = CASE_STATE_REQ_IDLE;
-        main_status.change_case_state_buzy = 0;
-        main_status.MotorAttemptCntr = 0;
-        motorTimeout = 0;
-        rtcTickRequest.motor_buzy = 0;
-        if(*(uint32_t*)&rtcTickRequest == 0)
-           nrf_drv_rtc_tick_disable(&rtc);	
-  }else{
-      main_status.MotorAttemptCntr = 1; // enable second attempt
-      switch(main_status.change_case_state_req){
-        case CASE_STATE_REQ_LOOK:
-          motorTimeout = ParamTab.MotorActiveTime.MOTOR_CCW_FULL_TIME_MS;
-          break;
-        case CASE_STATE_REQ_UNLOOK:
-          motorTimeout = ParamTab.MotorActiveTime.MOTOR_CW_FULL_TIME_MS;
-          break;
-        case CASE_STATE_REQ_HANDEL_OPEN:
-          motorTimeout = ParamTab.MotorActiveTime.MOTOR_CW_HALF_TIME_MS;
-          break;
-      }
+        NRF_LOG_INFO("Motor stop. True case state");
+    switch(CaseState.change_case_state_req){
+      case CASE_STATE_REQ_LOOK:
+        CaseState.LookStateErrCntr = 0;
+//        CaseState.LookStateDes = 0;
+        CaseState.LastTrueCaseState = CASE_LOCK;
+        CaseState.CurrentCaseState = CASE_LOCK;
+        break;
+      case CASE_STATE_REQ_HANDEL_OPEN:
+        CaseState.MidleStateErrCntr = 0;
+        if(CaseState.LookStateErrCntr < MAX_CASE_STATE_ERR_CNT){
+          CaseState.LookStateDes = 0;
+        }
+        CaseState.LastTrueCaseState = CASE_HANDEL_OPEN;
+        CaseState.CurrentCaseState = CASE_HANDEL_OPEN;
+        break;
+      case CASE_STATE_REQ_UNLOOK:
+        CaseState.UnloockStateErrCntr = 0;
+        CaseState.UnloockStateDes = 0;
+        if(CaseState.MidleStateErrCntr < MAX_CASE_STATE_ERR_CNT){
+          CaseState.MidleStateDes = 0;
+          if(CaseState.LookStateErrCntr < MAX_CASE_STATE_ERR_CNT){
+            CaseState.LookStateDes = 0;
+          }
+        }
+        CaseState.LastTrueCaseState = CASE_UNLOCK;
+        CaseState.CurrentCaseState = CASE_UNLOCK;
+        break;
+    }
   }
+  else{
+    CaseState.CurrentCaseState = CASE_UNRESOLVED;
+    NRF_LOG_INFO("Motor stop. Error case state.");
+    switch(CaseState.change_case_state_req){
+      case CASE_STATE_REQ_LOOK:
+      if(++CaseState.LookStateErrCntr >= MAX_CASE_STATE_ERR_CNT){
+        CaseState.LookStateDes = 1;
+      }
+      NRF_LOG_INFO("LookStateErrCntr = %d",CaseState.LookStateErrCntr);
+      break;
+      case CASE_STATE_REQ_HANDEL_OPEN:
+      if(++CaseState.MidleStateErrCntr >= MAX_CASE_STATE_ERR_CNT){
+        CaseState.MidleStateDes = 1;
+      }
+      NRF_LOG_INFO("MidleStateErrCntr = %d",CaseState.MidleStateErrCntr);
+      break;
+      case CASE_STATE_REQ_UNLOOK:
+      if(++CaseState.UnloockStateErrCntr >= MAX_CASE_STATE_ERR_CNT){
+        CaseState.UnloockStateDes = 1;
+      }
+      NRF_LOG_INFO("UnloockStateErrCntr = %d",CaseState.UnloockStateErrCntr);
+      break;
+    }
+  }
+  CaseState.change_case_state_req = CASE_STATE_REQ_IDLE;  
+//  else if(main_status.MotorAttemptCntr > 0){
+//        // Case is in FALSE state after second attempt 
+//        // send warning ERROR_CASE_STATE
+//        NRF_LOG_INFO("Motor stop. Error case state after second attempt");
+//        CaseState.change_case_state_req = CASE_STATE_REQ_IDLE;
+//        main_status.MotorAttemptCntr = 0;
+//        motorTimeout = 0;
+//        rtcTickRequest.motor_buzy = 0;
+//        if(*(uint32_t*)&rtcTickRequest == 0)
+//           nrf_drv_rtc_tick_disable(&rtc);	
+//  }else{
+//      NRF_LOG_INFO("Motor stop. Error case state after first attempt");
+//      CaseState.change_case_state_req = CASE_STATE_REQ_IDLE;
+//      main_status.MotorAttemptCntr = 1;
+//      motorTimeout = 0;
+//      rtcTickRequest.motor_buzy = 0;
+//      if(*(uint32_t*)&rtcTickRequest == 0){
+//         nrf_drv_rtc_tick_disable(&rtc);	
+//      }
+//  }
 }
 
 void logEventStorageReq(log_event_id_t event,uint8_t param0,uint8_t param1,uint8_t param2)
@@ -210,9 +261,9 @@ static void switch_int_handler(uint8_t pin, uint8_t action)
   get_current_status();
   switch(pin){
     case nSW1_PIN:  // case is open
-      if(main_status.change_case_state_req == CASE_STATE_REQ_UNLOOK){
+      if(CaseState.change_case_state_req == CASE_STATE_REQ_UNLOOK){
         logEventStorageReq(LOG_EVENT_CASE_OPEN, 0,0,0);
-        main_status.CaseState = CASE_UNLOCK;
+        CaseState.CurrentCaseState = CASE_UNLOCK;
         lsensor_sleep();
         device_status.DEVSTAT_STATE_OF_SW_1_CHANGED = YES; 
         SetLedControl(LED_OFF,LED_ON,LED_OFF);
@@ -221,9 +272,9 @@ static void switch_int_handler(uint8_t pin, uint8_t action)
       }
       break;
     case nSW2_PIN: // case is in handel open mode
-      if(main_status.change_case_state_req == CASE_STATE_REQ_HANDEL_OPEN){
+      if(CaseState.change_case_state_req == CASE_STATE_REQ_HANDEL_OPEN){
         logEventStorageReq(LOG_EVENT_CASE_HANDLE_OPEN, 0,0,0);
-        main_status.CaseState = CASE_HANDEL_OPEN;
+        CaseState.CurrentCaseState = CASE_HANDEL_OPEN;
         LIGHT_SENSOR_WEAKUP_ENABLE();
         device_status.DEVSTAT_STATE_OF_SW_2_CHANGED = YES; 
         SetLedControl(LED_OFF,LED_OFF,LED_ON);
@@ -232,9 +283,9 @@ static void switch_int_handler(uint8_t pin, uint8_t action)
       }
       break;
     case nSW3_PIN: // case is closed
-      if(main_status.change_case_state_req == CASE_STATE_REQ_LOOK){
+      if(CaseState.change_case_state_req == CASE_STATE_REQ_LOOK){
         logEventStorageReq(LOG_EVENT_CASE_CLOSED, 0,0,0);
-        main_status.CaseState = CASE_LOCK;
+        CaseState.CurrentCaseState = CASE_LOCK;
         LIGHT_SENSOR_WEAKUP_ENABLE();
         device_status.DEVSTAT_STATE_OF_SW_3_CHANGED = YES; 
         SetLedControl(LED_ON,LED_OFF,LED_OFF);
@@ -243,7 +294,7 @@ static void switch_int_handler(uint8_t pin, uint8_t action)
       }
       break;
     case nWIRE_PIN:
-      if(main_status.CaseState == CASE_LOCK){
+      if(CaseState.CurrentCaseState == CASE_LOCK){
         logEventStorageReq(LOG_EVENT_WIRE_CHANGED, 0,0,0);
         device_status.DEVSTAT_WIRE_PIN_CHANGED = YES; 
       }
@@ -251,7 +302,7 @@ static void switch_int_handler(uint8_t pin, uint8_t action)
 
     case SENSOR_INT_PIN:
       device_status.DEVSTAT_LIGHT_PENETRATION_CHANGED = YES;
-      if((main_status.CaseState == CASE_LOCK)||(main_status.CaseState == CASE_HANDEL_OPEN))
+      if((CaseState.CurrentCaseState == CASE_LOCK)||(CaseState.CurrentCaseState == CASE_HANDEL_OPEN))
         logEventStorageReq(LOG_EVENT_LIGHT_CHANGED, 0,0,0);
 
       CaseStateLedOnTime = ALARM_BLINK_TIME;
@@ -345,7 +396,7 @@ static void LockSwitchEvent_handler(void)
     case 0:   // do nothing
       break;
     case 1:   // stable state
-      if((main_status.CaseState == CASE_LOCK)||(main_status.CaseState == CASE_HANDEL_OPEN)){
+      if((CaseState.CurrentCaseState == CASE_LOCK)||(CaseState.CurrentCaseState == CASE_HANDEL_OPEN)){
         lsensor_weak_up();
       }
     default:   // debounce time
@@ -449,7 +500,7 @@ void wait_for_flash_ready(nrf_fstorage_t const * p_fstorage)
 void int_flash_read(uint32_t addr, uint32_t* pdata, size_t size)
 {
     uint32_t i;
-    uint32_t* paddr = (uint32_t*)addr;
+    uint32_t* paddr = (uint32_t*)(addr & 0xFFFFFFFC);
     size /= sizeof(uint32_t);
     for(i= 0;i<size;i++){
       pdata[i] = (uint32_t)paddr[i];
@@ -577,10 +628,10 @@ static void initParamTab(void){
 #define FIRST_TIME 0
 #if FIRST_TIME
 //        NRF_LOG_INFO("update ParamTable");
-//        ParamTable_t newTab = {LSENSOR_DEF, MOTOR_TIMEOUT_DEF,BATTERY_ALARM_LEVEL_DEF};
+//        ParamTable_t newTab = {LSENSOR_DEF, MOTOR_TIMEOUT_DEF,BATTERY_ALARM_LEVEL_DEF,1};
 //        memcpy(&NewParamTable,&newTab,sizeof(ParamTable_t));
         main_status.ParamTab_change_req = REQ_CHNGE;
-        int_flash_erase((uint32_t)pParamTable, 5);
+        int_flash_erase((uint32_t)pParamTable, 1);
 //        WriteParamTab();
 #else
 
@@ -668,13 +719,13 @@ static void GetCaseState(void)
 {
   get_current_status();
   if(device_status.DEVSTAT_STATE_OF_SW_1 == 0){
-    main_status.CaseState = CASE_UNLOCK;
+    CaseState.CurrentCaseState = CASE_UNLOCK;
   }else if(device_status.DEVSTAT_STATE_OF_SW_2 == 0){
-    main_status.CaseState = CASE_HANDEL_OPEN;
+    CaseState.CurrentCaseState = CASE_HANDEL_OPEN;
   }else if(device_status.DEVSTAT_STATE_OF_SW_3 == 0){
-    main_status.CaseState = CASE_LOCK;
+    CaseState.CurrentCaseState = CASE_LOCK;
   }else{
-    main_status.CaseState = CASE_UNRESOLVED;
+    CaseState.CurrentCaseState = CASE_UNRESOLVED;
   }
 }
 
@@ -687,6 +738,8 @@ static void rtc_handler(nrf_drv_rtc_int_type_t int_type)
     static uint32_t RTC_cntr_tick = 0;
     uint32_t err_code;
     if (int_type == NRF_DRV_RTC_INT_COMPARE0){ // one second event
+        if(motorTimeout)
+          NRF_LOG_INFO("MotorTimeout: %d",motorTimeout); 
         RTC_cntr_sec++;
         RTC_cntr_tick = 0;
         err_code = nrf_drv_rtc_cc_set(&rtc,0,nrfx_rtc_counter_get(&rtc) + TICK_PER_SEC,true);
@@ -748,7 +801,7 @@ static void rtc_handler(nrf_drv_rtc_int_type_t int_type)
             nrf_gpio_pin_clear(LED_R_PIN);
           }
         }
-        if(main_status.change_case_state_req != CASE_STATE_REQ_IDLE){
+        if(CaseState.change_case_state_req != CASE_STATE_REQ_IDLE){
           if(motorTimeout > RTC_TICK_TIME){
             motorTimeout -= RTC_TICK_TIME;
             if((RTC_cntr_tick&0x01)&&(main_status.FlashBuzy==0)){ // SAADC
@@ -761,7 +814,7 @@ static void rtc_handler(nrf_drv_rtc_int_type_t int_type)
             uint8_t param0;   // requered case state
             uint8_t param1;   // current case state
             GetCaseState();
-            switch(main_status.change_case_state_req){
+            switch(CaseState.change_case_state_req){
               case CASE_STATE_REQ_LOOK:
                 param0 = CASE_LOCK;
                 break;
@@ -772,7 +825,7 @@ static void rtc_handler(nrf_drv_rtc_int_type_t int_type)
                 param0 = CASE_HANDEL_OPEN;
                 break;
             }
-            param1 = main_status.CaseState;
+            param1 = CaseState.CurrentCaseState;
             CaseStateLedOnTime = CASE_STATE_ERROR_LED_BLINK_TIME;
             logEventStorageReq(LOG_EVENT_CASE_STATE_TIMEOUT,param0,param1,0);
             SetLedControl(LED_BLINK,LED_BLINK,LED_OFF);

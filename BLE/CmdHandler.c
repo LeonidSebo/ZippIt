@@ -13,10 +13,11 @@ extern uint8_t gAnswer[CHAR_ANSWER_SIZE];        /* Indication */
 extern uint8_t gMessage[CHAR_MESSAGE_SIZE];      /* Indication */
 extern uint8_t gFlashData[CHAR_FLASH_DATA_SIZE]; /* Notification */
 
-uint8_t gRetries; /* value from FLASh */
+//uint8_t gRetries; /* value from FLASh */
 uint16_t gRetriesCmdCounter;
 int16_t gRetriesAlertTimer;
 bool gRetriesStopDevice;
+NUMBER_RETRIES gNumberRetries;//; = COUNT_ATTENTION_EVENT_MAX_VALUE;
 
 #define TIMER_TICK_sec 16                     /*sec*/
 #define RETRIES_ALERT_DEVICE_STOP_TIME_MIN 30 /*min*/
@@ -35,7 +36,10 @@ bool gCmdGetRandomNumberNotFirstCount;
 bool gCmd_ID_ErrorCount;
 //-------------------------------------------------------//
 
-NUMBER_RETRIES gNumberRetries = COUNT_ATTENTION_EVENT_MAX_VALUE;
+void CmdH_Init() 
+{
+  gNumberRetries = bleGetNumberRetries();
+}
 
 void CmdH_Command_Write(uint16_t conn_handle, ble_main_service_t *p_lbs, uint16_t CommandLen, uint8_t *pCommandEncr) {
   BLE_COMMAND Command;
@@ -273,7 +277,7 @@ RESULT Cmd_SetNumberRetries(BLE_COMMAND *pCommand) {
 
   gNumberRetries = pCommand->Data[0];
   NRF_LOG_INFO("SetNumberRetries: NumberRetries = %d", gNumberRetries);
-  // res = bleSetNumberRetriel(LightAlarmLevel);
+  res = bleSetNumberRetries(gNumberRetries);
   res = Answer_OperationStatus(pCommand->CommandID, res);
   return res;
 }
@@ -493,7 +497,7 @@ void TickRetries_16s() {
     return;
   }
 
-  if (gRetriesCmdCounter > gRetries) {
+  if (gRetriesCmdCounter > gNumberRetries) {
     gRetriesStopDevice = true;
     gRetriesAlertTimer = RETRIES_ALERT_DEVICE_STOP_TIME_16secTick;
     Message_Byte_1(MSG_DISCOVERED_RETRIES_NO, gRetriesCmdCounter);

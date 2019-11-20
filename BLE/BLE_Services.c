@@ -227,17 +227,19 @@ RESULT Serv_SendToHost(CHARACTERISTIC_ID CharId, uint8_t *pData, uint16_t DataLe
     params.type = BLE_GATT_HVX_INDICATION;
     params.handle = m_lbs.hMessageChar.value_handle;
     break;
-
+  
   case CHAR_FLASH_DATA:
-    params.type = BLE_GATT_HVX_NOTIFICATION;
+    params.type = BLE_GATT_HVX_INDICATION;
     params.handle = m_lbs.hFlashDatChar.value_handle;
     break;
-    
-  
+
   default:
     return ERR_BLE_CHARACTERISTIC_ID;
+    break;
+  
   }
 
+  
 
   params.p_data = pData;
   params.p_len = &DataLen;
