@@ -10,6 +10,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+void CmdH_Init();
 RESULT CmdH_DeviceConnected();
 RESULT CmdH_DeviceDisconnected();
 void CmdH_Command_Write(uint16_t conn_handle, ble_main_service_t *p_lbs, uint16_t CommandLen, uint8_t *pCommand);
@@ -49,4 +50,5 @@ RESULT Message_SendToHost(BLE_MESSAGE_ID MessageID, uint8_t *pData, uint8_t Data
 RESULT Flash_LogRead(uint32_t offset, uint32_t DataLength);
 RESULT FlashData_SendToHost(BLE_FLASH_DATA_ID MessageID, RESULT OperationStatus, uint8_t *pData, uint8_t DataLength);
 
+void TickRetries_16s();
 #endif // CMD_HANDLER_H__

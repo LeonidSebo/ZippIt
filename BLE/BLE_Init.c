@@ -39,6 +39,7 @@ RESULT BLE_Init(void) {
   advertising_init();
   conn_params_init();
   AES_Init();
+  CmdH_Init();
   //=====================
 //  Debug_Func(NULL);
   //=====================
