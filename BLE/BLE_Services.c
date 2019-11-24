@@ -229,7 +229,7 @@ RESULT Serv_SendToHost(CHARACTERISTIC_ID CharId, uint8_t *pData, uint16_t DataLe
     break;
   
   case CHAR_FLASH_DATA:
-    params.type = BLE_GATT_HVX_INDICATION;
+    params.type = BLE_GATT_HVX_NOTIFICATION;
     params.handle = m_lbs.hFlashDatChar.value_handle;
     break;
 
