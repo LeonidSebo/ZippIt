@@ -493,7 +493,7 @@ RESULT FlashData_SendToHost(BLE_FLASH_DATA_ID DataID, RESULT OperationStatus, ui
     {
         break;
     }
-//    DataCount -= CurrentBlockLength;
+    DataCount -= CurrentBlockLength;
 //    if(DataCount <= 0)
 //    {
 //      break;
