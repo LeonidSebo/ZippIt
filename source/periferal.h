@@ -1,8 +1,9 @@
 #ifndef PERIFERAL_H
 #define PERIFERAL_H
+
+
 #include "sdk_config.h"
 #include "nrf.h"
-
 #include "nrf_gpio.h"
 #include "nrf_drv_gpiote.h"
 #include "app_error.h"
@@ -50,13 +51,15 @@
                                   nrf_gpio_pin_set(MOTOR_IN1_PIN);	\
                                   nrf_gpio_pin_clear(MOTOR_IN2_PIN);	\
                                   nrf_gpio_pin_set(MOTOR_EN_PIN);	\
-                                  main_status.MotorPowerOffReq = 0;
+                                  main_status.MotorPowerOffReq = 0;     \
+                                  NRF_LOG_INFO("CLOSE CASE");
 
 #define MOTOR_OPEN_CASE()         nrf_gpio_pin_set(EN_6V_PIN);          \
                                   nrf_gpio_pin_clear(MOTOR_IN1_PIN);	\
                                   nrf_gpio_pin_set(MOTOR_IN2_PIN);	\
                                   nrf_gpio_pin_set(MOTOR_EN_PIN);	\
-                                  main_status.MotorPowerOffReq = 0;     
+                                  main_status.MotorPowerOffReq = 0;     \
+                                  NRF_LOG_INFO("OPEN CASE");
 
 #define MOTOR_POWER_OFF()         nrf_gpio_pin_clear(EN_6V_PIN);        \
                                   nrf_gpio_pin_clear(MOTOR_IN1_PIN);	\
@@ -69,17 +72,21 @@
 #define DEF_HW_REVISION           0x00,0x01,0x00,0x00
 #define DEF_BAT_ALARM_LEVEL       0xBC,0x02,0x00,0x00
 #define DEF_CRC                   0x00,0x00,0x00,0x00
+#define DEF_NUM_RETR              0x01,0x00,0x00,0x00
 #define DEF_PARAM_TAB             LSENSOR_DEF,\
                                   DEF_MOTOR_ACTIVE_TIME,\
                                   DEF_HW_REVISION,\
                                   DEF_BAT_ALARM_LEVEL,\
+                                  DEF_NUM_RETR,\
                                   DEF_CRC
 
 #define     LIGHT_SENSOR_WEAKUP_ENABLE()              main_status.LightSensorWeakupTime = SW_EVENT_TIMEOUT
 
+#define LOG_EVENT_TAB_START_ADDR              (uint32_t)pParamTable + 0x1000 
+
 #define RTC_TICK_TIME       125
 
-#define INT_FLESH_ALMOST_FULL_REST    100
+#define INT_FLESH_ALMOST_FULL_REST    0x100
 
 //#define PARAM_TAB_ADDR      0x10000
 #define PAGE_SIZE           0x01000
@@ -88,6 +95,7 @@
 #define  CASE_STATE_LED_ON_TIME               6
 #define  CASE_STATE_ERROR_LED_BLINK_TIME      31
 #define  ALARM_BLINK_TIME                     301
+#define  MAX_CASE_STATE_ERR_CNT               5
 
 uint32_t find_free_addr(uint32_t start_addr);
 void int_flash_read(uint32_t addr, uint32_t* pdata, size_t size);
@@ -96,6 +104,7 @@ void int_flash_write(uint32_t addr, uint32_t* pdata, size_t size);
 void get_current_status(void);
 void init_periferal(void);
 void logEventStorageReq(log_event_id_t event,uint8_t param0,uint8_t param1,uint8_t param2);
+void TickRetries_16s();
 
 
 #endif

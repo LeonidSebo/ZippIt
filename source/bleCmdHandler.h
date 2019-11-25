@@ -19,6 +19,9 @@ RESULT bleGetBatteryVoltage(uint16_t* BatteryVoltage);
 RESULT bleSetLightAlarmLevel(uint16_t LightAlarm);
 RESULT bleSetHardwareVersion(HARDWARE_VERSION HardwareVersion);
 RESULT bleGetDeviceStatus(DEVICE_STATUS* pDeviceStatus);
+RESULT bleSetNumberRetries(uint8_t NumberRetries);
+RESULT bleFlashLogRead(uint32_t Offset, uint16_t DataLength, uint32_t* Data, uint16_t* DataLengthRet);
+uint8_t bleGetNumberRetries(void);
 
 void bleShowParamTab(void);
 

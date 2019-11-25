@@ -23,7 +23,7 @@
 /*----------------------------------------*/
 //#include "Debug.h"
 
-#define DEVICE_NAME "ZippIT" /**< Name of device. Will be included in the advertising data. */
+#define DEVICE_NAME "ZippIT_Leonid" /**< Name of device. Will be included in the advertising data. */
 
 #define AES_BLOCK_SIZE_BYTE 16
 
