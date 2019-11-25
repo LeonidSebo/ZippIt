@@ -432,13 +432,13 @@ RESULT Cmd_SetNewRandomNubers(bool AnswerChar) {
   /* by request of Yuri start*/
   DEVICE_STATUS DeviceStatus;
   res = bleGetDeviceStatus(&DeviceStatus);
-  pNewRandomNumbers[15] = ((uint8_t*)&DeviceStatus)[0];
+  pNewRandomNumbers[15] = *((uint8_t*)&DeviceStatus);
   /* by request of Yuri finish*/
 
   AES_SetRandomNumberDefault();
   if (AnswerChar) {
     res = Answer_SendToHost(
-        CMD_ID_GET_RANDOM_NUMBERS, ERR_NO, pNewRandomNumbers, AES_BLOCK_RANDOM_NO_SIZE_BYTE * CHARACTERISTICS_NO);
+        CMD_ID_GET_RANDOM_NUMBERS, ERR_NO, pNewRandomNumbers, AES_BLOCK_RANDOM_NO_SIZE_BYTE * CHARACTERISTICS_NO + 1);
   } else {
     res = Message_SendToHost(
         MSG_NEW_RANDOM_NUMBERS, pNewRandomNumbers, AES_BLOCK_RANDOM_NO_SIZE_BYTE * CHARACTERISTICS_NO + 1/* 1 - by request of Yuri*/);
