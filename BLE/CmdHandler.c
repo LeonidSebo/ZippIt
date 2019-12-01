@@ -534,7 +534,7 @@ RESULT FlashData_SendToHost(BLE_FLASH_DATA_ID DataID, RESULT OperationStatus, ui
 
 
 /* Old Function. Did't work with blok size more then 20 bytes */
-RESULT FlashData_LargeBlock_SendToHost(BLE_FLASH_DATA_ID DataID, RESULT OperationStatus, uint8_t *pData, uint8_t DataLength) {
+RESULT FlashData_SendToHost_oldLargeFrame(BLE_FLASH_DATA_ID DataID, RESULT OperationStatus, uint8_t *pData, uint8_t DataLength) {
   RESULT res;
   uint32_t i = 0;
   uint32_t DataCount = DataLength;
