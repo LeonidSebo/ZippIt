@@ -160,9 +160,9 @@ uint32_t ble_main_service_init(ble_main_service_t *p_lbs, const BLE_MAIN_SERVICE
   add_char_params.char_props.notify   = 1;
   //add_char_params.char_props.indicate = 1;
 
-  add_char_params.is_value_user = true;
+  add_char_params.is_value_user = false;
   //gDeviceStatus                       = 0x0000;
-  add_char_params.p_init_value = (uint8_t *)&gFlashData;
+  //add_char_params.p_init_value = (uint8_t *)&gFlashData;
 
   //add_char_params.read_access         = SEC_OPEN;
   add_char_params.cccd_write_access = SEC_OPEN;
@@ -228,6 +228,11 @@ RESULT Serv_SendToHost(CHARACTERISTIC_ID CharId, uint8_t *pData, uint16_t DataLe
     params.handle = m_lbs.hMessageChar.value_handle;
     break;
   
+  case CHAR_FLASH_DATA:
+    params.type = BLE_GATT_HVX_NOTIFICATION;
+    params.handle = m_lbs.hFlashDatChar.value_handle;
+    break;
+
   default:
     return ERR_BLE_CHARACTERISTIC_ID;
     break;
