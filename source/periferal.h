@@ -94,8 +94,9 @@
 
 #define  CASE_STATE_LED_ON_TIME               6
 #define  CASE_STATE_ERROR_LED_BLINK_TIME      31
-#define  ALARM_BLINK_TIME                     301
+#define  ALARM_BLINK_TIME                     31
 #define  MAX_CASE_STATE_ERR_CNT               5
+
 
 uint32_t find_free_addr(uint32_t start_addr);
 void int_flash_read(uint32_t addr, uint32_t* pdata, size_t size);

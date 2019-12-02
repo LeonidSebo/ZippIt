@@ -6,7 +6,6 @@
 #include "Debug.h"
 
 #define DEBUG_PRINT_RANDOM_AND_KEY_EN     1
-#define CHAR_ANSWER_ENCRIPTION_DISABLE    0
 
 #define NRF_CRYPTO_EXAMPLE_AES_MAX_TEXT_SIZE 120
 #define RNG_BYTE_WAIT_US (124UL)
@@ -107,6 +106,7 @@ void AES_SetNewRandomNumbers(uint8_t *pNewRandomNumbers) {
 
 RESULT AES_BlockEncript(CHARACTERISTIC_ID CharacteristicID, uint8_t *pClearBlock, uint8_t ClearBlockLen,
   uint8_t *pCipherBlock16) {
+  
   uint8_t EncrBuffer[AES_BLOCK_SIZE_BYTE];
   uint8_t NewKey[AES_KEY_SIZE_BYTE];
   RESULT res;

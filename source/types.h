@@ -90,10 +90,10 @@ typedef struct _main_status_t
   uint32_t ParamTab_change_req     :  2;
   uint32_t LightSensorWeakupTime   :  3;
   uint32_t LightSensorProblem      :  1;
+  uint32_t LightSensorState        :  2;    // 0 - not initialized, 1 - sleep, 2 - work
   uint32_t NotifyReq               :  1;
   uint32_t MotorPowerOffReq        :  2;     //0 - not request , 1 - Request motor power off, 
                                             //2 -  Request motor power off after one second
-//  uint32_t MotorAttemptCntr        :  2;
   uint32_t FlashErase_req          :  1;
   uint32_t FlashBuzy               :  1;
 //  uint32_t CaseState               :  2;
@@ -105,7 +105,7 @@ typedef struct _main_status_t
 typedef struct _rtc_tick_enable_t{
   uint32_t led_bilnk               :  1;
   uint32_t motor_buzy              :  1;
-  uint32_t spare                   :  6;
+  uint32_t spare                   :  5;
 }rtc_tick_enable_t;
 
 typedef enum _case_state_req_t
