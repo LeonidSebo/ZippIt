@@ -236,7 +236,6 @@ RESULT Serv_SendToHost(CHARACTERISTIC_ID CharId, uint8_t *pData, uint16_t DataLe
   default:
     return ERR_BLE_CHARACTERISTIC_ID;
     break;
-  
   }
 
   
