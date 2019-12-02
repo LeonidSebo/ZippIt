@@ -23,7 +23,8 @@ NUMBER_RETRIES gNumberRetries;//; = COUNT_ATTENTION_EVENT_MAX_VALUE;
 #define RETRIES_ALERT_DEVICE_STOP_TIME_MIN 30 /*min*/
 #define RETRIES_ALERT_DEVICE_STOP_TIME_16secTick (RETRIES_ALERT_DEVICE_STOP_TIME_MIN * 60 / TIMER_TICK_sec)
 
-#define CHAR_COMMAND_ENCRIPTION_DISABLE 1
+//-------------------------------------------------------//
+#define CHAR_COMMAND_ENCRIPTION_DISABLE 0
 //-------------------------------------------------------//
 #define COUNT_ATTENTION_EVENT_MAX_VALUE 10
 
@@ -271,12 +272,13 @@ RESULT Cmd_SetLightAlarmLevel(BLE_COMMAND *pCommand) {
 RESULT Cmd_SetNumberRetries(BLE_COMMAND *pCommand) {
   RESULT res = ERR_NO;
 
+  NRF_LOG_INFO("SetNumberRetries: NumberRetries = %d", gNumberRetries);
   if (pCommand->DataLength != sizeof(NUMBER_RETRIES)) {
     return Answer_OperationStatus(pCommand->CommandID, ERR_BLE_CMD_LEN);
   }
 
   gNumberRetries = pCommand->Data[0];
-  NRF_LOG_INFO("SetNumberRetries: NumberRetries = %d", gNumberRetries);
+
   res = bleSetNumberRetries(gNumberRetries);
   res = Answer_OperationStatus(pCommand->CommandID, res);
   return res;
@@ -294,6 +296,7 @@ RESULT Cmd_GetBatteryChargingLevel(BLE_COMMAND *pCommand) {
 RESULT Cmd_SetHardwareVersion(BLE_COMMAND *pCommand) {
   HARDWARE_VERSION HardwareVersion;
   RESULT res;
+  NRF_LOG_INFO("Cmd_SetHardwareVersion.");
   // memcpy(&HardwareVersion)
   res = bleSetHardwareVersion(*(HARDWARE_VERSION *)pCommand->Data);
   res = Answer_SetHardwareVersion(pCommand->CommandID, res, HardwareVersion);
@@ -302,6 +305,7 @@ RESULT Cmd_SetHardwareVersion(BLE_COMMAND *pCommand) {
 
 RESULT Cmd_FlashLogErase(BLE_COMMAND *pCommand) {
   RESULT res;
+  NRF_LOG_INFO("Cmd_FlashLogErase.");
   res = bleFlashLogErase();
   res = Answer_OperationStatus(pCommand->CommandID, res);
   return res;
@@ -311,7 +315,7 @@ RESULT Cmd_GetFlashLog(BLE_COMMAND *pCommand) {
   RESULT res;
   uint32_t Offset;
   uint32_t DataLength;
-
+  NRF_LOG_INFO("Cmd_GetFlashLog.");
   Offset = pCommand->Data[0] + (pCommand->Data[1] << 8) + (pCommand->Data[2] << 16);
   DataLength = pCommand->Data[3] + (pCommand->Data[4] << 8);
 
@@ -454,9 +458,18 @@ RESULT Cmd_SetNewRandomNubers(bool AnswerChar) {
 RESULT Flash_LogRead(uint32_t Offset, uint32_t DataLength) {
   RESULT res;
   uint16_t DataLengthRet;
-  uint8_t Data[CHAR_FLASH_DATA_SIZE];
+  uint8_t Data[512];
   res = bleFlashLogRead(Offset, DataLength, (uint32_t*)(Data + BLE_FLASH_DATA_HEADER_LEN), &DataLengthRet);
-  
+  RESULT_CHECK_WITH_LOG(res);
+
+  /* For debug only 
+  int8_t i;
+  for(i = 0; i < DataLengthRet; i++)
+  {
+    ((uint8_t*)(Data + BLE_FLASH_DATA_HEADER_LEN))[i] = i;
+  }
+  */
+  NRF_LOG_INFO("bleFlashLogRead: DataLength = %d Offset = %d Res = %d  DataLengthRet = %d", DataLength, Offset, res, DataLengthRet);
   Data[0] = FD_DATA_LOG_FILE;
   DataLengthRet += BLE_FLASH_DATA_HEADER_LEN;
   memcpy(Data + 1, &DataLengthRet, 2);
@@ -514,7 +527,7 @@ RESULT FlashData_SendToHost(BLE_FLASH_DATA_ID DataID, RESULT OperationStatus, ui
     res = AES_BlockEncript(CHAR_FLASH_DATA, (uint8_t *)pData + Offset, CurrentBlockLength, gFlashData/* + Offset*/);
     RESULT_CHECK_WITH_LOG(res);
     res = Serv_SendToHost(CHAR_FLASH_DATA, (uint8_t *)gFlashData/* + Offset*/, CurrentBlockLength);
-
+    AES_SetNewCharRandomVal(CHAR_FLASH_DATA);
     NRF_LOG_INFO("Send Block No %d of Log File data, Result %d", i++, res);
     NRF_LOG_FLUSH();
 //    RESULT_CHECK_WITH_LOG(res);
@@ -528,7 +541,7 @@ RESULT FlashData_SendToHost(BLE_FLASH_DATA_ID DataID, RESULT OperationStatus, ui
     /* AES_SetNewCharRandomVal(CHAR_FLASH_DATA); */
   }
 
-  AES_SetNewCharRandomVal(CHAR_FLASH_DATA);
+  //AES_SetNewCharRandomVal(CHAR_FLASH_DATA);
   return ERR_NO;
 }
 

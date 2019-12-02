@@ -23,7 +23,7 @@
 /*----------------------------------------*/
 //#include "Debug.h"
 
-#define DEVICE_NAME "ZippIT" /**< Name of device. Will be included in the advertising data. */
+#define DEVICE_NAME "ZippIT_test" /**< Name of device. Will be included in the advertising data. */
 
 #define AES_BLOCK_SIZE_BYTE 16
 
@@ -109,7 +109,7 @@ typedef enum _BLE_MESSAGE_ID {
 } BLE_MESSAGE_ID;
 
 typedef enum _BLE_FLASH_DATA_ID {
-  FD_DATA_LOG_FILE = 0x00,
+  FD_DATA_LOG_FILE = 0xFE,
 } BLE_FLASH_DATA_ID;
 
 typedef enum _LOG_RECORD_ID {
