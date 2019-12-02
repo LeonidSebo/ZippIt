@@ -62,12 +62,14 @@ typedef struct _ParamTable_t
   motor_active_time_t    MotorActiveTime;
   uint32_t    HW_revision;
   uint32_t    BatteryAlarmLevel;
+  uint32_t    NumberRetries;
 }ParamTable_t;
 
-#define MOTOR_ACTIVE_TIME_OFFSET    sizeof(lsensor_t)
-#define HW_REVISEON_OFFSET       sizeof(lsensor_t)+sizeof(motor_active_time_t)
-#define BAT_ALARM_LEVEL_OFFSET         HW_REVISEON_OFFSET+sizeof(uint32_t)
+#define PAR_TAB_MOTOR_ACTIVE_TIME_OFFSET    sizeof(lsensor_t)
+#define HW_REVISEON_OFFSET          sizeof(lsensor_t)+sizeof(motor_active_time_t)
+#define PAR_TAB_BAT_ALARM_LEVEL_OFFSET         HW_REVISEON_OFFSET+sizeof(uint32_t)
 #define LSENS_LOWER_THRESH_OFFSET      2
+#define PAR_TAB_NUM_RETR_OFFSET                PAR_TAB_BAT_ALARM_LEVEL_OFFSET+sizeof(uint32_t) 
 
 #define device_status_t     DEVICE_STATUS_EVENT
 
@@ -82,26 +84,28 @@ typedef struct _report_t
 
 typedef struct _main_status_t
 {
-  uint32_t change_case_state_req   :  2;     //0 - idle, 1 - look request, 2 - unlook request;3 - manual;
-  uint32_t change_case_state_buzy  :  1;
+//  uint32_t change_case_state_req   :  2;     //0 - idle, 1 - look request, 2 - unlook request;3 - manual;
+//  uint32_t change_case_state_buzy  :  1;
   uint32_t DateTime_change_req     :  1;
   uint32_t ParamTab_change_req     :  2;
   uint32_t LightSensorWeakupTime   :  3;
   uint32_t LightSensorProblem      :  1;
+  uint32_t LightSensorState        :  2;    // 0 - not initialized, 1 - sleep, 2 - work
   uint32_t NotifyReq               :  1;
   uint32_t MotorPowerOffReq        :  2;     //0 - not request , 1 - Request motor power off, 
                                             //2 -  Request motor power off after one second
-  uint32_t MotorAttemptCntr        :  2;
   uint32_t FlashErase_req          :  1;
   uint32_t FlashBuzy               :  1;
-  uint32_t CaseState               :  2;
-  uint32_t spare                   : 13;
+//  uint32_t CaseState               :  2;
+//  uint32_t CaseStateError          :  1;
+  uint32_t CaseStateNextEnabled    :  2;  //when CASE_STATE_REQ_IDLE: all states enabled, when others: requered state 
+  uint32_t spare                   : 16;
 }main_status_t;
 
 typedef struct _rtc_tick_enable_t{
   uint32_t led_bilnk               :  1;
   uint32_t motor_buzy              :  1;
-  uint32_t spare                   :  6;
+  uint32_t spare                   :  5;
 }rtc_tick_enable_t;
 
 typedef enum _case_state_req_t
@@ -188,4 +192,18 @@ typedef struct _log_event_store_t
   uint8_t log_event_wr_idx;
   uint8_t log_event_rd_idx;
 }log_event_store_t;
+
+typedef struct _case_state_t
+{
+  CASE_STATE  LastTrueCaseState;      // Last true case state
+  CASE_STATE  CurrentCaseState;       // Current case state
+  uint32_t change_case_state_req  :2; // if it is not CASE_STATE_REQ_IDLE - Reques change state to this state
+  uint32_t UnloockStateErrCntr       :3; // Errors counter of change_case_state_req == CASE_STATE_REQ_UNLOOK
+  uint32_t LookStateErrCntr          :3; // Errors counter of change_case_state_req == CASE_STATE_REQ_LOOK
+  uint32_t MidleStateErrCntr         :3; // Errors counter of change_case_state_req == CASE_STATE_REQ_HANDEL_OPEN
+  uint32_t UnloockStateDes        :1; // Desable transition to UNLOOK state
+  uint32_t LookStateDes           :1; // Desable transition to LOOK state
+  uint32_t MidleStateDes          :1; // Desable transition to HANDEL_OPEN state
+}case_state_t;
+
 #endif  //TYPES_H

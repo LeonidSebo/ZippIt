@@ -23,7 +23,7 @@
 /*----------------------------------------*/
 //#include "Debug.h"
 
-#define DEVICE_NAME "ZippIT" /**< Name of device. Will be included in the advertising data. */
+#define DEVICE_NAME "ZippIT_Leonid" /**< Name of device. Will be included in the advertising data. */
 
 #define AES_BLOCK_SIZE_BYTE 16
 
@@ -31,7 +31,8 @@
 #define CHAR_COMMAND_SIZE AES_BLOCK_SIZE_BYTE
 #define CHAR_ANSWER_SIZE AES_BLOCK_SIZE_BYTE
 #define CHAR_MESSAGE_SIZE AES_BLOCK_SIZE_BYTE
-#define CHAR_FLASH_DATA_SIZE AES_BLOCK_SIZE_BYTE * 16
+#define CHAR_FLASH_DATA_SIZE AES_BLOCK_SIZE_BYTE
+//#define CHAR_FLASH_DATA_SIZE AES_BLOCK_SIZE_BYTE * 16
 
 typedef enum _RESULT {
   ERR_NO,
@@ -108,7 +109,7 @@ typedef enum _BLE_MESSAGE_ID {
 } BLE_MESSAGE_ID;
 
 typedef enum _BLE_FLASH_DATA_ID {
-  FD_DATA_LOG_FILE = 0x00,
+  FD_DATA_LOG_FILE = 0xFE,
 } BLE_FLASH_DATA_ID;
 
 typedef enum _LOG_RECORD_ID {
@@ -298,10 +299,10 @@ typedef enum _CHARACTERISTIC_ID {
 
 /*=============================================================*/
 /* Debuging */
-#define ADVERTISING_LED BSP_BOARD_LED_0 /**< Is on when device is advertising. */
-#define CONNECTED_LED BSP_BOARD_LED_1   /**< Is on when device has connected. */
-#define LEDBUTTON_LED BSP_BOARD_LED_2   /**< LED to be toggled with the help of the LED Button Service. */
-#define LEDBUTTON_BUTTON BSP_BUTTON_0   /**< Button that will trigger the notification event with the LED Button Service */
+//#define ADVERTISING_LED BSP_BOARD_LED_0 /**< Is on when device is advertising. */
+//#define CONNECTED_LED BSP_BOARD_LED_1   /**< Is on when device has connected. */
+//#define LEDBUTTON_LED BSP_BOARD_LED_2   /**< LED to be toggled with the help of the LED Button Service. */
+//#define LEDBUTTON_BUTTON BSP_BUTTON_0   /**< Button that will trigger the notification event with the LED Button Service */
 /*=============================================================*/
 
 #define APP_BLE_OBSERVER_PRIO 3 /**< Application's BLE observer priority. You shouldn't need to modify this value. */
