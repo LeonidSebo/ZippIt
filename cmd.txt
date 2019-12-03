@@ -1,6 +1,15 @@
+00 00 								Ged device info
 04 08 B8 0B DC 05 B8 0B DC 05		Set motor time
 01 01 00							Case unlook
+01 01 01							CASE_HANDEL_OPEN
+01 01 02							Case look
+02 00								Get Dev status
 03 01 01							Red led on
 03 01 02							Red led blink
+04 08 08 07 06 05 04 03 02 01		Set Motor time
 05 04 01 02 03 04					Set time
 06 02 05 06							set battery alarm
+08 01 02							SET_NUMBER_RETRIES
+0A 00
+0B 04 01 00 00 00					SetHardwareVersion
+0D 05 00 00 00 ff 00				get log tab

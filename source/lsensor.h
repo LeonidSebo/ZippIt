@@ -41,6 +41,8 @@
 #define LSEN_SLEEP     LSEN_CONTR_REG_DEF & 0xFE    // Gain = 1, mode = Stand-by
 #define LSEN_WEAKUP    LSEN_CONTR_REG_DEF          // Gain = 1, mode = Active
 
+#define LS_SLEEP  1
+#define LS_WORK   2
 
 typedef struct _lsensor_t
 {
