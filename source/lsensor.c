@@ -106,18 +106,23 @@ void lsensor_init(void)
 
 void lsensor_sleep(void)
 {
-  NRF_LOG_INFO("lsensor_sleep");
-  uint8_t contr_reg = pParamTable->lsensor.contr_reg & 0xFE; // Stand-by mode
-  nrfx_gpiote_in_event_disable(SENSOR_INT_PIN);            // desable interrupt
-  lsensor_tx(LSEN_ALS_CONTR_REG,&contr_reg,1);             // send reg value
+  if(main_status.LightSensorState != LS_SLEEP){
+    NRF_LOG_INFO("lsensor_sleep");
+    uint8_t contr_reg = pParamTable->lsensor.contr_reg & 0xFE; // Stand-by mode
+    nrfx_gpiote_in_event_disable(SENSOR_INT_PIN);            // desable interrupt
+    lsensor_tx(LSEN_ALS_CONTR_REG,&contr_reg,1);             // send reg value
+    main_status.LightSensorState = LS_SLEEP;
+  }
 }
 
 void lsensor_weak_up(void)
 {
-  NRF_LOG_INFO("lsensor_weak_up");
-  uint8_t contr_reg = pParamTable->lsensor.contr_reg | 0x01; // Active mode
-  nrfx_gpiote_in_event_disable(SENSOR_INT_PIN);            // desable interrupt
-  lsensor_tx(LSEN_ALS_CONTR_REG,&contr_reg,1);             // send reg value
-  nrfx_gpiote_in_event_enable(SENSOR_INT_PIN, true);
-
+  if(main_status.LightSensorState != LS_WORK){
+    NRF_LOG_INFO("lsensor_weak_up");
+    uint8_t contr_reg = pParamTable->lsensor.contr_reg | 0x01; // Active mode
+    nrfx_gpiote_in_event_disable(SENSOR_INT_PIN);            // desable interrupt
+    lsensor_tx(LSEN_ALS_CONTR_REG,&contr_reg,1);             // send reg value
+    nrfx_gpiote_in_event_enable(SENSOR_INT_PIN, true);
+    main_status.LightSensorState = LS_WORK;
+  }
 }

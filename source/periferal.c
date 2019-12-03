@@ -6,7 +6,7 @@ extern uint8_t  NewParamTable[sizeof(ParamTable_t) + sizeof(uint32_t)];
 extern main_status_t main_status;
 
 __attribute__ ((section(".ParamTab")))
-const uint32_t endOfPrg = 0;
+const uint32_t endOfPrg = 0xFFFFFFFF;
 
 const ParamTable_t* pParamTable = (ParamTable_t*) ((uint8_t*)&endOfPrg + PAGE_SIZE);
 const nrf_drv_rtc_t rtc = NRF_DRV_RTC_INSTANCE(2); /**< Declaring an instance of nrf_drv_rtc for RTC0. */
@@ -240,6 +240,7 @@ static void SetLedControl(LED_STATE R,LED_STATE G,LED_STATE B)
   if((R == LED_BLINK)||(G == LED_BLINK)||(B == LED_BLINK)){
     NRF_LOG_INFO("RGB - 0x%02x  0x%02x  0x%02x", *(uint8_t*)&R, *(uint8_t*)&G, *(uint8_t*)&B);
      rtcTickRequest.led_bilnk = 1;
+     nrf_drv_rtc_tick_enable(&rtc,true);
   }
   if(R == LED_ON)
     nrf_gpio_pin_set(LED_R_PIN);
@@ -265,6 +266,7 @@ static void switch_int_handler(uint8_t pin, uint8_t action)
         logEventStorageReq(LOG_EVENT_CASE_OPEN, 0,0,0);
         CaseState.CurrentCaseState = CASE_UNLOCK;
         lsensor_sleep();
+        main_status.LightSensorWeakupTime = 0;
         device_status.DEVSTAT_STATE_OF_SW_1_CHANGED = YES; 
         SetLedControl(LED_OFF,LED_ON,LED_OFF);
         CaseStateLedOnTime = CASE_STATE_LED_ON_TIME;
@@ -301,13 +303,16 @@ static void switch_int_handler(uint8_t pin, uint8_t action)
       break;
 
     case SENSOR_INT_PIN:
-      device_status.DEVSTAT_LIGHT_PENETRATION_CHANGED = YES;
-      if((CaseState.CurrentCaseState == CASE_LOCK)||(CaseState.CurrentCaseState == CASE_HANDEL_OPEN))
-        logEventStorageReq(LOG_EVENT_LIGHT_CHANGED, 0,0,0);
-
-      CaseStateLedOnTime = ALARM_BLINK_TIME;
-      SetLedControl(LED_BLINK,LED_OFF,LED_OFF);
-      rtcTickRequest.led_bilnk = 1;
+      device_status.DEVSTAT_LIGHT_PENETRATION = nrf_gpio_pin_read(SENSOR_INT_PIN);
+      if(device_status.DEVSTAT_LIGHT_PENETRATION){
+        if((CaseState.CurrentCaseState == CASE_LOCK)||(CaseState.CurrentCaseState == CASE_HANDEL_OPEN)){
+          logEventStorageReq(LOG_EVENT_LIGHT_CHANGED, 0,0,0);
+          device_status.DEVSTAT_LIGHT_PENETRATION_CHANGED = YES;
+          NRF_LOG_INFO("Light sensor event");
+          CaseStateLedOnTime = ALARM_BLINK_TIME;
+          SetLedControl(LED_BLINK,LED_OFF,LED_OFF);
+        }
+      }
       break;
   }
   Message_DeviceStatus( device_status);             // switches state changed event
@@ -398,6 +403,7 @@ static void LockSwitchEvent_handler(void)
     case 1:   // stable state
       if((CaseState.CurrentCaseState == CASE_LOCK)||(CaseState.CurrentCaseState == CASE_HANDEL_OPEN)){
         lsensor_weak_up();
+        main_status.LightSensorWeakupTime = 0;
       }
     default:   // debounce time
       main_status.LightSensorWeakupTime--;
@@ -425,7 +431,7 @@ void saadc_callback(nrf_drv_saadc_evt_t const * p_event)
     BatVoltage = p_event->data.done.p_buffer[0];
     minVoltage = (minVoltage > BatVoltage)? BatVoltage:minVoltage;
     if(motorTimeout < RTC_TICK_TIME){
-      NRF_LOG_INFO("BatVoltage = %d   minVoltage = %d",BatVoltage,minVoltage);
+//      NRF_LOG_INFO("BatVoltage = %d   minVoltage = %d",BatVoltage,minVoltage);
     }
     if(BatVoltage < pParamTable->BatteryAlarmLevel){
       NRF_LOG_INFO("Low Battery");
@@ -751,7 +757,7 @@ static void rtc_handler(nrf_drv_rtc_int_type_t int_type)
                    
         if(((RTC_cntr_sec & 0x0F)==0)&&(main_status.FlashBuzy==NO)){ // measure Battery Voltage every 16 second
           main_status.FlashBuzy = YES;
-          NRF_LOG_INFO("Current Time = 0x%08x",CurrentDateTime.AsInt);
+//          NRF_LOG_INFO("Current Time = 0x%08x",CurrentDateTime.AsInt);
           saadc_init();
           err_code = nrfx_saadc_sample();
           APP_ERROR_CHECK(err_code);
@@ -786,6 +792,7 @@ static void rtc_handler(nrf_drv_rtc_int_type_t int_type)
         if((main_status.FlashErase_req)&&(!nrf_fstorage_is_busy(&fstorage)))
         {
           uint32_t BlocksNo = (fstorage.end_addr - fstorage.start_addr)/PAGE_SIZE - 1;
+          memset(&log_event,0,sizeof(log_event_store_t));
           int_flash_erase((uint32_t)pParamTable + PAGE_SIZE,BlocksNo);
         }
     }
