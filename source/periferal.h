@@ -1,8 +1,9 @@
 #ifndef PERIFERAL_H
 #define PERIFERAL_H
+
+
 #include "sdk_config.h"
 #include "nrf.h"
-
 #include "nrf_gpio.h"
 #include "nrf_drv_gpiote.h"
 #include "app_error.h"
@@ -50,13 +51,15 @@
                                   nrf_gpio_pin_set(MOTOR_IN1_PIN);	\
                                   nrf_gpio_pin_clear(MOTOR_IN2_PIN);	\
                                   nrf_gpio_pin_set(MOTOR_EN_PIN);	\
-                                  main_status.MotorPowerOffReq = 0;
+                                  main_status.MotorPowerOffReq = 0;     \
+                                  NRF_LOG_INFO("CLOSE CASE");
 
 #define MOTOR_OPEN_CASE()         nrf_gpio_pin_set(EN_6V_PIN);          \
                                   nrf_gpio_pin_clear(MOTOR_IN1_PIN);	\
                                   nrf_gpio_pin_set(MOTOR_IN2_PIN);	\
                                   nrf_gpio_pin_set(MOTOR_EN_PIN);	\
-                                  main_status.MotorPowerOffReq = 0;     
+                                  main_status.MotorPowerOffReq = 0;     \
+                                  NRF_LOG_INFO("OPEN CASE");
 
 #define MOTOR_POWER_OFF()         nrf_gpio_pin_clear(EN_6V_PIN);        \
                                   nrf_gpio_pin_clear(MOTOR_IN1_PIN);	\
@@ -101,6 +104,7 @@ void int_flash_write(uint32_t addr, uint32_t* pdata, size_t size);
 void get_current_status(void);
 void init_periferal(void);
 void logEventStorageReq(log_event_id_t event,uint8_t param0,uint8_t param1,uint8_t param2);
+void TickRetries_16s();
 
 
 #endif

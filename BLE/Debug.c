@@ -97,20 +97,35 @@ RESULT Debug_EncriptDecript() {
 
   return res;
 }
-
+ 
+ uint8_t data1[128+ 10];
 void Debug_Func(BLE_COMMAND *pCommand) {
+ RESULT res = ERR_NO;
+
+  int8_t i = 0;
+  FlashData_SendToHost(FD_DATA_LOG_FILE, res, data1, 40);
   /* Debug_CheckEncDec(); */
   /* Debug_GetEncrCommand(); */
   /* Debug_MessageSend(); */
   /* SetNewRandomNubers(false); */
-  Flash_LogRead(0, 256);
+  //Flash_LogRead(0, 256);
+  //Cmd_SetNewRandomNubers(true);
   /* Leonid */
   //bleShowParamTab();
-//  bleFlashErase(*(uint32_t*)pCommand->Data, *(uint32_t*)(pCommand->Data + 4));
+  //  bleFlashErase(*(uint32_t*)pCommand->Data, *(uint32_t*)(pCommand->Data + 4));
+  //  bleFlashWrite(*(uint32_t*)pCommand->Data, (uint32_t*)(pCommand->Data + 4),1);
+//  for(i = 0; i < 128; i++)
+//  {
+//    data1[i] = i;
+//  }
 
-  
+ // i= 0;
+//  while(i < 128)
+//  {
+//    data1[i] = i++;
+//  }
+//  data1[127] = 33; 
 
-//  bleFlashWrite(*(uint32_t*)pCommand->Data, (uint32_t*)(pCommand->Data + 4),1);
 }
 
 void Debug_CheckFrameLength() {

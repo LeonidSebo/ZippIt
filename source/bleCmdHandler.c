@@ -13,7 +13,7 @@ extern rtc_tick_enable_t rtcTickRequest;
 extern uint32_t BatVoltage;
 extern case_state_t  CaseState;
 
-uint16_t sw_rewision  = 0x0105;
+uint16_t sw_rewision  = 0x0109;
 uint8_t  NewParamTable[sizeof(ParamTable_t) + sizeof(uint32_t)] = {DEF_PARAM_TAB};
 
 RESULT bleGetDeviceInfo(DEVICE_INFO* pDeviceInfo)
@@ -33,7 +33,6 @@ RESULT bleSetCaseState(CASE_STATE ReqCaseState)
     NRF_LOG_INFO("ERR_MODULE_BUZY");
     return ERR_MODULE_BUZY;
   }
-  get_current_status();
   switch(ReqCaseState){
     case CASE_LOCK:
       if(CaseState.LookStateDes){
@@ -44,7 +43,7 @@ RESULT bleSetCaseState(CASE_STATE ReqCaseState)
         NRF_LOG_INFO("LOW BATTERY");
         return ERR_LOW_BATTERY;
       }
-      if(device_status.DEVSTAT_STATE_OF_SW_3){ // case isn't looked
+      if(CaseState.CurrentCaseState != CASE_LOCK){ //case isn't looked
         MOTOR_CLOSE_CASE();
         motorTimeout = (device_status.DEVSTAT_STATE_OF_SW_2 == 0)? pParamTable->MotorActiveTime.MOTOR_CCW_HALF_TIME_MS:
                                                                   pParamTable->MotorActiveTime.MOTOR_CCW_FULL_TIME_MS;
@@ -58,7 +57,7 @@ RESULT bleSetCaseState(CASE_STATE ReqCaseState)
         NRF_LOG_INFO("SetCaseState Error. UNLOCK state desabled");
         return ERR_CASE_STATE;
       }
-      if(device_status.DEVSTAT_STATE_OF_SW_1){ // case isn't unlooked
+      if(CaseState.CurrentCaseState != CASE_UNLOCK){ //case isn't unlooked
         MOTOR_OPEN_CASE();
         motorTimeout = (device_status.DEVSTAT_STATE_OF_SW_2)? pParamTable->MotorActiveTime.MOTOR_CW_HALF_TIME_MS:
                                                                   pParamTable->MotorActiveTime.MOTOR_CW_FULL_TIME_MS;
@@ -72,8 +71,9 @@ RESULT bleSetCaseState(CASE_STATE ReqCaseState)
         NRF_LOG_INFO("SetCaseState Error. HANDEL_OPEN state desabled");
         return ERR_CASE_STATE;
       }
-      if(device_status.DEVSTAT_STATE_OF_SW_2){ // case isn't manual
-        if(device_status.DEVSTAT_STATE_OF_SW_3){  // case is looked
+      if(CaseState.CurrentCaseState != CASE_HANDEL_OPEN){ //case was UNLOCK
+ 
+        if(CaseState.LastTrueCaseState == CASE_UNLOCK){ //case was UNLOCK
           if(device_status.DEVSTAT_POWER_LOW == YES){
             NRF_LOG_INFO("LOW BATTERY");
             return ERR_LOW_BATTERY;
@@ -83,7 +83,8 @@ RESULT bleSetCaseState(CASE_STATE ReqCaseState)
           CaseState.change_case_state_req = CASE_STATE_REQ_HANDEL_OPEN;
           rtcTickRequest.motor_buzy = 1;
           nrf_drv_rtc_tick_enable(&rtc,true);
-        }else{
+        }
+        else {
           MOTOR_OPEN_CASE();
           motorTimeout = pParamTable->MotorActiveTime.MOTOR_CCW_HALF_TIME_MS;
           CaseState.change_case_state_req = CASE_STATE_REQ_HANDEL_OPEN;
@@ -134,11 +135,6 @@ RESULT  bleSetMotorTimes(motor_active_time_t MotorTimes)
                                               MotorTimes.MOTOR_CW_FULL_TIME_MS,
                                               MotorTimes.MOTOR_CW_HALF_TIME_MS);
 
-/*  int_flash_read((uint32_t)pParamTable, (uint32_t*)&MotorActiveTime, sizeof(motor_active_time_t));
-    if((MotorActiveTime.MOTOR_CCW_FULL_TIME_MS  != MotorTimes.MOTOR_CCW_FULL_TIME_MS)||
-     (MotorActiveTime.MOTOR_CCW_HALF_TIME_MS  != MotorTimes.MOTOR_CCW_HALF_TIME_MS)||
-     (MotorActiveTime.MOTOR_CW_FULL_TIME_MS   != MotorTimes.MOTOR_CW_FULL_TIME_MS)||
-     (MotorActiveTime.MOTOR_CW_HALF_TIME_MS   != MotorTimes.MOTOR_CW_HALF_TIME_MS))*/
   if((pParamTable->MotorActiveTime.MOTOR_CCW_FULL_TIME_MS  != MotorTimes.MOTOR_CCW_FULL_TIME_MS)||
      (pParamTable->MotorActiveTime.MOTOR_CCW_HALF_TIME_MS  != MotorTimes.MOTOR_CCW_HALF_TIME_MS)||
      (pParamTable->MotorActiveTime.MOTOR_CW_FULL_TIME_MS   != MotorTimes.MOTOR_CW_FULL_TIME_MS)||
@@ -232,10 +228,11 @@ RESULT bleSetNumberRetries(uint8_t NumberRetries)
   return ERR_NO;
 }
 
-uint8_t bleGetNumberRetries()
+uint8_t bleGetNumberRetries(void)
 {
-  return 0;
+  return (uint8_t)pParamTable->NumberRetries;
 }
+
 
 RESULT bleGetDeviceStatus(DEVICE_STATUS* tDeviceStatus)
 {
@@ -252,6 +249,7 @@ RESULT bleGetDeviceStatus(DEVICE_STATUS* tDeviceStatus)
 
 void bleShowParamTab(void)
 {
+/*This function created for debugging. */
   uint8_t  ParamTable[sizeof(ParamTable_t) + sizeof(uint32_t)];
   NRF_LOG_INFO("bleShowParamTab:  BAT_ALARM_LEVEL              0x%08x ",pParamTable->BatteryAlarmLevel);
 
@@ -262,23 +260,24 @@ void bleShowParamTab(void)
   NRF_LOG_INFO("MOTOR_ACT_TIME CCW_F   0x%04x ",*(uint16_t*)(ParamTable+PAR_TAB_MOTOR_ACTIVE_TIME_OFFSET+4));
   NRF_LOG_INFO("MOTOR_ACT_TIME CCW_H   0x%04x ",*(uint16_t*)(ParamTable+PAR_TAB_MOTOR_ACTIVE_TIME_OFFSET+6));
   NRF_LOG_INFO("BAT_AL_LEVEL              0x%04x ",*(uint16_t*)(ParamTable+PAR_TAB_BAT_ALARM_LEVEL_OFFSET));
+  NRF_LOG_FLUSH();
   NRF_LOG_INFO("HW_REV                  0x%04x ",*(uint32_t*)(ParamTable+HW_REVISEON_OFFSET));
   NRF_LOG_INFO("NUMBER_RETR               0x%02x ",*(uint16_t*)(ParamTable+PAR_TAB_NUM_RETR_OFFSET));
 }
 
-RESULT bleFlashLogRead(uint32_t Offset, uint8_t DataLength, uint32_t* Data, uint8_t* DataLengthRet)
+RESULT bleFlashLogRead(uint32_t Offset, uint16_t DataLength, uint32_t* Data, uint16_t* DataLengthRet)
 {
   uint8_t i;
   DataLengthRet[0] = DataLength;
-  int_flash_read(LOG_EVENT_TAB_START_ADDR+Offset,(uint32_t*)Data,DataLength);
-  for(i = 0;i<64;i++){
+  int_flash_read(LOG_EVENT_TAB_START_ADDR+Offset,Data,DataLength);
+  for(i = 0;i<DataLength/4;i++){
     if(Data[i] == 0xFFFFFFFF){
       DataLengthRet[0] = i*4;   
       break;
     }
   }
   NRF_LOG_INFO("FlashLogRead:");
-  NRF_LOG_INFO("Offset = 0x%06x  Req DataLength = 0x%02x   DataLengthRet = 0x%02x ",Offset,DataLength,DataLengthRet[0]);
+  NRF_LOG_INFO("Offset = 0x%06x  Req DataLength = 0x%04x   DataLengthRet = 0x%04x ",Offset,DataLength,DataLengthRet[0]);
   NRF_LOG_INFO("Data[0] = 0x%08x  Data[1] = 0x%08x  Data[2] = 0x%08x  Data[3] = 0x%08x",Data[0],Data[1],Data[2],Data[3]);
 
   return ERR_NO;

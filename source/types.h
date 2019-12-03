@@ -171,7 +171,7 @@ typedef enum _log_event_id_t
   LOG_EVENT_UNAUTHORIZED_CMD,
   LOG_EVENT_ERROR,                /*8*/
   LOG_EVENT_LOW_FLASH_MEMORY,
-  LOG_EVENT_GPS_LOCATION
+  LOG_EVENT_GPS_LOCATION,
 }log_event_id_t;
 
 typedef  struct _log_event_t 

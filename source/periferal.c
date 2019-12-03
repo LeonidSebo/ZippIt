@@ -738,8 +738,8 @@ static void rtc_handler(nrf_drv_rtc_int_type_t int_type)
     static uint32_t RTC_cntr_tick = 0;
     uint32_t err_code;
     if (int_type == NRF_DRV_RTC_INT_COMPARE0){ // one second event
-        if(motorTimeout)
-          NRF_LOG_INFO("MotorTimeout: %d",motorTimeout); 
+//        if(motorTimeout)
+//          NRF_LOG_INFO("MotorTimeout: %d",motorTimeout); 
         RTC_cntr_sec++;
         RTC_cntr_tick = 0;
         err_code = nrf_drv_rtc_cc_set(&rtc,0,nrfx_rtc_counter_get(&rtc) + TICK_PER_SEC,true);
@@ -755,6 +755,8 @@ static void rtc_handler(nrf_drv_rtc_int_type_t int_type)
           saadc_init();
           err_code = nrfx_saadc_sample();
           APP_ERROR_CHECK(err_code);
+
+          TickRetries_16s();    
         }
         if(CaseStateLedOnTime > 1){
           CaseStateLedOnTime--;
@@ -890,6 +892,7 @@ void init_periferal(void)
   lsensor_init();
   memset(&log_event,0,sizeof(log_event_store_t));
   GetCaseState();
+  CaseState.LastTrueCaseState = CaseState.CurrentCaseState;
 //  get_current_status();
 //  if(device_status.DEVSTAT_STATE_OF_SW_1 == 0){
 //    main_status.CaseState = CASE_UNLOCK;
