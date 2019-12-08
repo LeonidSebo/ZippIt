@@ -24,7 +24,7 @@ NUMBER_RETRIES gNumberRetries;//; = COUNT_ATTENTION_EVENT_MAX_VALUE;
 #define RETRIES_ALERT_DEVICE_STOP_TIME_16secTick (RETRIES_ALERT_DEVICE_STOP_TIME_MIN * 60 / TIMER_TICK_sec)
 
 //-------------------------------------------------------//
-#define CHAR_COMMAND_ENCRIPTION_DISABLE 0
+#define CHAR_COMMAND_ENCRIPTION_DISABLE 1
 //-------------------------------------------------------//
 #define COUNT_ATTENTION_EVENT_MAX_VALUE 10
 //-------------------------------------------------------//
@@ -79,7 +79,7 @@ void CmdH_Command_Handler(BLE_COMMAND *pCommand) {
         
         return;
       }
-      /// !!!!!! add param to type.c logEventStorageReq(LOG_EVENT_CMD_GET_RANDOM_NUMBERS_NOT_FIRST, gCmdGetRandomNumberNotFirstCount, 0, 0);
+      logEventStorageReq(LOG_EVENT_CMD_GET_RANDOM_NUMBERS_NOT_FIRST, gCmdGetRandomNumberNotFirstCount, 0, 0);
       gCmdGetRandomNumberNotFirstCount = 0;
       res = ERR_CMD_GET_RANDOM_NUMBERS_NOT_FIRST;
       goto ExitFunc;
@@ -154,7 +154,7 @@ void CmdH_Command_Handler(BLE_COMMAND *pCommand) {
     }
     gCmd_ID_ErrorCount = 0;
     res = ERR_BLE_CMD_ID;
-    /// !!!!!! add param to type.c logEventStorageReq(LOG_EVENT_CMD_ID_UNKNOWN, gCmd_ID_ErrorCount, 0, 0);
+    logEventStorageReq(LOG_EVENT_CMD_ID_UNKNOWN, gCmd_ID_ErrorCount, 0, 0);
     goto ExitFunc;
   }
   gCmd_ID_ErrorCount = 0;
@@ -478,6 +478,7 @@ RESULT Flash_LogRead(uint32_t Offset, uint32_t DataLength) {
     ((uint8_t*)(Data + BLE_FLASH_DATA_HEADER_LEN))[i] = i;
   }
   */
+
   NRF_LOG_INFO("bleFlashLogRead: DataLength = %d Offset = %d Res = %d  DataLengthRet = %d", DataLength, Offset, res, DataLengthRet);
   Data[0] = FD_DATA_LOG_FILE;
   DataLengthRet += BLE_FLASH_DATA_HEADER_LEN;
@@ -587,11 +588,14 @@ RESULT FlashData_SendToHost(BLE_FLASH_DATA_ID DataID, RESULT OperationStatus, ui
     res = AES_BlockEncript(CHAR_FLASH_DATA, (uint8_t *)pData + Offset, CurrentBlockLength, gFlashData/* + Offset*/);
     RESULT_CHECK_WITH_LOG(res);
     res = Serv_SendToHost(CHAR_FLASH_DATA, (uint8_t *)gFlashData/* + Offset*/, CurrentBlockLength);
-    RESULT_CHECK_WITH_LOG(res);
-    NRF_LOG_INFO("Send Block No %d of Log File data, Result %d", i++, res);
     NRF_LOG_FLUSH();
-    AES_SetNewCharRandomVal(CHAR_FLASH_DATA);
-
+    NRF_LOG_INFO("Send Block No %d of LF, Res %d", i++, res);
+    NRF_LOG_FLUSH();
+ //   if(res != 0)
+ //   {
+    RESULT_CHECK_WITH_LOG(res);
+    //AES_SetNewCharRandomVal(CHAR_FLASH_DATA);
+//}
     Offset += CurrentBlockLength;
     if(Offset >= DataLength)
     {

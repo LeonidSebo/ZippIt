@@ -34,3 +34,5 @@ packages/
 ZipplT.emSession
 *.jlink
 /ZipplT.emSession
+*.dll
+*.orig

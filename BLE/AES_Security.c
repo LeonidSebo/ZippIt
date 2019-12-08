@@ -139,7 +139,7 @@ RESULT AES_BlockEncript(CHARACTERISTIC_ID CharacteristicID, uint8_t *pClearBlock
 
 #if DEBUG_PRINT_RANDOM_AND_KEY_EN 
   NRF_LOG_INFO("Characteritic %d:", CharacteristicID);
-  Debug_PrintHexArray("In  AES_BlockEncript", pClearBlock, 16);
+  /*Debug_PrintHexArray("In  AES_BlockEncript", pClearBlock, 16);*/
   Debug_PrintHexArray("Out AES_BlockEncript", pCipherBlock16, 16);
 #endif
   return ERR_NO;
