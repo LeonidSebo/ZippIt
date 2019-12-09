@@ -23,7 +23,7 @@
 /*----------------------------------------*/
 //#include "Debug.h"
 
-#define DEVICE_NAME "ZippIT_Leonid" /**< Name of device. Will be included in the advertising data. */
+#define DEVICE_NAME "ZippIT ver. 1.13" /**< Name of device. Will be included in the advertising data. */
 
 #define AES_BLOCK_SIZE_BYTE 16
 
@@ -31,7 +31,7 @@
 #define CHAR_COMMAND_SIZE AES_BLOCK_SIZE_BYTE
 #define CHAR_ANSWER_SIZE AES_BLOCK_SIZE_BYTE
 #define CHAR_MESSAGE_SIZE AES_BLOCK_SIZE_BYTE
-#define CHAR_FLASH_DATA_SIZE AES_BLOCK_SIZE_BYTE
+#define CHAR_FLASH_DATA_SIZE AES_BLOCK_SIZE_BYTE * 2
 //#define CHAR_FLASH_DATA_SIZE AES_BLOCK_SIZE_BYTE * 16
 
 typedef enum _RESULT {
@@ -117,6 +117,11 @@ typedef enum _LOG_RECORD_ID {
   LOG_ATTENTION = 0x01,
 } LOG_RECORD_ID;
 
+typedef enum _EVENTS_HANDLER_REQUEST
+{
+  FLASH_READ_LOG_REQUEST = 0x00000001
+}EVENTS_HANDLER_REQUEST;
+
 #define LOG_ERROR(PARAM) /* LOG_ERROR */
 
 #define RESULT_CHECK(result) \
@@ -156,6 +161,16 @@ typedef struct _BLE_COMMAND {
   uint8_t DataLength;
   uint8_t Data[BLE_BLOCK_DATA_SIZE_BYTE];
 } BLE_COMMAND;
+
+typedef struct _BLE_COMMAND_HEADER {
+  uint8_t CommandID;
+  uint8_t DataLength;
+}BLE_COMMAND_HEADER;
+
+typedef struct _BLE_CMD_GET_FLASH_LOG_REQUEST {
+  uint32_t Offset;
+  uint16_t DataLength;
+}BLE_CMD_GET_FLASH_LOG_REQUEST;
 
 typedef struct _BLE_ANSWER {
   uint8_t AnswerID;

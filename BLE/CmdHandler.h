@@ -47,8 +47,9 @@ RESULT Message_Byte_1(BLE_MESSAGE_ID MessageTD, uint8_t Message);
 RESULT Message_SendToHost(BLE_MESSAGE_ID MessageID, uint8_t *pData, uint8_t DataLength);
 
 /* FLASH_DATA Characteristic */
-RESULT Flash_LogRead(uint32_t offset, uint32_t DataLength);
-RESULT FlashData_SendToHost(BLE_FLASH_DATA_ID MessageID, RESULT OperationStatus, uint8_t *pData, uint8_t DataLength);
+//RESULT Flash_LogRead(uint32_t offset, uint32_t DataLength);
+RESULT Req_Flash_LogRead();
+RESULT FlashData_SendToHost(BLE_FLASH_DATA_ID MessageID, RESULT OperationStatus, uint8_t *pData, uint16_t DataLength);
 
 void TickRetries_16s();
 #endif // CMD_HANDLER_H__

@@ -13,7 +13,7 @@ extern rtc_tick_enable_t rtcTickRequest;
 extern uint32_t BatVoltage;
 extern case_state_t  CaseState;
 
-uint16_t sw_rewision  = 0x0112;
+uint16_t sw_rewision  = 0x0113;
 uint8_t  NewParamTable[sizeof(ParamTable_t) + sizeof(uint32_t)] = {DEF_PARAM_TAB};
 
 RESULT bleGetDeviceInfo(DEVICE_INFO* pDeviceInfo)
@@ -267,18 +267,19 @@ void bleShowParamTab(void)
 
 RESULT bleFlashLogRead(uint32_t Offset, uint16_t DataLength, uint32_t* Data, uint16_t* DataLengthRet)
 {
-  uint8_t i;
-  DataLengthRet[0] = DataLength;
+  uint32_t i;
+//  *DataLengthRet = DataLength;
   int_flash_read(LOG_EVENT_TAB_START_ADDR+Offset,Data,DataLength);
   for(i = 0;i<DataLength/4;i++){
     if(Data[i] == 0xFFFFFFFF){
-      DataLengthRet[0] = i*4;   
+//      *DataLengthRet = i*4;   
       break;
     }
   }
   NRF_LOG_INFO("FlashLogRead:");
+ *DataLengthRet = i*4;
   NRF_LOG_INFO("Offset = 0x%06x  Req DataLength = 0x%04x   DataLengthRet = 0x%04x ",Offset,DataLength,DataLengthRet[0]);
   NRF_LOG_INFO("Data[0] = 0x%08x  Data[1] = 0x%08x  Data[2] = 0x%08x  Data[3] = 0x%08x",Data[0],Data[1],Data[2],Data[3]);
-
+  NRF_LOG_FLUSH();
   return ERR_NO;
 }
