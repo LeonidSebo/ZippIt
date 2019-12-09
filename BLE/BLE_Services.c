@@ -244,8 +244,12 @@ RESULT Serv_SendToHost(CHARACTERISTIC_ID CharId, uint8_t *pData, uint16_t DataLe
   params.p_data = pData;
   params.p_len = &DataLen;
 
-  res32 = sd_ble_gatts_hvx(m_conn_handle, &params);
-  if (res32) {
+  res32 = NRF_ERROR_RESOURCES;
+  while(res32 == NRF_ERROR_RESOURCES)
+  {
+    res32 = sd_ble_gatts_hvx(m_conn_handle, &params);
+  }
+  if (res32 != NRF_SUCCESS) {
 
     res = ERR_BLE_MESSAGE_SEND;
   }

@@ -1,8 +1,4 @@
-/**
- * @brief Blinky Sample Application main file.
- *
- * This file contains the source code for a sample server application using the LED Button service.
- */
+
 
 #include <stdint.h>
 #include <string.h>
@@ -12,8 +8,6 @@
 #include "nrf_log_ctrl.h"
 #include "nrf_log_default_backends.h"
 //=======================================
-//#include "BLE/Debug.h"
-//#include "BLE/BLE_Init.h"
 #include "Debug.h"
 #include "BLE_Init.h"
 #include "periferal.h"
@@ -21,6 +15,8 @@
 
 #define BUTTON_DETECTION_DELAY          APP_TIMER_TICKS(50)                     /**< Delay from a GPIOTE event until a button is reported as pushed (in number of timer ticks). */
 #define NRF_CRYPTO_AES      1
+
+uint32_t gEventsFlag;
 
 /**@brief Function for the LEDs initialization.
  *
@@ -80,6 +76,7 @@ static void idle_state_handle(void)
  */
 int main(void)
 {
+    gEventsFlag = 0;
     log_init();
     timers_init();
     init_periferal();
@@ -88,7 +85,12 @@ int main(void)
     NRF_LOG_INFO("ZippIT started.");
     for (;;)
     {
-        idle_state_handle();
+      if(gEventsFlag & FLASH_READ_LOG_REQUEST)
+      {
+        gEventsFlag &= ~FLASH_READ_LOG_REQUEST;
+        Req_Flash_LogRead();
+      }
+      idle_state_handle();
     }
 }
 

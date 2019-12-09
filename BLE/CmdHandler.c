@@ -12,6 +12,7 @@ extern uint8_t gCommand[CHAR_COMMAND_SIZE];      /* Write */
 extern uint8_t gAnswer[CHAR_ANSWER_SIZE];        /* Indication */
 extern uint8_t gMessage[CHAR_MESSAGE_SIZE];      /* Indication */
 extern uint8_t gFlashData[CHAR_FLASH_DATA_SIZE]; /* Notification */
+extern uint32_t gEventsFlag;
 
 //uint8_t gRetries; /* value from FLASh */
 uint16_t gRetriesCmdCounter;
@@ -24,11 +25,12 @@ NUMBER_RETRIES gNumberRetries;//; = COUNT_ATTENTION_EVENT_MAX_VALUE;
 #define RETRIES_ALERT_DEVICE_STOP_TIME_16secTick (RETRIES_ALERT_DEVICE_STOP_TIME_MIN * 60 / TIMER_TICK_sec)
 
 //-------------------------------------------------------//
-#define CHAR_COMMAND_ENCRIPTION_DISABLE 1
+#define CHAR_COMMAND_ENCRIPTION_DISABLE         0
+#define DEBUG_FILL_FLASH_DATA_FROM_COUNTER      0
 //-------------------------------------------------------//
 #define COUNT_ATTENTION_EVENT_MAX_VALUE 10
 //-------------------------------------------------------//
-#define FLASH_DATA_READ_BLOCKS_MAX      10
+#define FLASH_DATA_READ_BLOCKS_MAX      32
 
 bool gCmdGetRandomNumberWait;
 #define COUNT_CMD_GET_RANDOM_NUMBER_NOT_FIRST_MAX_VALUE 0 /*COUNT_ATTENTION_EVENT_MAX_VALUE*/
@@ -37,6 +39,8 @@ bool gCmdGetRandomNumberNotFirstCount;
 #define COUNT_CMD_ID_ERROR_MAX_VALUE COUNT_ATTENTION_EVENT_MAX_VALUE
 bool gCmd_ID_ErrorCount;
 //-------------------------------------------------------//
+
+BLE_CMD_GET_FLASH_LOG_REQUEST gCmdGetFlashLogRequest;
 
 void CmdH_Init() 
 {
@@ -322,6 +326,17 @@ RESULT Cmd_FlashLogErase(BLE_COMMAND *pCommand) {
 
 RESULT Cmd_GetFlashLog(BLE_COMMAND *pCommand) {
   RESULT res;
+  NRF_LOG_INFO("Cmd_GetFlashLog.");
+  gCmdGetFlashLogRequest.Offset = pCommand->Data[0] + (pCommand->Data[1] << 8) + (pCommand->Data[2] << 16);
+  gCmdGetFlashLogRequest.DataLength = pCommand->Data[3] + (pCommand->Data[4] << 8);
+
+  res = Answer_OperationStatus(pCommand->CommandID, ERR_NO);
+  gEventsFlag |= FLASH_READ_LOG_REQUEST;
+  return res;
+}
+
+RESULT Cmd_GetFlashLog_ver_1(BLE_COMMAND *pCommand) {
+  RESULT res;
   uint32_t Offset;
   uint32_t DataLength;
   NRF_LOG_INFO("Cmd_GetFlashLog.");
@@ -332,6 +347,7 @@ RESULT Cmd_GetFlashLog(BLE_COMMAND *pCommand) {
   res = Flash_LogRead(Offset, DataLength);
   return res;
 }
+
 
 /* ================ ANSWERS ========================= */
 
@@ -464,6 +480,78 @@ RESULT Cmd_SetNewRandomNubers(bool AnswerChar) {
 }
 
 /* ================ FLASH_DATA ========================= */
+
+
+RESULT Req_Flash_LogRead() 
+{
+  RESULT res;
+  uint16_t DataLengthRet = 0;
+  uint16_t FrameLengthSend;
+
+  uint8_t Data[AES_BLOCK_SIZE_BYTE * FLASH_DATA_READ_BLOCKS_MAX + 1];
+  /* read Flash data Log */
+  res = bleFlashLogRead(gCmdGetFlashLogRequest.Offset, gCmdGetFlashLogRequest.DataLength, (uint32_t*)(Data + BLE_FLASH_DATA_HEADER_LEN), &DataLengthRet);
+  RESULT_CHECK_WITH_LOG(res);
+
+  #if DEBUG_FILL_FLASH_DATA_FROM_COUNTER
+  /* For debug only */
+  int32_t i;
+  for(i = 0; i < DataLengthRet; i++)
+  {
+    ((uint8_t*)(Data + BLE_FLASH_DATA_HEADER_LEN))[i] = i;
+  }
+  #endif
+
+  NRF_LOG_INFO("bleFlashLogRead: Length = %d Offset = %d Res = %d  LengthRet = %d", 
+          gCmdGetFlashLogRequest.DataLength, gCmdGetFlashLogRequest.Offset, res, DataLengthRet);
+  /* Fill header */
+  Data[0] = FD_DATA_LOG_FILE;
+  
+  FrameLengthSend = (res == ERR_NO) ? (DataLengthRet + BLE_FLASH_DATA_HEADER_LEN) : BLE_FLASH_DATA_HEADER_LEN;
+  memcpy(Data + 1, &DataLengthRet, 2);
+  Data[3] = res;
+
+  res = FlashData_SendToHost(FD_DATA_LOG_FILE, res, Data, FrameLengthSend);
+
+  return res;
+}
+
+RESULT FlashData_SendToHost(BLE_FLASH_DATA_ID DataID, RESULT OperationStatus, uint8_t *pData, uint16_t DataLength) {
+  RESULT res;
+  uint32_t i = 0;
+  uint32_t DataCount = DataLength;
+  uint32_t CurrentBlockLength;
+  uint32_t Offset = 0;
+
+  uint8_t CipherBlock16[AES_BLOCK_SIZE_BYTE];
+
+  while (true) {
+    CurrentBlockLength = (DataCount < AES_BLOCK_SIZE_BYTE) ? DataCount : AES_BLOCK_SIZE_BYTE;
+    res = AES_BlockEncript(CHAR_FLASH_DATA, (uint8_t *)pData + Offset, CurrentBlockLength, CipherBlock16);//gFlashData/* + Offset*/);
+    //NRF_LOG_INFO("Send Block LF No %d, Len %d Res %d", i++, CurrentBlockLength, res);
+    RESULT_CHECK_WITH_LOG(res);
+    res = Serv_SendToHost(CHAR_FLASH_DATA, CipherBlock16, AES_BLOCK_SIZE_BYTE);
+    NRF_LOG_FLUSH();
+    NRF_LOG_INFO("Send Block LF No %d, Len %d Res %d", i++, CurrentBlockLength, res);
+    NRF_LOG_FLUSH();
+    RESULT_CHECK_WITH_LOG(res);
+    Offset += CurrentBlockLength;
+    if(Offset >= DataLength)
+    {
+        break;
+    }
+    DataCount -= CurrentBlockLength;
+    /* Set new random number for next block data */
+    /* AES_SetNewCharRandomVal(CHAR_FLASH_DATA); */
+  }
+
+  /* Set new random number for next frame */
+  AES_SetNewCharRandomVal(CHAR_FLASH_DATA);
+  return ERR_NO;
+}
+
+
+/*
 RESULT Flash_LogRead(uint32_t Offset, uint32_t DataLength) {
   RESULT res;
   uint16_t DataLengthRet;
@@ -471,13 +559,7 @@ RESULT Flash_LogRead(uint32_t Offset, uint32_t DataLength) {
   res = bleFlashLogRead(Offset, DataLength, (uint32_t*)(Data + BLE_FLASH_DATA_HEADER_LEN), &DataLengthRet);
   RESULT_CHECK_WITH_LOG(res);
 
-  /* For debug only 
-  int8_t i;
-  for(i = 0; i < DataLengthRet; i++)
-  {
-    ((uint8_t*)(Data + BLE_FLASH_DATA_HEADER_LEN))[i] = i;
-  }
-  */
+
 
   NRF_LOG_INFO("bleFlashLogRead: DataLength = %d Offset = %d Res = %d  DataLengthRet = %d", DataLength, Offset, res, DataLengthRet);
   Data[0] = FD_DATA_LOG_FILE;
@@ -485,15 +567,10 @@ RESULT Flash_LogRead(uint32_t Offset, uint32_t DataLength) {
   memcpy(Data + 1, &DataLengthRet, 2);
   Data[3] = res;
   res = FlashData_SendToHost(FD_DATA_LOG_FILE, res, Data, DataLengthRet + BLE_FLASH_DATA_HEADER_LEN);
-//  if(res != ERR_NO)
-//  {
-//    return res;
-//  }
-//  AES_SetNewCharRandomVal(CHAR_FLASH_DATA);
   return res;
 }
 
-RESULT Flash_LogRead_New(uint32_t Offset, uint32_t DataLength) {
+RESULT Flash_LogRead_ver2(uint32_t Offset, uint32_t DataLength) {
   RESULT res;
   int32_t i;
   uint16_t DataLengthRet;
@@ -526,13 +603,6 @@ RESULT Flash_LogRead_New(uint32_t Offset, uint32_t DataLength) {
     res = bleFlashLogRead(CurrentOffset, CurrentDataLength, (uint32_t *)(Data + CurrentBlockLength - CurrentDataLength), &DataLengthRet);
     if (res != ERR_NO) {
     }
-    /* For debug only 
-    int8_t j;
-    for(j = 0; j < CurrentDataLength; j++)
-    {
-      ((uint8_t*)(Data + CurrentBlockLength - CurrentDataLength))[i] = j;
-    }
-    */
     res = Serv_SendToHost(CHAR_FLASH_DATA, (uint8_t *)Data, DataLengthRet);
     if (res != ERR_NO) {
     }
@@ -549,6 +619,7 @@ RESULT Flash_LogRead_New(uint32_t Offset, uint32_t DataLength) {
   AES_SetNewCharRandomVal(CHAR_FLASH_DATA);
   return res;
 }
+*/
 /*============== RETRIES ==============*/
 void TickRetries_16s() {
   return;
@@ -574,102 +645,43 @@ void TickRetries_16s() {
   gRetriesCmdCounter = 0;
 }
 
-RESULT FlashData_SendToHost(BLE_FLASH_DATA_ID DataID, RESULT OperationStatus, uint8_t *pData, uint8_t DataLength) {
-  RESULT res;
-  uint32_t i = 0;
-  uint32_t DataCount = DataLength;
-  uint32_t CurrentBlockLength;
-  uint32_t Offset = 0;
-
-  uint8_t CipherBlock16[AES_BLOCK_SIZE_BYTE];
-
-  while (true) {
-    CurrentBlockLength = (DataCount <= AES_BLOCK_SIZE_BYTE) ? DataCount : AES_BLOCK_SIZE_BYTE;
-    res = AES_BlockEncript(CHAR_FLASH_DATA, (uint8_t *)pData + Offset, CurrentBlockLength, gFlashData/* + Offset*/);
-    RESULT_CHECK_WITH_LOG(res);
-    res = Serv_SendToHost(CHAR_FLASH_DATA, (uint8_t *)gFlashData/* + Offset*/, CurrentBlockLength);
-    NRF_LOG_FLUSH();
-    NRF_LOG_INFO("Send Block No %d of LF, Res %d", i++, res);
-    NRF_LOG_FLUSH();
- //   if(res != 0)
- //   {
-    RESULT_CHECK_WITH_LOG(res);
-    //AES_SetNewCharRandomVal(CHAR_FLASH_DATA);
-//}
-    Offset += CurrentBlockLength;
-    if(Offset >= DataLength)
-    {
-        break;
-    }
-//    NRF_LOG_INFO("Send Block Offset = %d, DataLen = %d ", Offset, DataLength);
-    DataCount -= CurrentBlockLength;
-    /* AES_SetNewCharRandomVal(CHAR_FLASH_DATA); */
-  }
-
-  AES_SetNewCharRandomVal(CHAR_FLASH_DATA);
-  return ERR_NO;
-}
 
 
 /* Old Function. Did't work with blok size more then 20 bytes */
-RESULT FlashData_SendToHost_oldLargeFrame(BLE_FLASH_DATA_ID DataID, RESULT OperationStatus, uint8_t *pData, uint8_t DataLength) {
-  RESULT res;
-  uint32_t i = 0;
-  uint32_t DataCount = DataLength;
-  uint32_t CurrentBlockLength;
-  uint32_t Offset = 0;
-
- // BLE_FLASH_DATA *pFlashData = (BLE_FLASH_DATA *)pData;
- // pFlashData->DataID = DataID;
- // pFlashData->DataLength = DataLength + BLE_FLASH_DATA_OPERATION_STATUS_LEN;
- // pFlashData->OperationStatus = OperationStatus;
- // memcpy()
-
-  uint8_t CipherBlock16[AES_BLOCK_SIZE_BYTE];
-
-  while (true) {
-    CurrentBlockLength = (DataCount < AES_BLOCK_SIZE_BYTE) ? DataCount : AES_BLOCK_SIZE_BYTE;
-    res = AES_BlockEncript(CHAR_FLASH_DATA, (uint8_t *)pData + Offset, CurrentBlockLength, gFlashData + Offset);
-    RESULT_CHECK_WITH_LOG(res);
-    Offset += CurrentBlockLength;
-    if(Offset >= DataLength)
-    {
-        break;
-    }
-    DataCount -= CurrentBlockLength;
-//    if(DataCount <= 0)
+//RESULT FlashData_SendToHost_oldLargeFrame(BLE_FLASH_DATA_ID DataID, RESULT OperationStatus, uint8_t *pData, uint8_t DataLength) {
+//  RESULT res;
+//  uint32_t i = 0;
+//  uint32_t DataCount = DataLength;
+//  uint32_t CurrentBlockLength;
+//  uint32_t Offset = 0;
+//
+// // BLE_FLASH_DATA *pFlashData = (BLE_FLASH_DATA *)pData;
+// // pFlashData->DataID = DataID;
+// // pFlashData->DataLength = DataLength + BLE_FLASH_DATA_OPERATION_STATUS_LEN;
+// // pFlashData->OperationStatus = OperationStatus;
+// // memcpy()
+//
+//  uint8_t CipherBlock16[AES_BLOCK_SIZE_BYTE];
+//
+//  while (true) {
+//    CurrentBlockLength = (DataCount < AES_BLOCK_SIZE_BYTE) ? DataCount : AES_BLOCK_SIZE_BYTE;
+//    res = AES_BlockEncript(CHAR_FLASH_DATA, (uint8_t *)pData + Offset, CurrentBlockLength, gFlashData + Offset);
+//    RESULT_CHECK_WITH_LOG(res);
+//    Offset += CurrentBlockLength;
+//    if(Offset >= DataLength)
 //    {
-//      break;
+//        break;
 //    }
-    /* AES_SetNewCharRandomVal(CHAR_FLASH_DATA); */
-  }
-
-  res = Serv_SendToHost(CHAR_FLASH_DATA, (uint8_t *)gFlashData, DataLength);
-  RESULT_CHECK_WITH_LOG(res);
-  AES_SetNewCharRandomVal(CHAR_FLASH_DATA);
-  return ERR_NO;
-}
-/*============== RETRIES ==============*/
-//void TickRetries_16s() {
-//  return;
-//  if (gRetriesStopDevice) {
-//    if (gRetriesAlertTimer > 0) {
-//      gRetriesAlertTimer--;
-//    }
-//    else
-//    {
-//      gRetriesAlertTimer = 0;
-//      gRetriesStopDevice = false;
-//      wake();
-//    }
-//    return;
+//    DataCount -= CurrentBlockLength;
+////    if(DataCount <= 0)
+////    {
+////      break;
+////    }
+//     AES_SetNewCharRandomVal(CHAR_FLASH_DATA);
 //  }
 //
-//  if (gRetriesCmdCounter > gNumberRetries) {
-//    gRetriesStopDevice = true;
-//    gRetriesAlertTimer = RETRIES_ALERT_DEVICE_STOP_TIME_16secTick;
-//    Message_Byte_1(MSG_DISCOVERED_RETRIES_NO, gRetriesCmdCounter);
-//    sleep();
-//  }
-//  gRetriesCmdCounter = 0;
+//  res = Serv_SendToHost(CHAR_FLASH_DATA, (uint8_t *)gFlashData, DataLength);
+//  RESULT_CHECK_WITH_LOG(res);
+//  AES_SetNewCharRandomVal(CHAR_FLASH_DATA);
+//  return ERR_NO;
 //}

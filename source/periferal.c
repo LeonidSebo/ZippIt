@@ -419,6 +419,7 @@ volatile uint8_t state = 1;
 static nrf_saadc_value_t     m_buffer_pool[2][SAMPLES_IN_BUFFER];
 static uint32_t              m_adc_evt_counter;
 
+#define LOW_BATTERY_TRACE_ENABLE  0
 void saadc_callback(nrf_drv_saadc_evt_t const * p_event)
 {
   static uint32_t minVoltage = 0xffffffff;
@@ -434,7 +435,9 @@ void saadc_callback(nrf_drv_saadc_evt_t const * p_event)
 //      NRF_LOG_INFO("BatVoltage = %d   minVoltage = %d",BatVoltage,minVoltage);
     }
     if(BatVoltage < pParamTable->BatteryAlarmLevel){
-      NRF_LOG_INFO("Low Battery");
+      #if LOW_BATTERY_TRACE_ENABLE
+        NRF_LOG_INFO("Low Battery");
+      #endif
       if(device_status.DEVSTAT_POWER_LOW == NO){
         device_status.DEVSTAT_POWER_LOW = YES;
         logEventStorageReq(LOG_EVENT_ERROR,0,0,0);
