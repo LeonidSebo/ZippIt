@@ -129,7 +129,7 @@ RESULT AES_BlockEncript(CHARACTERISTIC_ID CharacteristicID, uint8_t *pClearBlock
   #if(!CHAR_ANSWER_ENCRIPTION_DISABLE)
   {
     res = AES_EncodeBlock(NewKey, gIV, EncrBuffer);
-  RESULT_CHECK(res);
+    RESULT_CHECK(res);
     /* Xor ClearData with Encription IV*/
     AES_XorArray2(EncrBuffer, pCipherBlock16, AES_BLOCK_SIZE_BYTE);
       res = AES_EncodeBlock(NewKey, gIV, EncrBuffer);
