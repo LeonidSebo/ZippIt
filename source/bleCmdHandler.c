@@ -276,10 +276,10 @@ RESULT bleFlashLogRead(uint32_t Offset, uint16_t DataLength, uint32_t* Data, uin
       break;
     }
   }
-  NRF_LOG_INFO("FlashLogRead:");
+  NRF_LOG_INFO("FlashLogRead: i = %d", i);
  *DataLengthRet = i*4;
   NRF_LOG_INFO("Offset = 0x%06x  Req DataLength = 0x%04x   DataLengthRet = 0x%04x ",Offset,DataLength,DataLengthRet[0]);
-  NRF_LOG_INFO("Data[0] = 0x%08x  Data[1] = 0x%08x  Data[2] = 0x%08x  Data[3] = 0x%08x",Data[0],Data[1],Data[2],Data[3]);
+  NRF_LOG_INFO("Data[0] = 0x%08x  Data[1] = 0x%08x  Data[2] = 0x%08x  Data[3] = 0x%08x",Data[i-3],Data[i-2],Data[i-1],Data[i]);
   NRF_LOG_FLUSH();
   return ERR_NO;
 }
