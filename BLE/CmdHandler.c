@@ -30,7 +30,8 @@ NUMBER_RETRIES gNumberRetries;//; = COUNT_ATTENTION_EVENT_MAX_VALUE;
 //-------------------------------------------------------//
 #define COUNT_ATTENTION_EVENT_MAX_VALUE 10
 //-------------------------------------------------------//
-#define FLASH_DATA_READ_BLOCKS_MAX      32
+//#define FLASH_DATA_READ_BLOCKS_MAX      32
+#define FLASH_DATA_READ_SIZE_BYTE_MAX      512
 
 bool gCmdGetRandomNumberWait;
 #define COUNT_CMD_GET_RANDOM_NUMBER_NOT_FIRST_MAX_VALUE 0 /*COUNT_ATTENTION_EVENT_MAX_VALUE*/
@@ -488,7 +489,9 @@ RESULT Req_Flash_LogRead()
   uint16_t DataLengthRet = 0;
   uint16_t FrameLengthSend;
 
-  uint8_t Data[AES_BLOCK_SIZE_BYTE * FLASH_DATA_READ_BLOCKS_MAX + 1];
+//  uint8_t Data[AES_BLOCK_SIZE_BYTE * FLASH_DATA_READ_BLOCKS_MAX + 1];
+  uint8_t Data[FLASH_DATA_READ_SIZE_BYTE_MAX + AES_BLOCK_SIZE_BYTE/* AES_BLOCK_SIZE_BYTE for Header */];
+
   /* read Flash data Log */
   res = bleFlashLogRead(gCmdGetFlashLogRequest.Offset, gCmdGetFlashLogRequest.DataLength, (uint32_t*)(Data + BLE_FLASH_DATA_HEADER_LEN), &DataLengthRet);
   RESULT_CHECK_WITH_LOG(res);
@@ -501,9 +504,10 @@ RESULT Req_Flash_LogRead()
     ((uint8_t*)(Data + BLE_FLASH_DATA_HEADER_LEN))[i] = i;
   }
   #endif
-
+  NRF_LOG_FLUSH();
   NRF_LOG_INFO("bleFlashLogRead: Length = %d Offset = %d Res = %d  LengthRet = %d", 
           gCmdGetFlashLogRequest.DataLength, gCmdGetFlashLogRequest.Offset, res, DataLengthRet);
+  NRF_LOG_FLUSH();
   /* Fill header */
   Data[0] = FD_DATA_LOG_FILE;
   

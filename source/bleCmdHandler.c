@@ -13,13 +13,13 @@ extern rtc_tick_enable_t rtcTickRequest;
 extern uint32_t BatVoltage;
 extern case_state_t  CaseState;
 
-uint16_t sw_rewision  = 0x0113;
+uint16_t sw_revision  = 0x0114;
 uint8_t  NewParamTable[sizeof(ParamTable_t) + sizeof(uint32_t)] = {DEF_PARAM_TAB};
 
 RESULT bleGetDeviceInfo(DEVICE_INFO* pDeviceInfo)
 {
-  pDeviceInfo->SW_VERSION_MINOR = sw_rewision&0xFF;
-  pDeviceInfo->SW_VERSION_MAJOR = sw_rewision>>8;
+  pDeviceInfo->SW_VERSION_MINOR = sw_revision&0xFF;
+  pDeviceInfo->SW_VERSION_MAJOR = sw_revision>>8;
   pDeviceInfo->HW_VERSION_MINOR = pParamTable->HW_revision&0xFF;
   pDeviceInfo->HW_VERSION_MAJOR = pParamTable->HW_revision>>8;
   return ERR_NO;

@@ -23,7 +23,7 @@
 /*----------------------------------------*/
 //#include "Debug.h"
 
-#define DEVICE_NAME "ZippIT ver. 1.13" /**< Name of device. Will be included in the advertising data. */
+#define DEVICE_NAME "ZippIT ver. 1.14" /**< Name of device. Will be included in the advertising data. */
 
 #define AES_BLOCK_SIZE_BYTE 16
 
@@ -31,7 +31,7 @@
 #define CHAR_COMMAND_SIZE AES_BLOCK_SIZE_BYTE
 #define CHAR_ANSWER_SIZE AES_BLOCK_SIZE_BYTE
 #define CHAR_MESSAGE_SIZE AES_BLOCK_SIZE_BYTE
-#define CHAR_FLASH_DATA_SIZE AES_BLOCK_SIZE_BYTE * 2
+#define CHAR_FLASH_DATA_SIZE AES_BLOCK_SIZE_BYTE
 //#define CHAR_FLASH_DATA_SIZE AES_BLOCK_SIZE_BYTE * 16
 
 typedef enum _RESULT {
