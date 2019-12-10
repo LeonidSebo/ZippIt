@@ -71,7 +71,7 @@ static void fstorage_evt_handler(nrf_fstorage_evt_t * p_evt)
               uint32_t lReportAddr = ReportAddr;
               ReportAddr += p_evt->len;
               log_event.log_event[log_event.log_event_rd_idx].store_flag = LOG_STORE_NO_REQ;
-              if(log_event.log_event_rd_idx == LOG_EVENT_MAX_CNT){
+              if(log_event.log_event_rd_idx == (LOG_EVENT_MAX_CNT - 1)){
                 log_event.log_event_rd_idx = 0;
               }else{
                 log_event.log_event_rd_idx++;
@@ -214,6 +214,9 @@ static void stop_motor(void)
 
 void logEventStorageReq(log_event_id_t event,uint8_t param0,uint8_t param1,uint8_t param2)
 {
+//  NRF_LOG_INFO("logEventStorageReq: wr_idx = %d,  rd_idx = %d, store_flag = %d", 
+//                log_event.log_event_wr_idx,log_event.log_event_rd_idx,
+//                log_event.log_event[log_event.log_event_wr_idx].store_flag );
   if(log_event.log_event[log_event.log_event_wr_idx].store_flag == LOG_STORE_NO_REQ){
     log_event.log_event[log_event.log_event_wr_idx].log_event = event;
     log_event.log_event[log_event.log_event_wr_idx].param0 = param0;
@@ -235,10 +238,10 @@ static void SetLedControl(LED_STATE R,LED_STATE G,LED_STATE B)
   led_control.LED_GREEN = G;
   led_control.LED_BLUE = B;
 
-   NRF_LOG_INFO("Led State - 0x%02x", *(uint8_t*)&led_control);
+//   NRF_LOG_INFO("Led State - 0x%02x", *(uint8_t*)&led_control);
 
   if((R == LED_BLINK)||(G == LED_BLINK)||(B == LED_BLINK)){
-    NRF_LOG_INFO("RGB - 0x%02x  0x%02x  0x%02x", *(uint8_t*)&R, *(uint8_t*)&G, *(uint8_t*)&B);
+//    NRF_LOG_INFO("RGB - 0x%02x  0x%02x  0x%02x", *(uint8_t*)&R, *(uint8_t*)&G, *(uint8_t*)&B);
      rtcTickRequest.led_bilnk = 1;
      nrf_drv_rtc_tick_enable(&rtc,true);
   }
@@ -389,7 +392,7 @@ static void StoreDevLog(void)
   if(log_event.log_event[log_event.log_event_rd_idx].store_flag == LOG_STORE_REQ){
     uint32_t DtateTime = *(uint32_t*)&log_event.log_event[log_event.log_event_rd_idx].DateTime;
     uint8_t event = *(uint8_t*)&log_event.log_event[log_event.log_event_rd_idx].log_event;
-    NRF_LOG_INFO("StoreDevLog at addr = 0x%08x   date = 0x%08x  event = %d",ReportAddr,DtateTime,event);
+//    NRF_LOG_INFO("StoreDevLog at addr = 0x%08x   date = 0x%08x  event = %d",ReportAddr,DtateTime,event);
     int_flash_write(ReportAddr,(uint32_t*)&log_event.log_event[log_event.log_event_rd_idx], EVENT_LOG_SIZE);
   }
 }

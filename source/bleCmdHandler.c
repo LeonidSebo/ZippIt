@@ -13,7 +13,7 @@ extern rtc_tick_enable_t rtcTickRequest;
 extern uint32_t BatVoltage;
 extern case_state_t  CaseState;
 
-uint16_t sw_revision  = 0x0114;
+uint16_t sw_revision  = 0x0115;
 uint8_t  NewParamTable[sizeof(ParamTable_t) + sizeof(uint32_t)] = {DEF_PARAM_TAB};
 
 RESULT bleGetDeviceInfo(DEVICE_INFO* pDeviceInfo)
