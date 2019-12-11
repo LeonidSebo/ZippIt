@@ -5,7 +5,7 @@
 #include "nrf_delay.h"
 #include "Debug.h"
 
-#define DEBUG_PRINT_RANDOM_AND_KEY_EN     0
+#define DEBUG_PRINT_RANDOM_AND_KEY_EN     1
 
 #define NRF_CRYPTO_EXAMPLE_AES_MAX_TEXT_SIZE 120
 #define RNG_BYTE_WAIT_US (124UL)

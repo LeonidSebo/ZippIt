@@ -12,4 +12,5 @@
 08 01 02							SET_NUMBER_RETRIES
 0A 00
 0B 04 01 00 00 00					SetHardwareVersion
-0D 05 00 00 00 ff 00				get log tab
+0D 05 20 00 00 40 00				get log tab
+0C 00								FlashLogErase	

@@ -392,7 +392,7 @@ static void StoreDevLog(void)
   if(log_event.log_event[log_event.log_event_rd_idx].store_flag == LOG_STORE_REQ){
     uint32_t DtateTime = *(uint32_t*)&log_event.log_event[log_event.log_event_rd_idx].DateTime;
     uint8_t event = *(uint8_t*)&log_event.log_event[log_event.log_event_rd_idx].log_event;
-//    NRF_LOG_INFO("StoreDevLog at addr = 0x%08x   date = 0x%08x  event = %d",ReportAddr,DtateTime,event);
+    NRF_LOG_INFO("StoreDevLog at addr = 0x%08x   date = 0x%08x  event = %d",ReportAddr,DtateTime,event);
     int_flash_write(ReportAddr,(uint32_t*)&log_event.log_event[log_event.log_event_rd_idx], EVENT_LOG_SIZE);
   }
 }

@@ -13,13 +13,12 @@ extern rtc_tick_enable_t rtcTickRequest;
 extern uint32_t BatVoltage;
 extern case_state_t  CaseState;
 
-uint16_t sw_revision  = 0x0115;
 uint8_t  NewParamTable[sizeof(ParamTable_t) + sizeof(uint32_t)] = {DEF_PARAM_TAB};
 
 RESULT bleGetDeviceInfo(DEVICE_INFO* pDeviceInfo)
 {
-  pDeviceInfo->SW_VERSION_MINOR = sw_revision&0xFF;
-  pDeviceInfo->SW_VERSION_MAJOR = sw_revision>>8;
+  pDeviceInfo->SW_VERSION_MINOR = SOFT_VERSION_MINOR;
+  pDeviceInfo->SW_VERSION_MAJOR = SOFT_VERSION_MAJOR;
   pDeviceInfo->HW_VERSION_MINOR = pParamTable->HW_revision&0xFF;
   pDeviceInfo->HW_VERSION_MAJOR = pParamTable->HW_revision>>8;
   return ERR_NO;
@@ -279,7 +278,7 @@ RESULT bleFlashLogRead(uint32_t Offset, uint16_t DataLength, uint32_t* Data, uin
   NRF_LOG_INFO("FlashLogRead: i = %d", i);
  *DataLengthRet = i*4;
   NRF_LOG_INFO("Offset = 0x%06x  Req DataLength = 0x%04x   DataLengthRet = 0x%04x ",Offset,DataLength,DataLengthRet[0]);
-  NRF_LOG_INFO("Data[0] = 0x%08x  Data[1] = 0x%08x  Data[2] = 0x%08x  Data[3] = 0x%08x",Data[i-3],Data[i-2],Data[i-1],Data[i]);
+  NRF_LOG_INFO("Data[i-3] = 0x%08x  Data[i-2] = 0x%08x  Data[i-1] = 0x%08x  Data[i] = 0x%08x",Data[i-4],Data[i-3],Data[i-2],Data[i-1]);
   NRF_LOG_FLUSH();
   return ERR_NO;
 }

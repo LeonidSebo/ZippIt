@@ -25,7 +25,7 @@ NUMBER_RETRIES gNumberRetries;//; = COUNT_ATTENTION_EVENT_MAX_VALUE;
 #define RETRIES_ALERT_DEVICE_STOP_TIME_16secTick (RETRIES_ALERT_DEVICE_STOP_TIME_MIN * 60 / TIMER_TICK_sec)
 
 //-------------------------------------------------------//
-#define CHAR_COMMAND_ENCRIPTION_DISABLE         0
+#define CHAR_COMMAND_ENCRIPTION_DISABLE         1
 #define DEBUG_FILL_FLASH_DATA_FROM_COUNTER      0
 //-------------------------------------------------------//
 #define COUNT_ATTENTION_EVENT_MAX_VALUE 10
@@ -336,18 +336,18 @@ RESULT Cmd_GetFlashLog(BLE_COMMAND *pCommand) {
   return res;
 }
 
-RESULT Cmd_GetFlashLog_ver_1(BLE_COMMAND *pCommand) {
-  RESULT res;
-  uint32_t Offset;
-  uint32_t DataLength;
-  NRF_LOG_INFO("Cmd_GetFlashLog.");
-  Offset = pCommand->Data[0] + (pCommand->Data[1] << 8) + (pCommand->Data[2] << 16);
-  DataLength = pCommand->Data[3] + (pCommand->Data[4] << 8);
-
-  //res = Answer_OperationStatus(pCommand->CommandID, res);
-  res = Flash_LogRead(Offset, DataLength);
-  return res;
-}
+//RESULT Cmd_GetFlashLog_ver_1(BLE_COMMAND *pCommand) {
+//  RESULT res;
+//  uint32_t Offset;
+//  uint32_t DataLength;
+//  NRF_LOG_INFO("Cmd_GetFlashLog.");
+//  Offset = pCommand->Data[0] + (pCommand->Data[1] << 8) + (pCommand->Data[2] << 16);
+//  DataLength = pCommand->Data[3] + (pCommand->Data[4] << 8);
+//
+//  //res = Answer_OperationStatus(pCommand->CommandID, res);
+//  //res = Flash_LogRead(Offset, DataLength);
+//  return res;
+//}
 
 
 /* ================ ANSWERS ========================= */
