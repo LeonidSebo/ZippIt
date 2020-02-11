@@ -17,6 +17,7 @@
 #define NRF_CRYPTO_AES      1
 
 uint32_t gEventsFlag;
+extern main_status_t main_status;
 
 /**@brief Function for the LEDs initialization.
  *

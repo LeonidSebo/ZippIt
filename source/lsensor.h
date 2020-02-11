@@ -15,7 +15,7 @@
 #define LSEN_ALS_DATA_CH1_1_REG    0x89
 #define LSEN_ALS_DATA_CH0_0_REG    0x8A
 #define LSEN_ALS_DATA_CH0_1_REG    0x8B
-#define LSEN_AALS_STATUS_REG       0x8C
+#define LSEN_ALS_STATUS_REG        0x8C
 #define LSEN_INTERRUPT_REG         0x8F
 #define LSEN_ALS_THRES_UP_0_REG    0x97
 #define LSEN_ALS_THRES_UP_1_REG    0x98

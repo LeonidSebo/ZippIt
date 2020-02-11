@@ -262,6 +262,7 @@ static void SetLedControl(LED_STATE R,LED_STATE G,LED_STATE B)
 
 static void switch_int_handler(uint8_t pin, uint8_t action)
 {
+  uint8_t buff;
   get_current_status();
   switch(pin){
     case nSW1_PIN:  // case is open
@@ -306,6 +307,8 @@ static void switch_int_handler(uint8_t pin, uint8_t action)
       break;
 
     case SENSOR_INT_PIN:
+      lsensor_rx(LSEN_ALS_STATUS_REG,&buff,1); //dumy read
+      
       device_status.DEVSTAT_LIGHT_PENETRATION = nrf_gpio_pin_read(SENSOR_INT_PIN);
       if(device_status.DEVSTAT_LIGHT_PENETRATION){
         if((CaseState.CurrentCaseState == CASE_LOCK)||(CaseState.CurrentCaseState == CASE_HANDEL_OPEN)){
@@ -405,7 +408,8 @@ static void LockSwitchEvent_handler(void)
       break;
     case 1:   // stable state
       if((CaseState.CurrentCaseState == CASE_LOCK)||(CaseState.CurrentCaseState == CASE_HANDEL_OPEN)){
-        lsensor_weak_up();
+//        lsensor_weak_up();
+        main_status.LightSensorWeakup_req = 1;
         main_status.LightSensorWeakupTime = 0;
       }
     default:   // debounce time
@@ -760,7 +764,14 @@ static void rtc_handler(nrf_drv_rtc_int_type_t int_type)
         WriteParamTab();
         LockSwitchEvent_handler();
         StoreDevLog();
-                   
+        if(main_status.LightSensorWeakup_req){
+          if(nrf_gpio_pin_read(SENSOR_INT_PIN) == 0){
+            main_status.LightSensorWeakup_req = 0;
+          }
+          else{
+            lsensor_weak_up();
+          }
+        }
         if(((RTC_cntr_sec & 0x0F)==0)&&(main_status.FlashBuzy==NO)){ // measure Battery Voltage every 16 second
           main_status.FlashBuzy = YES;
 //          NRF_LOG_INFO("Current Time = 0x%08x",CurrentDateTime.AsInt);
@@ -902,6 +913,10 @@ void init_periferal(void)
   print_flash_info(&fstorage);
   initParamTab();
   ReportAddr = find_free_addr((uint32_t)pParamTable + PAGE_SIZE);
+
+// set delay
+  nrf_pwr_mgmt_run();
+
   lsensor_init();
   memset(&log_event,0,sizeof(log_event_store_t));
   GetCaseState();

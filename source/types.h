@@ -90,6 +90,7 @@ typedef struct _main_status_t
   uint32_t ParamTab_change_req     :  2;
   uint32_t LightSensorWeakupTime   :  3;
   uint32_t LightSensorProblem      :  1;
+  uint32_t LightSensorWeakup_req   :  1;
   uint32_t LightSensorState        :  2;    // 0 - not initialized, 1 - sleep, 2 - work
   uint32_t NotifyReq               :  1;
   uint32_t MotorPowerOffReq        :  2;     //0 - not request , 1 - Request motor power off, 
@@ -99,7 +100,7 @@ typedef struct _main_status_t
 //  uint32_t CaseState               :  2;
 //  uint32_t CaseStateError          :  1;
   uint32_t CaseStateNextEnabled    :  2;  //when CASE_STATE_REQ_IDLE: all states enabled, when others: requered state 
-  uint32_t spare                   : 16;
+  uint32_t spare                   : 15;
 }main_status_t;
 
 typedef struct _rtc_tick_enable_t{
