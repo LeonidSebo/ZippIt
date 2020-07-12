@@ -100,7 +100,8 @@ typedef struct _main_status_t
 //  uint32_t CaseState               :  2;
 //  uint32_t CaseStateError          :  1;
   uint32_t CaseStateNextEnabled    :  2;  //when CASE_STATE_REQ_IDLE: all states enabled, when others: requered state 
-  uint32_t spare                   : 15;
+  uint32_t LightSensor_IntEn       :  1;
+  uint32_t spare                   : 14;
 }main_status_t;
 
 typedef struct _rtc_tick_enable_t{

@@ -102,8 +102,10 @@ RESULT Debug_EncriptDecript() {
 void Debug_Func(BLE_COMMAND *pCommand) {
  RESULT res = ERR_NO;
 
-  int8_t i = 0;
-  FlashData_SendToHost(FD_DATA_LOG_FILE, res, data1, 40);
+  lsensor_rx_all();
+//  int8_t i = 0;
+//  FlashData_SendToHost(FD_DATA_LOG_FILE, res, data1, 40);
+
   /* Debug_CheckEncDec(); */
   /* Debug_GetEncrCommand(); */
   /* Debug_MessageSend(); */

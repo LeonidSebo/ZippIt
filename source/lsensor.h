@@ -34,15 +34,19 @@
 #define LSEN_LOWER_THRESH_LOW_DEF   0x20
 #define LSEN_LOWER_THRESH_HIGHT_DEF 0x00
 #define LSEN_ALS_MEAS_RATE_DEF      0x12   // Int time = 200ms, Meas rate = 200ms
-#define LSEN_INTERRUPT_DEF          0x02    // Int. enable, active 0
+#define LSEN_INTERRUPT_DEF          0x00   // Int. enable, active 0
 #define LSEN_CONTR_REG_DEF          0x01    // Gain = 1, mode = Ative
 #define LSEN_INT_PERSIST_DEF        0x02    // 3 measurment before asserting intr=errupt
-
+#define LSEN_INTERRUPT_EN           0x06
 #define LSEN_SLEEP     LSEN_CONTR_REG_DEF & 0xFE    // Gain = 1, mode = Stand-by
 #define LSEN_WEAKUP    LSEN_CONTR_REG_DEF          // Gain = 1, mode = Active
 
-#define LS_SLEEP  1
-#define LS_WORK   2
+#define LS_SLEEP        1
+#define LS_WORK         2
+
+#define  LS_DEAD_TIME    3
+
+
 
 typedef struct _lsensor_t
 {
@@ -56,7 +60,7 @@ typedef struct _lsensor_t
   uint8_t   int_persist_reg;
 }lsensor_t;
 
-#define LSENSOR_DEF      LSEN_UPPER_THRESH_LOW_DEF, \
+#define LSENSOR_DEF       LSEN_UPPER_THRESH_LOW_DEF, \
                           LSEN_UPPER_THRESH_HIGHT_DEF,\
                           LSEN_LOWER_THRESH_LOW_DEF,\
                           LSEN_LOWER_THRESH_HIGHT_DEF,\
@@ -75,6 +79,8 @@ void lsensor_init(void);
 void lsensor_weak_up(void);
 void lsensor_sleep(void);
 void lsensor_rx(uint8_t reg_addr, uint8_t* pdata, size_t size);
+void lsensor_rx_all( void );
 
+#define lsensor_sleep()     lsensor_init()
 
 #endif  //LSENSOR_H

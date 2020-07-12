@@ -20,7 +20,7 @@
 #include "app_button.h"
 #include "crc32.h"
 #include "nrfx_saadc.h"
-
+#include "aux_i2c.h"
 
 #define BUTTON_DETECTION_DELAY          APP_TIMER_TICKS(50)                     /**< Delay from a GPIOTE event until a button is reported as pushed (in number of timer ticks). */
 
@@ -34,7 +34,7 @@
 
 #define  LED_BLINK_ON_TIME_TICK     2
 
-#define  SW_EVENT_TIMEOUT           2
+#define  SW_EVENT_TIMEOUT           0
 
 //#define MOTOR_STOP()              nrf_gpio_pin_clear(MOTOR_IN1_PIN);	\
 //                                  nrf_gpio_pin_clear(MOTOR_IN2_PIN);	\
@@ -47,12 +47,14 @@
                                   nrf_gpio_pin_set(EN_6V_PIN);          \
                                   main_status.MotorPowerOffReq = 2;
 
-#define MOTOR_CLOSE_CASE()        nrf_gpio_pin_set(EN_6V_PIN);          \
-                                  nrf_gpio_pin_set(MOTOR_IN1_PIN);	\
-                                  nrf_gpio_pin_clear(MOTOR_IN2_PIN);	\
-                                  nrf_gpio_pin_set(MOTOR_EN_PIN);	\
-                                  main_status.MotorPowerOffReq = 0;     \
-                                  NRF_LOG_INFO("CLOSE CASE");
+//#define MOTOR_CLOSE_CASE()        if(main_status.LightSensorState != LS_WORK)\
+//                                  lsensor_weak_up();\
+//                                  nrf_gpio_pin_set(EN_6V_PIN);          \
+//                                  nrf_gpio_pin_set(MOTOR_IN1_PIN);	\
+//                                  nrf_gpio_pin_clear(MOTOR_IN2_PIN);	\
+//                                  nrf_gpio_pin_set(MOTOR_EN_PIN);	\
+//                                  main_status.MotorPowerOffReq = 0;     \
+//                                  NRF_LOG_INFO("CLOSE CASE");
 
 #define MOTOR_OPEN_CASE()         nrf_gpio_pin_set(EN_6V_PIN);          \
                                   nrf_gpio_pin_clear(MOTOR_IN1_PIN);	\
@@ -107,5 +109,6 @@ void init_periferal(void);
 void logEventStorageReq(log_event_id_t event,uint8_t param0,uint8_t param1,uint8_t param2);
 void TickRetries_16s();
 
+void MOTOR_CLOSE_CASE(void);
 
 #endif

@@ -147,7 +147,7 @@ void CmdH_Command_Handler(BLE_COMMAND *pCommand) {
     return;
 
   //------------------------------//
-  case CMD_ID_DEBUG:
+  case CMD_ID_DEBUG:            // 0x50
     Debug_Func(pCommand);
     return;
 

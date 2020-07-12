@@ -51,10 +51,14 @@ extern "C" {
 #define SENSOR_SCL_PIN		4
 #define SENSOR_SPARE_PIN	5
 
-#define SPI_MISO_PIN		6
-#define SPI_MOSI_PIN		7
-#define SPI_CLK_PIN			8
-#define SPI_nCS_PIN			12
+//#define SPI_MISO_PIN		6
+//#define SPI_MOSI_PIN		7
+//#define SPI_CLK_PIN			8
+//#define SPI_nCS_PIN			12
+
+#define AUX_SDA                7
+#define AUX_SCL                8
+
 
 #define NFC1_PIN_PIN		9
 #define NFC2_PIN_PIN		10

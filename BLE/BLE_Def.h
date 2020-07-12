@@ -26,7 +26,7 @@
 #define STR(x) STR_HELPER(x)
 
 #define SOFT_VERSION_MAJOR 1
-#define SOFT_VERSION_MINOR 16
+#define SOFT_VERSION_MINOR 18
 
 // SOFT_VERSION 1.16 changed light sensor control
 
@@ -308,8 +308,9 @@ typedef enum _CHARACTERISTIC_ID {
 } CHARACTERISTIC_ID;
 
 #define UUID_BASE                                             \
-  { 0x66, 0x9A, 0x0C, 0x20, 0x00, 0x08, /**/ 0x23, 0x15, /**/ \
+  { 0x69, 0x9A, 0x0C, 0x20, 0x00, 0x08, /**/ 0x23, 0x15, /**/ \
     0xE9, 0x11, 0x35, 0xD5, 0x50, 0xB4, 0x2C, 0xCE }
+//  { 0x66, 0x9A, 0x0C, 0x20, 0x00, 0x08, /**/ 0x23, 0x15, /**/ \
 
 /*=============================================================*/
 

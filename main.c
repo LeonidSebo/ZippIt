@@ -78,6 +78,7 @@ static void idle_state_handle(void)
 int main(void)
 {
     gEventsFlag = 0;
+//    return 0;
     log_init();
     timers_init();
     init_periferal();

@@ -4,6 +4,8 @@
 
 extern uint8_t  NewParamTable[sizeof(ParamTable_t) + sizeof(uint32_t)];
 extern main_status_t main_status;
+extern int8_t lsensor_DeadTime;
+
 
 __attribute__ ((section(".ParamTab")))
 const uint32_t endOfPrg = 0xFFFFFFFF;
@@ -302,24 +304,26 @@ static void switch_int_handler(uint8_t pin, uint8_t action)
     case nWIRE_PIN:
       if(CaseState.CurrentCaseState == CASE_LOCK){
         logEventStorageReq(LOG_EVENT_WIRE_CHANGED, 0,0,0);
-        device_status.DEVSTAT_WIRE_PIN_CHANGED = YES; 
+        device_status.DEVSTAT_WIRE_PIN_CHANGED = YES;
+        buff = ALARM_CABLE;
+        aux_i2c_tx(&buff);
       }
       break;
 
     case SENSOR_INT_PIN:
-      lsensor_rx(LSEN_ALS_STATUS_REG,&buff,1); //dumy read
-      
-      device_status.DEVSTAT_LIGHT_PENETRATION = nrf_gpio_pin_read(SENSOR_INT_PIN);
-      if(device_status.DEVSTAT_LIGHT_PENETRATION){
-        if((CaseState.CurrentCaseState == CASE_LOCK)||(CaseState.CurrentCaseState == CASE_HANDEL_OPEN)){
-          logEventStorageReq(LOG_EVENT_LIGHT_CHANGED, 0,0,0);
-          device_status.DEVSTAT_LIGHT_PENETRATION_CHANGED = YES;
-          NRF_LOG_INFO("Light sensor event");
-          CaseStateLedOnTime = ALARM_BLINK_TIME;
-          SetLedControl(LED_BLINK,LED_OFF,LED_OFF);
-        }
-      }
-      break;
+      return;
+//      device_status.DEVSTAT_LIGHT_PENETRATION = ~nrf_gpio_pin_read(SENSOR_INT_PIN);
+//      if(device_status.DEVSTAT_LIGHT_PENETRATION){
+//       if((CaseState.CurrentCaseState == CASE_LOCK)||(CaseState.CurrentCaseState == CASE_HANDEL_OPEN)){
+//          logEventStorageReq(LOG_EVENT_LIGHT_CHANGED, 0,0,0);
+//          device_status.DEVSTAT_LIGHT_PENETRATION_CHANGED = YES;
+//          CaseStateLedOnTime = ALARM_BLINK_TIME;
+//          SetLedControl(LED_BLINK,LED_OFF,LED_OFF);
+//          buff = ALARM_LIGHT;
+//          aux_i2c_tx(&buff);
+//        }
+//      }
+//      break;
   }
   Message_DeviceStatus( device_status);             // switches state changed event
   device_status.DEVSTAT_STATE_OF_SW_1_CHANGED = NO; 
@@ -383,9 +387,11 @@ static void gpio_init(void)
     bsp_board_init(BSP_INIT_LEDS);   
 
 /********** init SENSOR_INT_PIN *******************************/
-    nrf_drv_gpiote_in_config_t in_config = NRFX_GPIOTE_CONFIG_IN_SENSE_LOTOHI(false);
-
-    in_config.pull = NRF_GPIO_PIN_PULLUP;
+//    nrf_drv_gpiote_in_config_t in_config = NRFX_GPIOTE_CONFIG_IN_SENSE_LOTOHI(false);
+//
+//    in_config.pull = NRF_GPIO_PIN_PULLUP;
+//    err_code = nrf_drv_gpiote_in_init(SENSOR_INT_PIN,in_config,NULL);
+//    APP_ERROR_CHECK(err_code);
 }
 
 static void StoreDevLog(void)
@@ -407,11 +413,13 @@ static void LockSwitchEvent_handler(void)
     case 0:   // do nothing
       break;
     case 1:   // stable state
+      NRF_LOG_INFO("CurrentCaseState =  %d",CaseState.CurrentCaseState);
       if((CaseState.CurrentCaseState == CASE_LOCK)||(CaseState.CurrentCaseState == CASE_HANDEL_OPEN)){
-//        lsensor_weak_up();
-        main_status.LightSensorWeakup_req = 1;
+        lsensor_weak_up();
+//        main_status.LightSensorWeakup_req = 1;
         main_status.LightSensorWeakupTime = 0;
       }
+      break;
     default:   // debounce time
       main_status.LightSensorWeakupTime--;
   }
@@ -429,6 +437,7 @@ static uint32_t              m_adc_evt_counter;
 #define LOW_BATTERY_TRACE_ENABLE  0
 void saadc_callback(nrf_drv_saadc_evt_t const * p_event)
 {
+  uint8_t buff[4];
   static uint32_t minVoltage = 0xffffffff;
   if (p_event->type == NRF_DRV_SAADC_EVT_DONE)
   {
@@ -449,9 +458,14 @@ void saadc_callback(nrf_drv_saadc_evt_t const * p_event)
         device_status.DEVSTAT_POWER_LOW = YES;
         logEventStorageReq(LOG_EVENT_ERROR,0,0,0);
         device_status.DEVSTAT_POWER_LOW_CHANGED = YES;
+        buff[0] = ALARM_BAT;
+        buff[1] = 0;
+        buff[2] = ((uint16_t)BatVoltage) & 0xff;
+        buff[3] = ((uint16_t)BatVoltage) >> 8;
+        aux_i2c_tx(buff);
         get_current_status();
         Message_DeviceStatus( device_status);       // low battery event
-       device_status.DEVSTAT_POWER_LOW_CHANGED = NO;
+        device_status.DEVSTAT_POWER_LOW_CHANGED = NO;
       }
     }
 // cancel the measuring  
@@ -753,6 +767,7 @@ static void rtc_handler(nrf_drv_rtc_int_type_t int_type)
     static uint32_t RTC_cntr_sec = 0;
     static uint32_t RTC_cntr_tick = 0;
     uint32_t err_code;
+    uint8_t buff;
     if (int_type == NRF_DRV_RTC_INT_COMPARE0){ // one second event
 //        if(motorTimeout)
 //          NRF_LOG_INFO("MotorTimeout: %d",motorTimeout); 
@@ -764,14 +779,42 @@ static void rtc_handler(nrf_drv_rtc_int_type_t int_type)
         WriteParamTab();
         LockSwitchEvent_handler();
         StoreDevLog();
-        if(main_status.LightSensorWeakup_req){
-          if(nrf_gpio_pin_read(SENSOR_INT_PIN) == 0){
-            main_status.LightSensorWeakup_req = 0;
-          }
-          else{
-            lsensor_weak_up();
+        if(lsensor_DeadTime>0){
+          lsensor_DeadTime--;
+        }else{
+          if(main_status.LightSensorState == LS_WORK){
+            device_status.DEVSTAT_LIGHT_PENETRATION = ~nrf_gpio_pin_read(SENSOR_INT_PIN);
+            if(device_status.DEVSTAT_LIGHT_PENETRATION){
+             if(((CaseState.CurrentCaseState == CASE_LOCK)||(CaseState.CurrentCaseState == CASE_HANDEL_OPEN))&&
+                 (main_status.LightSensor_IntEn)){
+                logEventStorageReq(LOG_EVENT_LIGHT_CHANGED, 0,0,0);
+                device_status.DEVSTAT_LIGHT_PENETRATION_CHANGED = YES;
+                CaseStateLedOnTime = ALARM_BLINK_TIME;
+                SetLedControl(LED_BLINK,LED_OFF,LED_OFF);
+                buff = ALARM_LIGHT;
+                aux_i2c_tx(&buff);
+                main_status.LightSensor_IntEn = 0;
+
+                NRF_LOG_INFO("========== Light sensor event ============");
+
+                Message_DeviceStatus( device_status);             // switches state changed event
+                device_status.DEVSTAT_STATE_OF_SW_1_CHANGED = NO; 
+                device_status.DEVSTAT_STATE_OF_SW_2_CHANGED = NO; 
+                device_status.DEVSTAT_STATE_OF_SW_3_CHANGED = NO; 
+                device_status.DEVSTAT_WIRE_PIN_CHANGED = NO; 
+                device_status.DEVSTAT_LIGHT_PENETRATION_CHANGED = NO;
+         }
+            }else{
+              main_status.LightSensor_IntEn = 1;
+            }
           }
         }
+//        if(main_status.LightSensorWeakup_req){
+//          if(nrf_gpio_pin_read(SENSOR_INT_PIN) == 0){
+//            main_status.LightSensorWeakup_req = 0;
+//          }
+//          lsensor_weak_up();
+//        }
         if(((RTC_cntr_sec & 0x0F)==0)&&(main_status.FlashBuzy==NO)){ // measure Battery Voltage every 16 second
           main_status.FlashBuzy = YES;
 //          NRF_LOG_INFO("Current Time = 0x%08x",CurrentDateTime.AsInt);
@@ -805,6 +848,11 @@ static void rtc_handler(nrf_drv_rtc_int_type_t int_type)
           main_status.MotorPowerOffReq--;
         }else if(main_status.MotorPowerOffReq == 1){
           MOTOR_POWER_OFF();
+          if((CaseState.CurrentCaseState != CASE_LOCK)&&
+             (CaseState.CurrentCaseState != CASE_HANDEL_OPEN)&&
+             (main_status.LightSensorState == LS_WORK)){
+            lsensor_init();
+          }
         }
         if((main_status.FlashErase_req)&&(!nrf_fstorage_is_busy(&fstorage)))
         {
@@ -905,7 +953,8 @@ void init_periferal(void)
   lfclk_config();                 //initialization clock 32768 
   rtc_config();
   gpio_init();
-  twi_init();                     //initialization i2c
+  twi_init();                     //initialization lsensor i2c
+  i2c_aux_init();                 //initialization auxiliary i2c
   p_fs_api = &nrf_fstorage_sd;
   rc = nrf_fstorage_init(&fstorage, p_fs_api, NULL);
   APP_ERROR_CHECK(rc);
@@ -917,7 +966,10 @@ void init_periferal(void)
 // set delay
   nrf_pwr_mgmt_run();
 
+//  lsensor_init();
+  lsensor_weak_up();
   lsensor_init();
+
   memset(&log_event,0,sizeof(log_event_store_t));
   GetCaseState();
   CaseState.LastTrueCaseState = CaseState.CurrentCaseState;
@@ -931,4 +983,18 @@ void init_periferal(void)
 //  }else{
 //    main_status.CaseState = CASE_UNRESOLVED;
 //  }
+}
+
+void MOTOR_CLOSE_CASE(void){
+  if(main_status.LightSensorState != LS_WORK){
+    NRF_LOG_INFO("LightSensorState = %01x",main_status.LightSensorState);
+    lsensor_weak_up();
+  }
+  nrf_gpio_pin_set(EN_6V_PIN);         
+  nrf_gpio_pin_set(MOTOR_IN1_PIN);	
+  nrf_gpio_pin_clear(MOTOR_IN2_PIN);	
+  nrf_gpio_pin_set(MOTOR_EN_PIN);	
+  main_status.MotorPowerOffReq = 0;   
+  NRF_LOG_INFO("CLOSE CASE");
+
 }
