@@ -45,6 +45,9 @@ void twi_init(void)
     nrf_drv_twi_enable(&m_twi);
 }
 
+
+#ifdef LSEN_LTR_303
+
 void lsensor_tx(uint8_t reg_addr, uint8_t const* pdata, size_t size)
 {
   ret_code_t ret;
@@ -149,3 +152,79 @@ void lsensor_rx_all( void ){
   lsensor_rx(LSEN_INTERRUPT_PERSIST_REG,buff,1); 
   NRF_LOG_INFO("INTERRUPT_PERSIST: %01x", buff[0]);
 }
+
+#else
+#ifdef  LSEN_OPT3002
+
+
+void lsensor_tx(uint8_t reg_addr, uint8_t const* pdata, size_t size)
+{
+  ret_code_t ret;
+  uint32_t i;
+  uint8_t buffer[LSENSOR_MAX_TRANSACTION_SIZE + 1]; /* Addr + data */
+  for(i = 0;i<size;i+=2){
+    buffer[0] = reg_addr + i;
+    buffer[2] = pdata[i];
+    buffer[1] = pdata[i+1];
+    ret = nrf_drv_twi_tx(&m_twi, LSENSOR_I2C_ADDR, buffer,I2C_ADDR_LEN + 2, false);
+    if(ret != NRF_SUCCESS){
+      if(!main_status.LightSensorProblem){
+        logEventStorageReq(LOG_EVENT_ERROR,ERR_LIGHT_SENSOR_PROBLEM,0,0);
+        main_status.LightSensorProblem = 1;
+      }else{
+        main_status.LightSensorProblem = 0;
+      }
+    }
+  }
+}
+
+void lsensor_rx(uint8_t reg_addr, uint8_t* pdata, size_t size)
+{
+    ret_code_t ret;
+    uint32_t i;
+    uint32_t repetition_cntr = I2C_REPETITION_MAX;
+    uint8_t RxData[2];
+    uint8_t buffer; 
+    for(i = 0;i<size;i+=2){
+      buffer = reg_addr + i;
+      ret = nrf_drv_twi_tx(&m_twi, LSENSOR_I2C_ADDR, &buffer, I2C_ADDR_LEN, false);
+      if(ret != NRF_SUCCESS){
+        if(!main_status.LightSensorProblem){
+          logEventStorageReq(LOG_EVENT_ERROR,ERR_LIGHT_SENSOR_PROBLEM,0,0);
+          main_status.LightSensorProblem = 1;
+        }else{
+          main_status.LightSensorProblem = 0;
+        }
+      }
+      ret = nrf_drv_twi_rx(&m_twi, LSENSOR_I2C_ADDR, RxData, 2);
+      if(ret != NRF_SUCCESS){
+        if(!main_status.LightSensorProblem){
+          logEventStorageReq(LOG_EVENT_ERROR,ERR_LIGHT_SENSOR_PROBLEM,0,0);
+          main_status.LightSensorProblem = 1;
+        }else{
+          pdata[i]=RxData[1];
+          pdata[i+1]=RxData[0];
+          main_status.LightSensorProblem = 0;
+        }
+      }
+   }
+}
+
+void lsensor_init(void)
+{
+  uint8_t contr_reg = 2; // SW Reset
+  main_status.LightSensorState = LS_SLEEP;
+  lsensor_tx(LSEN_ALS_CONTR_REG,&contr_reg,1);
+  contr_reg = pParamTable->lsensor.contr_reg & 0xFE; // Stand-by mode
+  lsensor_tx(LSEN_ALS_CONTR_REG,&contr_reg,1);
+
+  lsensor_tx(LSEN_ALS_THRES_UP_0_REG,&(pParamTable->lsensor.upper_thresh_low),4);
+  lsensor_tx(LSEN_INTERRUPT_PERSIST_REG,&(pParamTable->lsensor.int_persist_reg),1);
+  lsensor_tx(LSEN_ALS_MEAS_RATE_REG,&(pParamTable->lsensor.meas_rate),1);
+  contr_reg = LSEN_INTERRUPT_EN;
+  lsensor_tx(LSEN_INTERRUPT_REG,&contr_reg,1);
+  lsensor_rx(LSEN_ALS_STATUS_REG,&contr_reg,1); //dumy read
+}
+
+#endif
+#endif

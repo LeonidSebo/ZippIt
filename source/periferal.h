@@ -75,12 +75,15 @@
 #define DEF_BAT_ALARM_LEVEL       0xBC,0x02,0x00,0x00
 #define DEF_CRC                   0x00,0x00,0x00,0x00
 #define DEF_NUM_RETR              0x01,0x00,0x00,0x00
+
 #define DEF_PARAM_TAB             LSENSOR_DEF,\
                                   DEF_MOTOR_ACTIVE_TIME,\
                                   DEF_HW_REVISION,\
                                   DEF_BAT_ALARM_LEVEL,\
                                   DEF_NUM_RETR,\
                                   DEF_CRC
+
+
 
 #define     LIGHT_SENSOR_WEAKUP_ENABLE()              main_status.LightSensorWeakupTime = SW_EVENT_TIMEOUT
 

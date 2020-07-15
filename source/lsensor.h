@@ -4,6 +4,11 @@
 #include <stdint.h>
 #include "nrf_drv_gpiote.h"
 
+#define _LSEN_LTR_303
+#define LSEN_OPT3002  
+
+#ifdef LSEN_LTR_303
+
 #define  LSENSOR_I2C_ADDR 0x29
 
 // LTR-303ALS-01 registers
@@ -41,11 +46,51 @@
 #define LSEN_SLEEP     LSEN_CONTR_REG_DEF & 0xFE    // Gain = 1, mode = Stand-by
 #define LSEN_WEAKUP    LSEN_CONTR_REG_DEF          // Gain = 1, mode = Active
 
+
+
+#define LSENSOR_DEF       LSEN_UPPER_THRESH_LOW_DEF, \
+                          LSEN_UPPER_THRESH_HIGHT_DEF,\
+                          LSEN_LOWER_THRESH_LOW_DEF,\
+                          LSEN_LOWER_THRESH_HIGHT_DEF,\
+                          LSEN_ALS_MEAS_RATE_DEF,\
+                          LSEN_INTERRUPT_DEF,\
+                          LSEN_CONTR_REG_DEF,\
+                          LSEN_INT_PERSIST_DEF 
+#else
+#ifdef  LSEN_OPT3002
+
+#define  LSENSOR_I2C_ADDR                       0x84
+#define I2C_ADDR_LEN                              1
+
+#define LSENSOR_MAX_TRANSACTION_SIZE            0x02
+
+
+#define LSEN_UPPER_THRESH_LSB_DEF   0xFF
+#define LSEN_UPPER_THRESH_MSB_DEF   0xFF
+#define LSEN_LOWER_THRESH_LSB_DEF   0x20
+#define LSEN_LOWER_THRESH_MSB_DEF   0x00
+#define LSEN_ALS_MEAS_RATE_DEF      0x12   // Int time = 200ms, Meas rate = 200ms
+#define LSEN_INTERRUPT_DEF          0x00   // Int. enable, active 0
+#define LSEN_CONTR_REG_DEF          0x01    // Gain = 1, mode = Ative
+#define LSEN_INT_PERSIST_DEF        0x02    // 3 measurment before asserting intr=errupt
+#define LSEN_INTERRUPT_EN           0x06
+
+
+#define LSENSOR_DEF       LSEN_UPPER_THRESH_LSB_DEF,\
+                          LSEN_UPPER_THRESH_MSB_DEF,\
+                          LSEN_LOWER_THRESH_LSB_DEF,\
+                          LSEN_LOWER_THRESH_MSB_DEF,\
+                          LSEN_ALS_MEAS_RATE_DEF,\
+                          LSEN_INTERRUPT_DEF,\
+                          LSEN_CONTR_REG_DEF,\
+                          LSEN_INT_PERSIST_DEF 
+#endif
+#endif
+
 #define LS_SLEEP        1
 #define LS_WORK         2
 
 #define  LS_DEAD_TIME    3
-
 
 
 typedef struct _lsensor_t
@@ -59,15 +104,6 @@ typedef struct _lsensor_t
   uint8_t   contr_reg;
   uint8_t   int_persist_reg;
 }lsensor_t;
-
-#define LSENSOR_DEF       LSEN_UPPER_THRESH_LOW_DEF, \
-                          LSEN_UPPER_THRESH_HIGHT_DEF,\
-                          LSEN_LOWER_THRESH_LOW_DEF,\
-                          LSEN_LOWER_THRESH_HIGHT_DEF,\
-                          LSEN_ALS_MEAS_RATE_DEF,\
-                          LSEN_INTERRUPT_DEF,\
-                          LSEN_CONTR_REG_DEF,\
-                          LSEN_INT_PERSIST_DEF 
 
 #define I2C_REPETITION_MAX          5
 
