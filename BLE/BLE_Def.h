@@ -25,10 +25,11 @@
 #define STR_HELPER(x) #x
 #define STR(x) STR_HELPER(x)
 
-#define SOFT_VERSION_MAJOR 1
-#define SOFT_VERSION_MINOR 18
+#define SOFT_VERSION_MAJOR 2
+#define SOFT_VERSION_MINOR 0
 
 // SOFT_VERSION 1.16 changed light sensor control
+//  SOFT_VERSION 2.0 replaced light sensor
 
 #define DEVICE_NAME "ZippIT ver. " STR(SOFT_VERSION_MAJOR) "." STR(SOFT_VERSION_MINOR)
 //#define DEVICE_NAME "ZippIT ver. 1.14" /**< Name of device. Will be included in the advertising data. */

@@ -782,11 +782,10 @@ static void rtc_handler(nrf_drv_rtc_int_type_t int_type)
         if(lsensor_DeadTime>0){
           lsensor_DeadTime--;
         }else{
-          if(main_status.LightSensorState == LS_WORK){
+          if((main_status.LightSensorState == LS_WORK)&& (main_status.LightSensor_IntEn)){
             device_status.DEVSTAT_LIGHT_PENETRATION = ~nrf_gpio_pin_read(SENSOR_INT_PIN);
             if(device_status.DEVSTAT_LIGHT_PENETRATION){
-             if(((CaseState.CurrentCaseState == CASE_LOCK)||(CaseState.CurrentCaseState == CASE_HANDEL_OPEN))&&
-                 (main_status.LightSensor_IntEn)){
+             if(((CaseState.CurrentCaseState == CASE_LOCK)||(CaseState.CurrentCaseState == CASE_HANDEL_OPEN))){
                 logEventStorageReq(LOG_EVENT_LIGHT_CHANGED, 0,0,0);
                 device_status.DEVSTAT_LIGHT_PENETRATION_CHANGED = YES;
                 CaseStateLedOnTime = ALARM_BLINK_TIME;
@@ -966,8 +965,8 @@ void init_periferal(void)
 // set delay
   nrf_pwr_mgmt_run();
 
-//  lsensor_init();
-  lsensor_weak_up();
+//seek_addr();    //debug
+//  lsensor_weak_up();
   lsensor_init();
 
   memset(&log_event,0,sizeof(log_event_store_t));

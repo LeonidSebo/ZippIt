@@ -25,7 +25,7 @@ NUMBER_RETRIES gNumberRetries;//; = COUNT_ATTENTION_EVENT_MAX_VALUE;
 #define RETRIES_ALERT_DEVICE_STOP_TIME_16secTick (RETRIES_ALERT_DEVICE_STOP_TIME_MIN * 60 / TIMER_TICK_sec)
 
 //-------------------------------------------------------//
-#define CHAR_COMMAND_ENCRIPTION_DISABLE         0
+#define CHAR_COMMAND_ENCRIPTION_DISABLE         1
 #define DEBUG_FILL_FLASH_DATA_FROM_COUNTER      0
 //-------------------------------------------------------//
 #define COUNT_ATTENTION_EVENT_MAX_VALUE 10

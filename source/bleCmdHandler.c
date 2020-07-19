@@ -185,8 +185,13 @@ RESULT bleSetBatteryAlarmLevel(uint32_t BatLevel)
 RESULT bleSetLightAlarmLevel(uint16_t LightAlarm)
 {
   uint32_t addr;
+#if LSENSOR == LSEN_LTR_303
   if((pParamTable->lsensor.lower_thresh_low != LightAlarm & 0xFF)||
      (pParamTable->lsensor.lower_thresh_hight != ((LightAlarm >> 8)&0xFF))){
+#elif LSENSOR == LSEN_OPT3002
+  if(pParamTable->lsensor.lower_threshold != LightAlarm){
+ 
+#endif
     if(main_status.ParamTab_change_req != REQ_NONE){
       return ERR_MODULE_BUZY;
     }
